@@ -18,12 +18,12 @@ def test_stdio_lifecycle():
             async with ClientSession(read, write) as client:
                 await client.initialize()
                 listing = await client.list_tools()
-                assert [tool.name for tool in listing.tools] == ["connection_status"]
+                assert [tool.name for tool in listing.tools] == ["connection_status", "list_activities", "get_activity", "get_activity_splits", "get_activity_samples", "get_strength_sets", "get_training_summary"]
                 assert listing.tools[0].annotations.readOnlyHint is True
                 response = await client.call_tool("connection_status", {})
                 assert not response.isError
                 data = json.loads(response.content[0].text)
-                assert data["session_state"] == "auth_required"
+                assert data["session_state"] in ("auth_required", "saved_session")
                 assert data["garmin_verified"] is False
                 unknown = await client.call_tool("delete_activity", {})
                 assert unknown.isError

@@ -97,6 +97,8 @@ class TokenStore:
 
 
 def new_client(*args, **kwargs):
+    import truststore
+    truststore.inject_into_ssl()
     from garminconnect import Garmin
     silence_library_logs()
     # Prevent the upstream library from writing plaintext tokens through its

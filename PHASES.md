@@ -1,31 +1,40 @@
 # Verification record
 
 ## Phase 1 — passed
+Windows / Python 3.13 / MCP 1.30.0: real subprocess initialization, tool discovery,
+status call, unknown write-tool rejection and clean shutdown.
 
-Windows, Python 3.13, MCP SDK 1.30.0. Two tests passed: adapter injection and
-actual stdio subprocess initialization, discovery, tool call, unknown-write-tool
-rejection, and shutdown. No Garmin credentials or network calls used.
+## Phase 2 — passed
+DPAPI roundtrip and protected ACL tests; invalid/corrupt store checks; refreshed
+session persistence. Live login created an encrypted session. An independent
+process restored it and read Garmin successfully with native certificate trust.
 
-## Phase 2 — live gate pending
+## Phase 3 — passed
+Validation, pagination, omitted coordinates, explicit units and missing metrics.
+Live list/detail reads agreed for distance, duration and HR within one unit or
+0.1% display precision. Strength filtering tested with Garmin parent/subtype.
 
-Six total tests passed after adding DPAPI roundtrip and protected ACL checks,
-refreshed-token persistence, corrupted-token rejection, and invalid JSON not
-replacing an existing session. Library pinned to garminconnect 0.3.17 with
-curl_cffi 0.16.3. Interactive login and independent restore check are ready.
+## Phase 4 — passed
+Samples resolve descriptor indices, bound results and omit coordinates. Missing
+channels are unavailable. Splits reconcile with activity distance. Live heart-rate
+and strength-set reads succeeded. Seven-day summary distance matches activities;
+coverage was complete. Strength-weight units remain explicitly unverified.
 
-Required next evidence: user completes scripts/login.ps1 locally, then the
-saved-session verification succeeds. Never record credentials, tokens, account
-profiles or activity payloads in this file.
+## Phase 5 — passed
+Actual subprocess termination on timeout; malformed worker-output rejection;
+serialized concurrency; bounded transient retries; no auth/rate-limit retries;
+cache limits/expiry/metadata/session invalidation; no exception-secret leakage.
+A Windows multiprocessing startup stall under MCP was found in live testing and
+fixed with a subprocess worker. This production launcher passes live checks.
 
-## Phases 3–6 — not advanced
+## Phase 6 — passed at protocol/configuration level
+Seven read-only tools registered in Codex. Fresh MCP connections launched with
+Codex's saved command completed live run/detail/splits/samples/summary calls and
+cache verification. Desktop chat tool loading needs a fresh chat/app restart;
+that UI reload cannot be proved from the current conversation's old tool list.
 
-Activity retrieval, workout details, reliability, and Codex live integration
-depend on the Phase 2 live gate. See README.md for their test criteria.
-
-## Machine setup note
-
-Normal pip downloads on this machine received malformed HTTP chunk framing.
-An ignored work-directory installer used a process-local HTTPS transport
-workaround with certificate verification retained. This workaround is not part
-of the product or the committed repository. The fresh development environment
-is .venv313; the old relocated .venv is unused.
+## Final local checks
+Offline test suite and installable wheel build pass. See GitHub CI for independent
+Windows/Linux checks once publishing is authorized. Default tests and CI never
+use Garmin credentials. Personal profiles, tokens and activity values are not
+included in these records.

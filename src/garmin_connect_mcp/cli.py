@@ -20,12 +20,16 @@ def main() -> None:
             interactive_login(store)
             print("Login verified; encrypted session saved locally.")
         elif args.command == "verify":
-            client = restore_session(store)
-            client.get_activities(0, 1)
-            store.save(client.client.dumps())
+            from .runtime import session_lock
+            with session_lock(store):
+                client = restore_session(store)
+                client.get_activities(0, 1)
+                store.save(client.client.dumps())
             print("Saved session verified with Garmin.")
         else:
-            store.clear()
+            from .runtime import session_lock
+            with session_lock(store):
+                store.clear()
             print("Local session removed. This does not revoke Garmin's issued token.")
     except Exception:
         print("Garmin connection failed. Check login/MFA, network access, and the local session; no secrets were logged.", file=sys.stderr)
