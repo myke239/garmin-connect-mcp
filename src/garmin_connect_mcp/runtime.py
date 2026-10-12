@@ -10,7 +10,11 @@ from pathlib import Path
 
 from .auth import TokenStore, restore_session, restrict
 
-ALLOWED = {"get_activity", "get_activity_splits", "get_activity_details", "get_activity_exercise_sets", "connectapi"}
+ALLOWED = {"get_sleep_data", "get_hrv_data", "get_stress_data", "get_body_battery",
+    "get_morning_training_readiness", "get_training_status", "get_max_metrics",
+    "get_lactate_threshold", "get_race_predictions", "get_heart_rate_zones",
+    "get_stats", "get_personal_record", "get_activity_hr_in_timezones"}
+ALLOWED |= {"get_activity", "get_activity_splits", "get_activity_details", "get_activity_exercise_sets", "connectapi"}
 ALLOWED |= {"mcp_commit_write", "get_workouts", "get_workout_by_id"}
 ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_devices", "get_activity_types",
             "get_body_composition", "get_hydration_data", "get_blood_pressure"}

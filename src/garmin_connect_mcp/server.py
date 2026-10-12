@@ -307,6 +307,47 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             """Summarize at most 500 activities within 90 days; report missing metrics and coverage."""
             return safe_call(backend.get_training_summary, start_date, end_date)
 
+        from .recovery import RecoveryKind, read_recovery, session_context
+        from .builders import strength_workout, running_workout, swim_workout
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_recovery(kind: RecoveryKind, calendar_date: str) -> dict:
+            """Read bounded sleep, HRV, stress, body battery, readiness, training status, VO2,
+            threshold, race predictions, zones, daily summary or records. Dates YYYY-MM-DD.
+            Undated kinds return latest data with original dates. Missing is not zero.
+            No identifiers/raw timelines; readiness fallback is explicitly marked."""
+            return safe_call(read_recovery, backend, kind, calendar_date)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_session_with_context(activity_id: str, sleep_calendar_date: str | None = None) -> dict:
+            """Bundle activity, splits, HR zones and recovery context. Uses activity local date;
+            sleep wake-date defaults to same day (preceding day before 04:00).
+            Override sleep_calendar_date for shift work. No diagnoses or invented scores."""
+            return safe_call(session_context, backend, activity_id, sleep_calendar_date)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_strength_workout(workout_name: str, exercises: list[dict]) -> dict:
+            """Pure strength draft. Each explicitly chosen category/exercise has sets, exactly
+            one reps or duration_seconds, optional weight_kg/rest_seconds/notes.
+            Expand sets and rests; resolve exact catalog identifiers first. Max 100 steps."""
+            return safe_call(strength_workout, workout_name, exercises)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_running_workout(workout_name: str, intervals: list[dict],
+                warmup_seconds: StrictInt = 0, cooldown_seconds: StrictInt = 0) -> dict:
+            """Pure running draft. Intervals choose duration_seconds or distance_m, repeats,
+            recovery_seconds, optional hr_zone 1-5 OR pace_s_km [faster,slower].
+            Converts pace to Garmin m/s. No implicit intensity or write."""
+            return safe_call(running_workout, workout_name, intervals, warmup_seconds, cooldown_seconds)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_swim_workout(workout_name: str, pool_length_m: StrictInt, intervals: list[dict]) -> dict:
+            """Pure 25m/50m pool draft. Intervals use distance_m, stroke, repeats, rest_seconds,
+            optional equipment/drill. Supported strokes: any_stroke, backstroke, breaststroke,
+            fly, free; equipment fins/kickboard/paddles/pull_buoy/snorkel; drill kick/pull/drill.
+            Calendar/readback success does not verify physical watch behavior."""
+            return safe_call(swim_workout, workout_name, pool_length_m, intervals)
+
     return server
 
 
