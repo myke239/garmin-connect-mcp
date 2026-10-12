@@ -1,6 +1,6 @@
 {
   "name": "garmin-connect",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Garmin activity analysis and opt-in previewed account writes.",
   "author": {
     "name": "myke239"

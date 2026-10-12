@@ -11,7 +11,7 @@ import time
 from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal,Any,Callable
 
 from .auth import TokenStore, data_directory
 from .runtime import RequestError, session_lock, bounded_request, error_code
@@ -214,17 +214,12 @@ def _validate(operation, parameters):
             crc=0
             for byte in content: crc=_calcCRC(crc,byte)
             if crc!=0: raise WriteInputError(operation,"FIT file checksum is invalid")
-            from garmin_fit_sdk import Decoder,Stream
-            count=0
-            def bounded_message(number,value):
-                nonlocal count
-                count+=1
-                if count>50000: raise ValueError("FIT message count exceeds limit")
-            messages,errors=Decoder(Stream.from_byte_array(bytearray(content))).read(mesg_listener=bounded_message)
-            if errors:
-                raise WriteInputError(operation,"FIT content is invalid or unsupported by the pinned Garmin FIT SDK")
-            if (not messages.get("file_id_mesgs") or messages["file_id_mesgs"][0].get("type") != "activity"
-                    or not messages.get("session_mesgs") or not messages.get("lap_mesgs") or len(messages.get("activity_mesgs",[])) != 1):
+            from .fit_support import decode
+            try: decoded=decode(content)
+            except RequestError:raise
+            except ValueError:
+                raise WriteInputError(operation,"FIT content is invalid or unsupported by the pinned Garmin FIT SDK") from None
+            if decoded['file_type']!='activity' or not decoded['sessions'] or not decoded['laps'] or decoded['activities']!=1:
                 raise WriteInputError(operation,"Only FIT activity recordings with session, lap and one activity message are accepted; health/course files are not activity uploads")
         if parameters["format"] != "fit":
             from defusedxml import ElementTree
@@ -474,13 +469,13 @@ def review_context(operation, parameters, digest):
 
 
 class WriteService:
-    def __init__(self, directory=None, runner=bounded_request):
+    def __init__(self, directory: Path | str | None = None, runner: Callable[...,Any] = bounded_request) -> None:
         self.directory = Path(directory or data_directory())
         self.store = TokenStore(self.directory / "write-journal")
         self.settings = TokenStore(self.directory / "write-settings")
         self.runner = runner
 
-    def enabled(self):
+    def enabled(self) -> bool:
         return self.settings.exists() and json.loads(self.settings.load()).get("enabled") is True
 
     def require_enabled(self,operation=None):

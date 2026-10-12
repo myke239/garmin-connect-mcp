@@ -33,3 +33,8 @@ ancestry alone may report the branch unmerged). Keep main tracking origin/main.
 Discard only known disposable caches/build artifacts. Preserve encrypted live
 write journals, audit records, credentials, active runtime environments and logs
 needed for unresolved outcomes. Never publish private audit artifacts.
+
+Quality gates: critical Python lint across source/scripts/tests, strict typed
+launcher/diagnostic interfaces, package build, tracked secret/private-artifact
+checks and dependency audit. Legacy modules do not yet have complete strict
+type coverage. Desktop/frozen/container checks are separate offline CI jobs.

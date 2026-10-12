@@ -21,3 +21,9 @@ for dependency license notices.
 Garmin access uses unofficial endpoints rather than the partner API. Users are
 responsible for complying with service terms. Ngrok carries remote tool responses.
 Data requested by ChatGPT or Codex becomes available to the conversation.
+
+Frozen redistributable builds exclude the official Garmin FIT SDK. FIT support
+is installed directly by each user from PyPI under its own license. Tray support
+uses pystray (LGPLv3); bundled source/license metadata and the public build spec
+allow rebuilding with a modified library. Other bundled dependencies retain
+their distributed license notices in _internal/*.dist-info.

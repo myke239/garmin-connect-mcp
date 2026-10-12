@@ -37,31 +37,12 @@ def extract(content):
 
 
 def parse(content):
-    from garmin_fit_sdk import Decoder, Stream
-    count = 0
-    def listener(kind, value):
-        nonlocal count
-        count += 1
-        if count > 100000:
-            raise ValueError('Recording message limit exceeded')
-    messages, errors = Decoder(Stream.from_byte_array(bytearray(content))).read(mesg_listener=listener)
-    if errors or not messages.get('file_id_mesgs') or messages['file_id_mesgs'][0].get('type') != 'activity' or not messages.get('session_mesgs'):
+    from .fit_support import decode
+    result=decode(content)
+    if result['file_type']!='activity' or not result['sessions']:
         raise ValueError('Unsupported activity recording')
-    raw = messages.get('record_mesgs', [])
-    if len(raw) > 50000:
-        raise ValueError('Recording sample limit exceeded')
-    rows = []
-    for row in raw:
-        stamp = row.get('timestamp')
-        if not isinstance(stamp, datetime) or stamp.tzinfo is None:
-            raise ValueError('Recording timestamp must have a timezone')
-        rows.append({'timestamp_s': stamp.timestamp(), 'heart_rate_bpm': number(row.get('heart_rate')),
-            'power_w': number(row.get('power')), 'cadence_rpm': number(row.get('cadence')),
-            'speed_m_s': number(row.get('enhanced_speed',row.get('speed'))),
-            'elevation_m': number(row.get('enhanced_altitude',row.get('altitude'))),
-            'distance_m': number(row.get('distance'))})
-    # Coordinates, developer fields, serial numbers and text are never copied.
-    return rows
+    return result['rows']
+
 
 
 class Archive:

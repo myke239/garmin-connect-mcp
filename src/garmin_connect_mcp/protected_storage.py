@@ -7,7 +7,7 @@ from pathlib import Path
 MARKER = '.protected-store.json'
 
 
-def configuration(directory):
+def configuration(directory: Path) -> Path | None:
     current=Path(directory).absolute()
     for root in (current,*current.parents):
         marker=root/MARKER

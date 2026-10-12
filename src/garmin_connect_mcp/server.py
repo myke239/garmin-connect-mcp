@@ -20,7 +20,7 @@ def safe_call(function, *args):
         return {"error": {"code": "INVALID_WRITE_INPUT", "operation": error.operation,
             "stage": "validation", "garmin_request_sent": False, "message": str(error)}}
     except RequestError as error:
-        messages = {"WRITE_OPERATION_DENIED":"This operation is denied by the local owner policy; use the installed launcher to review allowed operations.",
+        messages = {"FIT_SUPPORT_REQUIRED":"Install the user-local FIT add-on using the installed launcher fit-setup; no activation or checkout required.","WRITE_OPERATION_DENIED":"This operation is denied by the local owner policy; use the installed launcher to review allowed operations.",
             "ARCHIVE_DISABLED":"Local archive is disabled; the owner can opt in with the installed launcher archive-enable.",
             "ARCHIVE_NOT_FOUND":"This activity has no local archived recording.",
             "WORKOUT_TARGET_CHANGED":"The workout changed since review; obtain a fresh target and review a new intent. No automatic retry.",
@@ -297,7 +297,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
             return safe_call(backend.get_activity_splits, activity_id)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
-        def get_activity_samples(activity_id: str, metric: str = "heart_rate", max_points: int = 200) -> dict:
+        def get_activity_samples(activity_id: str, metric: Literal["heart_rate","power","cadence","speed","elevation"] = "heart_rate", max_points: StrictInt = 200) -> dict:
             """Read at most 1000 heart_rate/power/cadence/speed/elevation samples; explicit field units, no GPS."""
             return safe_call(backend.get_activity_samples, activity_id, metric, max_points)
 

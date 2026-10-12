@@ -66,3 +66,11 @@ Offline test suite and installable wheel build pass. See GitHub CI for independe
 Windows/Linux checks for each reviewed pull request. Default tests and CI never
 use Garmin credentials. Personal profiles, tokens and activity values are not
 included in these records.
+
+## Comparison roadmap (2026-10-12)
+
+See [ROADMAP.md](ROADMAP.md) and phase PRs #21–#23 for recovery/builders, archive/
+analytics/lifecycle and permissions/protected-storage verification. The deployment
+phase adds actual executable, desktop and Docker protocol gates. Default CI stays
+offline with respect to Garmin and never uses account credentials. Physical watch
+execution remains unverified; server readback and queued sync cannot prove it.

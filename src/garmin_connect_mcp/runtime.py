@@ -143,4 +143,5 @@ def execute_worker(command, payload, timeout):
 def bounded_request(directory, method, args, kwargs, timeout=45):
     import sys
     payload = json.dumps({"directory": str(directory), "method": method, "args": args, "kwargs": kwargs})
-    return execute_worker([sys.executable, "-m", "garmin_connect_mcp.worker"], payload, timeout)
+    from .launching import command
+    return execute_worker(command("worker"), payload, timeout)

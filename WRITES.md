@@ -206,3 +206,5 @@ as future workouts. Walking/hiking legacy workout IDs are blocked after live
 readback lost their sport identity. Multisport stepOrder must be globally unique.
 
 Workout previews include operation-specific commit_tool/commit_arguments. Pass these unchanged after full-preview approval; content_sha256 and contextual fields must match the immutable stored intent. Generic commit remains supported. These tools retain scope, expiry, journal and preflight protections; do not use them to circumvent a platform rejection.
+
+Additional lifecycle operations: rename_workout and delete_workout require a fresh expected_name/expected_content_sha256 from get_garmin_workout_mutation_target; deletion also requires confirm_calendar_removal=true. schedule_existing_workouts takes 1-20 workout_id/date_str pairs and creates no templates. Clone drafts, lifecycle verification and partial-batch recovery are documented in [ARCHIVE.md](ARCHIVE.md). Operation allowlists apply again at commit; see [PERMISSIONS.md](PERMISSIONS.md).

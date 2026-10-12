@@ -31,3 +31,12 @@ calendar batches. Live lifecycle and original-recording checks passed with clean
 Phase 2 merged as PR #22. Phase 3 implemented: operation allowlists, callable tool
 profiles, optional protected Linux storage and catalog drift checks. Real WSL
 Secret Service migration/readback passed with an isolated temporary keyring.
+
+Phase 3 merged as PR #23. Phase 4 implemented: setup/tray UI, menu shortcuts,
+optional per-user watchdog/startup with health checks, Docker and Windows/Linux
+frozen packaging, diagnostics and quality/dependency CI gates. Official FIT SDK
+is excluded from public executable bundles and installed user-locally.
+Windows tray, Linux systemd registration and network-isolated container MCP
+checks passed. Final executable/installed-runtime/CI gates are tracked in the PR.
+Physical watch execution and untested macOS/ARM frozen distributions remain
+explicit external/platform limits, not passed verification gates.

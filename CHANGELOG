@@ -1,3 +1,9 @@
+0.12.0 - 2026-10-12
+- Local setup/tray UI, menu shortcuts, explicit private-terminal login/consent and opt-in restartable per-user background startup with OAuth health checks.
+- Windows/Linux frozen executables and local installation; separately licensed FIT SDK excluded from bundles and obtained through a bounded user-local add-on.
+- Non-root Docker build; lint, typed launcher/diagnostic interfaces, secret/private-artifact, build, dependency and frozen/container CI gates.
+- Updated development pip/pytest after dependency audit; retained grants, journals and legacy credential paths.
+
 0.11.0 - 2026-10-12
 - Local per-operation write allowlists and callable tool profiles, with commit/worker policy rechecks.
 - Optional fail-closed Linux Secret Service encryption and atomic, reentrant private-store migration.

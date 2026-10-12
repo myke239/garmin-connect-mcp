@@ -24,7 +24,7 @@ def write_atomic(path, content):
     temporary.replace(path)
 
 
-def install(source, root, python=None, uv=None, remote=False, secure=False):
+def install(source, root, python=None, uv=None, remote=False, secure=False, desktop=False):
     source, root = source.resolve(), root.expanduser().absolute()
     if root.is_symlink() or (hasattr(root, "is_junction") and root.is_junction()):
         raise ValueError("Install directory cannot be a link")
@@ -49,16 +49,18 @@ def install(source, root, python=None, uv=None, remote=False, secure=False):
         subprocess.run([executable, "-c", "import sys; assert sys.version_info >= (3,12), 'Python 3.12+ or uv required'"], check=True)
         subprocess.run([executable, "-m", "venv", str(environment)], check=True)
     runtime = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    extras=(["remote"] if remote else [])+(["secure"] if secure else [])
+    extras=(["remote"] if remote else [])+(["secure"] if secure else [])+(["desktop"] if desktop else [])
     requirement = str(source) + ("["+",".join(extras)+"]" if extras else "")
     command = ([uv, "pip", "install", "--python", str(runtime)] if uv else [str(runtime), "-m", "pip", "install"])
+    if not uv:
+        subprocess.run([str(runtime),"-m","pip","install","--upgrade","pip>=26.2.1"],check=True,env=env)
     subprocess.run(command + [requirement], check=True, env=env)
     subprocess.run([str(runtime), "-c",
         "import asyncio; from garmin_connect_mcp.server import create_server; "
         "import tempfile; from pathlib import Path; "
         "from garmin_connect_mcp.auth import TokenStore; from garmin_connect_mcp.service import GarminService; "
         "directory = tempfile.TemporaryDirectory(); "
-        "assert len(asyncio.run(create_server(GarminService(TokenStore(Path(directory.name)))).list_tools())) == 44; "
+        "assert len(asyncio.run(create_server(GarminService(TokenStore(Path(directory.name))),tool_profile='all').list_tools())) == 44; "
         "directory.cleanup()"], check=True)
     marketplace = release / "marketplace"
     shutil.copytree(source / "plugins", marketplace / "plugins")
@@ -83,6 +85,8 @@ def install(source, root, python=None, uv=None, remote=False, secure=False):
     metadata["launcher"] = str(launcher)
     write_atomic(root / "installation.json", json.dumps(metadata, indent=2) + "\n")
     (release / "installation.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    if desktop:
+        subprocess.run([str(runtime),"-m","garmin_connect_mcp.shortcut",str(runtime)],check=True)
     print("Installed " + version + ". Launcher: " + str(launcher))
     print("Next: run the launcher with login, then verify. No environment activation or cd needed.")
     return launcher
@@ -95,8 +99,9 @@ def main():
     parser.add_argument("--uv")
     parser.add_argument("--remote", action="store_true")
     parser.add_argument("--secure", action="store_true")
+    parser.add_argument("--desktop", action="store_true")
     args = parser.parse_args()
-    install(Path(__file__).resolve().parent.parent, args.install_dir, args.python, args.uv, args.remote, args.secure)
+    install(Path(__file__).resolve().parent.parent, args.install_dir, args.python, args.uv, args.remote, args.secure, args.desktop)
 
 
 if __name__ == "__main__":
