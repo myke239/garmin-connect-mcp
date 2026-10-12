@@ -108,3 +108,5 @@ fields to change an approved draft. Replacement remains destructive.
 A platform safety block is distinct from a connector error. Preserve the exact
 error and draft status; do not switch tools, SDK, or HTTP paths to evade a block.
 The new tools improve reviewability but are not a proven safety-block fix.
+
+Prefer high-level readonly builders for structured plans: build_garmin_strength_workout accepts explicitly selected catalog exercises with sets and reps OR duration_seconds, optional kg/rests; build_garmin_running_workout accepts duration OR metres and pace_s_km [faster,slower] OR HR zone; build_garmin_swim_workout accepts 25m/50m pools with whole-length distances, strokes, drills and equipment. They expand repeats/rests and return JSON for the existing reviewed commit workflow. Never infer equipment, exercise variants or intensity. Saved templates do not establish physical watch execution.

@@ -68,8 +68,10 @@ def validate_workout(payload):
             "stepTypeKey":{"warmup":1,"cooldown":2,"interval":3,"recovery":4,"rest":5,"repeat":6,"other":7,"main":8},
             "conditionTypeKey":{"lap.button":1,"time":2,"distance":3,"calories":4,"power":5,"heart.rate":6,"iterations":7,"fixed.rest":8,"fixed.repetition":9,"reps":10},
             "workoutTargetTypeKey":{"no.target":1,"power.zone":2,"cadence":3,"heart.rate.zone":4,"speed.zone":5,"pace.zone":6,"grade":7,"heart.rate.lap":8,"power.lap":9,"resistance":15}}
+        if key_name == "sportTypeKey" and value[key_name] not in SPORT_IDS:
+            raise WriteInputError("create_workout", "Each segment must use a supported Garmin workout sport; unsupported legacy enums lose identity.")
         known=mappings.get(key_name,{})
-        if value[key_name] in known and value[id_name] != known[value[key_name]]:
+        if value[key_name] not in known or value[id_name] != known[value[key_name]]:
             raise ValueError("Workout enum ID does not match its SDK key")
 
     enum(payload.get("sportType"), "sportTypeId", "sportTypeKey")
@@ -94,7 +96,7 @@ def validate_workout(payload):
                 value=step.get(field)
                 if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<0):
                     raise ValueError("Workout target/load values must be finite nonnegative numbers")
-            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"]:
+            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"] and step.get("targetType",{}).get("workoutTargetTypeKey") != "pace.zone":
                 raise ValueError("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
             if step.get("category") is not None:
                 from garminconnect.exercises import CATEGORIES,EXERCISES
@@ -126,6 +128,13 @@ def validate_workout(payload):
             elif step.get("type") == "ExecutableStepDTO":
                 enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
                 enum(step.get("targetType"), "workoutTargetTypeId", "workoutTargetTypeKey")
+                if step.get("zoneNumber") is not None and (isinstance(step["zoneNumber"], bool) or
+                        not isinstance(step["zoneNumber"], int) or not 1 <= step["zoneNumber"] <= 5):
+                    raise ValueError("zoneNumber must be a whole zone 1-5")
+                if step.get("zoneNumber") is not None and any(step.get(k) is not None for k in ("targetValueOne", "targetValueTwo")):
+                    raise ValueError("Do not combine a named zone with a custom target range")
+                if any(k in step["targetType"] for k in ("targetValueOne", "targetValueTwo", "zoneNumber")):
+                    raise ValueError("Place target values on the step, not inside targetType")
                 if "conditionValue" in step["endCondition"]:
                     raise ValueError("Put duration/distance in step.endConditionValue, not endCondition.conditionValue")
                 if step["endCondition"]["conditionTypeKey"] in {"distance", "time"}:

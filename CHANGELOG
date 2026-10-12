@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 — 2026-10-12
+
+- Bounded recovery/performance reads and session context with explicit missing/stale data.
+- Pure running, expanded strength/timed exercise and pool-swim builders.
+- Reject mismatched/unknown workout enums and ambiguous zone targets.
+
 ## 0.8.1 — 2026-10-12
 
 - Per-user Windows/Linux installers with managed Python and standard application paths.

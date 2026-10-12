@@ -5,7 +5,7 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.8.1** · Python **3.12+** · **MIT** license.
+Version **0.9.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -192,3 +192,11 @@ working in ChatGPT on 2026-10-12; this is a reported success for one case, not a
 independently observed classifier test or a universal resolution. Report a platform block
 with its exact error, timestamp, conversation/request ID and server evidence;
 do not use another execution path to bypass it.
+
+## Recovery and easier workout drafts (0.9)
+
+Use `get_garmin_recovery` for wellness/performance summaries and
+`get_session_with_context` to relate a completed activity to recovery.
+High-level strength (including named timed exercises), running intervals/pace
+and pool swimming builders return validated drafts without writes.
+See [RECOVERY.md](RECOVERY.md) and [ROADMAP.md](ROADMAP.md).
