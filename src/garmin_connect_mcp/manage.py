@@ -47,7 +47,7 @@ def main():
     parser = argparse.ArgumentParser(description="Garmin Connect setup and launch commands")
     parser.add_argument("command", choices=["login", "verify", "logout", "serve", "approve",
         "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
-        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status"])
+        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     if args.command == "doctor":
@@ -68,7 +68,7 @@ def main():
         register_plugin(codex, metadata["marketplace"])
         print("Plugin installed. Open a new Codex chat.")
         return
-    mapping = {"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
+    mapping = {"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
         "writes-status": ("writes", ["status"]), "approve": ("remote", ["approve"]), "tunnel-setup": ("tunnel", ["setup"]),
         "tunnel": ("tunnel", ["run"]), "tunnel-status": ("tunnel", ["status"])}
     module, prefix = mapping.get(args.command, ("cli", [args.command]))

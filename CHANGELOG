@@ -1,3 +1,8 @@
+0.11.0 - 2026-10-12
+- Local per-operation write allowlists and callable tool profiles, with commit/worker policy rechecks.
+- Optional fail-closed Linux Secret Service encryption and atomic, reentrant private-store migration.
+- Fixed-source bounded catalog drift checks without executing or automatically adopting downloaded code.
+
 0.10.0 - 2026-10-12
 - Opt-in bounded original FIT archive and full-resolution power/drift analysis, richer sample channels and explicit interval comparison.
 - Pure template cloning; hash-protected rename/delete and durable batches scheduling existing workouts with explicit commit tools.

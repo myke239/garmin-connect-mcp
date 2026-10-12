@@ -24,7 +24,7 @@ def write_atomic(path, content):
     temporary.replace(path)
 
 
-def install(source, root, python=None, uv=None, remote=False):
+def install(source, root, python=None, uv=None, remote=False, secure=False):
     source, root = source.resolve(), root.expanduser().absolute()
     if root.is_symlink() or (hasattr(root, "is_junction") and root.is_junction()):
         raise ValueError("Install directory cannot be a link")
@@ -49,7 +49,8 @@ def install(source, root, python=None, uv=None, remote=False):
         subprocess.run([executable, "-c", "import sys; assert sys.version_info >= (3,12), 'Python 3.12+ or uv required'"], check=True)
         subprocess.run([executable, "-m", "venv", str(environment)], check=True)
     runtime = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    requirement = str(source) + ("[remote]" if remote else "")
+    extras=(["remote"] if remote else [])+(["secure"] if secure else [])
+    requirement = str(source) + ("["+",".join(extras)+"]" if extras else "")
     command = ([uv, "pip", "install", "--python", str(runtime)] if uv else [str(runtime), "-m", "pip", "install"])
     subprocess.run(command + [requirement], check=True, env=env)
     subprocess.run([str(runtime), "-c",
@@ -93,8 +94,9 @@ def main():
     parser.add_argument("--python")
     parser.add_argument("--uv")
     parser.add_argument("--remote", action="store_true")
+    parser.add_argument("--secure", action="store_true")
     args = parser.parse_args()
-    install(Path(__file__).resolve().parent.parent, args.install_dir, args.python, args.uv, args.remote)
+    install(Path(__file__).resolve().parent.parent, args.install_dir, args.python, args.uv, args.remote, args.secure)
 
 
 if __name__ == "__main__":
