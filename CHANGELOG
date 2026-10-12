@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 — 2026-10-12
+
+- Discover all 85 verified yoga POSE identifiers with paginated exercise search.
+- Build timed yoga pose steps with exact identifier, sport, duration and target validation.
+- Document pose assembly, scheduling and verification in MCP metadata and workout skills.
+
 ## 0.6.0 — 2026-10-12
 
 - Complete JSON schemas/examples for all 12 currently advertised Garmin workout

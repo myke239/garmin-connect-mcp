@@ -23,13 +23,15 @@ def exercises(term="",limit=20,start=0,category=None):
     if (not isinstance(term,str) or len(term)>100 or isinstance(limit,bool) or not isinstance(limit,int)
             or not 1<=limit<=50 or isinstance(start,bool) or not isinstance(start,int) or not 0<=start<=10000):
         raise ValueError("Invalid exercise search")
-    if category is not None and category not in CATEGORIES: raise ValueError("Unknown catalog category")
+    from .yoga import POSES
+    catalog=list(EXERCISES)+[{"category":"POSE","exercise":key,"name":key.replace("_"," ").title()} for key in sorted(POSES)]
+    if category is not None and category not in [*CATEGORIES,"POSE"]: raise ValueError("Unknown catalog category")
     needle=normalize(term)
     if term.strip() and not needle: raise ValueError("Use searchable letters or digits")
     def exact(row):
         return bool(needle) and needle in {normalize(row["name"]),normalize(row["exercise"]),
                                           normalize(row["category"]+"/"+row["exercise"])}
-    rows=[row for row in EXERCISES if (category is None or row["category"]==category)
+    rows=[row for row in catalog if (category is None or row["category"]==category)
           and all(token in normalize(row["name"]+" "+row["category"]+" "+row["exercise"]).split() for token in needle.split())]
     rows.sort(key=lambda row:(not exact(row),row["name"].casefold(),row["category"],row["exercise"]))
     exact_rows=[row for row in rows if exact(row)]
@@ -38,8 +40,8 @@ def exercises(term="",limit=20,start=0,category=None):
         "next_start":start+len(page) if start+len(page)<len(rows) else None,"truncated":start+len(page)<len(rows),
         "match_status":"exact" if exact_rows else "variants_or_partial" if rows else "not_found",
         "selection_required":not bool(exact_rows) or len(exact_rows)>1,
-        "source":"pinned SDK snapshot of Garmin Connect's exercise picker","sdk_version":version("garminconnect"),
-        "coverage":"Not a live Garmin picker query; absence here does not establish that Garmin globally lacks the movement.",
+        "source":"pinned SDK strength picker plus 85 Garmin yoga poses verified 2026-10-12","sdk_version":version("garminconnect"),
+        "coverage":"Pinned snapshot, not a live query. POSE display names are derived from enums, not official translations. Absence does not establish global Garmin absence.",
         "guidance":"Use exact category/exercise values. Equipment-specific variants are separate choices. Never replace an unresolved movement with a parent category or related exercise without user selection."}
 
 
@@ -88,4 +90,7 @@ def workout_schema(sport):
         result["exercise_categories"]=CATEGORIES
         result["example_limit"]="One illustrative squat repetition, not the user's routine; estimated duration 0 means unknown. Resolve exact catalog pairs and build requested reps/load steps with build_garmin_strength_step."
         result["load_target_units"]={"input":"weight_kg","weightValue":"grams","weightUnit":workout.WEIGHT_UNIT_KILOGRAM,"conversion":"weightValue = weight_kg * 1000"}
+    if sport=="yoga":
+        result["pose_catalog"]={"category":"POSE","count":85,"verified_date":"2026-10-12","lookup_tool":"find_garmin_exercises","builder_tool":"build_garmin_yoga_step"}
+        result["example_limit"]="Timed session; for exact pose sequences discover category POSE, build_garmin_yoga_step for each selected duration/order, then build_garmin_workout with explicit yoga segments. Watch animations unverified."
     return result

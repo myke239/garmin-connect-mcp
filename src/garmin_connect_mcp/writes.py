@@ -76,7 +76,7 @@ def validate_workout(payload):
     total = 0
     seen_orders=set()
 
-    def steps(items, depth=0):
+    def steps(items, depth=0, sport=None):
         nonlocal total
         if not isinstance(items, list) or not 1 <= len(items) <= 100 or depth > 5:
             raise ValueError("Provide 1–100 steps per group, with at most five nested repeat groups")
@@ -98,10 +98,23 @@ def validate_workout(payload):
                 raise ValueError("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
             if step.get("category") is not None:
                 from garminconnect.exercises import CATEGORIES,EXERCISES
-                if step["category"] not in CATEGORIES:
+                if step["category"]=="POSE":
+                    from .yoga import POSES
+                    if (sport!="yoga" or step.get("exerciseName") not in POSES
+                            or step.get("type")!="ExecutableStepDTO"
+                            or step.get("stepType",{}).get("stepTypeKey")!="interval"
+                            or step.get("endCondition",{}).get("conditionTypeKey")!="time"
+                            or step.get("targetType",{}).get("workoutTargetTypeKey")!="no.target"
+                            or isinstance(step.get("endConditionValue"),bool)
+                            or not isinstance(step.get("endConditionValue"),(int,float))
+                            or not 1<=step["endConditionValue"]<=86400
+                            or not float(step["endConditionValue"]).is_integer()
+                            or any(step.get(field) is not None for field in ("weightValue","targetValueOne","targetValueTwo","secondaryTargetType","secondaryTargetValueOne","secondaryTargetValueTwo"))):
+                        raise WriteInputError("create_workout","POSE requires an exact verified identifier in a yoga segment and a timed untargeted interval of 1-86400 whole seconds. Use build_garmin_yoga_step.")
+                elif step["category"] not in CATEGORIES:
                     raise ValueError("Unknown Garmin exercise category")
                 name=step.get("exerciseName")
-                if name and not any(e["category"]==step["category"] and e["exercise"]==name for e in EXERCISES):
+                if step["category"]!="POSE" and name and not any(e["category"]==step["category"] and e["exercise"]==name for e in EXERCISES):
                     raise ValueError("Exercise name does not match its Garmin category")
             if step.get("type") == "RepeatGroupDTO":
                 count = step.get("numberOfIterations")
@@ -109,7 +122,7 @@ def validate_workout(payload):
                     raise ValueError("Repeat groups require 1–100 iterations")
                 if step["stepType"].get("stepTypeKey") != "repeat":
                     raise ValueError("Repeat groups require the repeat step type")
-                steps(step.get("workoutSteps"), depth + 1)
+                steps(step.get("workoutSteps"), depth + 1, sport)
             elif step.get("type") == "ExecutableStepDTO":
                 enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
                 enum(step.get("targetType"), "workoutTargetTypeId", "workoutTargetTypeKey")
@@ -136,7 +149,7 @@ def validate_workout(payload):
             raise ValueError("Single-sport segments must match the workout sport")
         if payload["sportType"]["sportTypeKey"]=="multi_sport" and segment["sportType"]["sportTypeKey"]=="multi_sport":
             raise ValueError("Multisport segments require explicit constituent sports")
-        steps(segment.get("workoutSteps"))
+        steps(segment.get("workoutSteps"), sport=segment["sportType"]["sportTypeKey"])
 
 
 def _validate(operation, parameters):
