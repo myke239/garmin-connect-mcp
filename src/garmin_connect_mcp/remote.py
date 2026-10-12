@@ -4,7 +4,9 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import secrets
+import shlex
 import sys
 import time
 from contextlib import contextmanager
@@ -55,6 +57,14 @@ def valid_callback(value):
 
 def key(value):
     return hashlib.sha256(value.encode()).hexdigest()
+
+
+def approval_command(ticket):
+    """Use the running installation without requiring activation or a working directory."""
+    args = [str(Path(sys.executable).resolve()), "-m", "garmin_connect_mcp.remote", "approve", ticket]
+    if os.name == "nt":
+        return "& " + " ".join("'" + arg.replace("'", "''") + "'" for arg in args)
+    return shlex.join(args)
 
 
 class OwnerRefresh(RefreshToken):
@@ -123,9 +133,13 @@ class OwnerProvider:
                     "<p>This gives ChatGPT access to your Garmin account with scopes: "
                     + html.escape(" ".join(pending["params"]["scopes"])) + ". "
                     "Only approve a connection you just started.</p>"
-                    "<p>On your PC, activate this project's Python environment, then run:</p>"
-                    "<pre>python -m garmin_connect_mcp.remote approve "
-                    + html.escape(ticket) + "</pre><p>Then select Continue.</p>"
+                    "<p>On the PC running this server, open "
+                    + ("PowerShell" if os.name == "nt" else "a terminal")
+                    + " and paste this entire command. You can run it from any folder; "
+                    "no Python environment activation is needed.</p><pre>"
+                    + html.escape(approval_command(ticket))
+                    + "</pre><p>Review the connection and type APPROVE when prompted. "
+                    "Then return here and select Continue. The request expires after five minutes.</p>"
                     '<form method="get" action="/consent"><input type="hidden" name="ticket" value="'
                     + html.escape(ticket, quote=True) + '"><button>Continue</button></form>')
             params = AuthorizationParams.model_validate(pending["params"])

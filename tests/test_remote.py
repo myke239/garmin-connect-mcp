@@ -2,6 +2,9 @@
 import base64
 import hashlib
 import json
+import os
+import subprocess
+import sys
 import time
 from urllib.parse import parse_qs, urlsplit
 
@@ -184,3 +187,36 @@ def test_expiration_and_terminal_approval(remote, monkeypatch):
     with provider.state() as state:
         state["pending"][ticket]["expires_at"] = time.time() - 1
     assert client.get("/consent", params={"ticket": ticket}).status_code == 400
+
+
+def test_consent_command_uses_server_interpreter_and_explains_steps(remote):
+    import html
+    from garmin_connect_mcp.remote import approval_command
+    client, _ = remote
+    _, ticket = pending(client)
+    page = client.get("/consent", params={"ticket": ticket})
+    assert html.escape(approval_command(ticket)) in page.text
+    assert "any folder" in page.text
+    assert "no Python environment activation" in page.text
+    assert "type APPROVE" in page.text
+
+
+def test_powershell_command_quotes_spaces_and_apostrophes(monkeypatch):
+    from types import SimpleNamespace
+    from garmin_connect_mcp import remote
+    monkeypatch.setattr(remote, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(sys, "executable", "Python Folder/O'Brien/python.exe")
+    command = remote.approval_command("test-ticket")
+    assert command.startswith("& '")
+    assert "O''Brien" in command
+    assert command.endswith("'approve' 'test-ticket'")
+
+
+def test_installed_approval_cli_runs_outside_project(tmp_path):
+    env = dict(os.environ, GARMIN_MCP_DATA_DIR=str(tmp_path / "private"))
+    result = subprocess.run([sys.executable, "-m", "garmin_connect_mcp.remote", "approve",
+        "expired-test-ticket", "--public-url", ORIGIN], cwd=tmp_path, env=env,
+        capture_output=True, text=True, timeout=15)
+    assert result.returncode != 0
+    assert "Connection request expired or not found" in result.stderr
+    assert "ModuleNotFoundError" not in result.stderr
