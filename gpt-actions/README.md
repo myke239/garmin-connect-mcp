@@ -1,7 +1,13 @@
 # Direct Garmin GPT Actions feasibility test
 
-Status: experimental, not authenticated or installed. No hosted service or MCP
-server is added by this prototype. The existing Codex integration is unaffected.
+Status: deferred future plan at the user's request (2026-10-11). The user does
+not have Garmin Connect Developer Program access. Do not continue development,
+account setup or deployment unless the user asks to resume. Resume by confirming
+developer access, then testing GPT Actions PKCE compatibility before adding
+activity actions or claiming ChatGPT/mobile support.
+
+The experimental prototype is not authenticated or installed. No hosted service
+or MCP server is added by it. The existing Codex integration remains active.
 The connection-test schema passed OpenAPI 3.1 validation with
 openapi-spec-validator 0.9.0. This validates its structure, not OAuth compatibility
 or account access. Validation tooling is kept in ignored project work storage.
