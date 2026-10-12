@@ -2,8 +2,29 @@
 
 A local, read-only Garmin Connect integration for Codex and other MCP clients.
 
-**Status:** Phase 1 foundation implemented; dependency installation and protocol
-tests must pass before Phase 2. No Garmin login or activity tools exist yet.
+**Status:** Phase 1 passed. Phase 2 authentication implemented with six passing
+offline tests; live login and saved-session verification pending. Activity tools
+will be built after that gate passes.
+
+## Local Garmin login
+
+On this machine, run in your own PowerShell terminal:
+
+```powershell
+& 'D:\developer\garmin-connect-mcp\scripts\login.ps1'
+```
+
+Enter credentials and MFA only in the local prompts. Windows sessions are stored
+at `D:\developer\.garmin-connect-mcp\session.dpapi`, encrypted with current-user
+Windows DPAPI and protected by an ACL granting only the current user and SYSTEM.
+No plaintext session file is written. `GARMIN_MCP_DATA_DIR` overrides the location.
+The upstream `GARMINTOKENS` variable must be unset to prevent its plaintext-store
+fallback. On non-Windows systems the store uses owner-only file permissions.
+
+The script checks an actual Garmin read, then launches a second process to test
+session restoration. `garmin-connect-mcp logout` removes only the local session;
+it does not revoke tokens already issued by Garmin. Connection failures are
+reported without exception details to avoid credential leakage.
 
 ## Development setup (Windows)
 
