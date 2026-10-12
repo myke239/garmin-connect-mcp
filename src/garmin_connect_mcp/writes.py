@@ -8,6 +8,7 @@ import math
 import secrets
 import tempfile
 import time
+from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
@@ -62,6 +63,13 @@ def validate_workout(payload):
                 or isinstance(value.get(id_name), bool) or value[id_name] < 1
                 or not isinstance(value.get(key_name), str) or not value[key_name]):
             raise ValueError(f"Workout {key_name} requires its numeric {id_name} and string key")
+        mappings={"sportTypeKey":{"running":1,"cycling":2,"swimming":4,"strength_training":5,"walking":17,"hiking":18},
+            "stepTypeKey":{"warmup":1,"cooldown":2,"interval":3,"recovery":4,"rest":5,"repeat":6,"other":7,"main":8},
+            "conditionTypeKey":{"lap.button":1,"time":2,"distance":3,"calories":4,"power":5,"heart.rate":6,"iterations":7,"fixed.rest":8,"fixed.repetition":9,"reps":10},
+            "workoutTargetTypeKey":{"no.target":1,"power.zone":2,"cadence":3,"heart.rate.zone":4,"speed.zone":5,"pace.zone":6,"grade":7,"heart.rate.lap":8,"power.lap":9,"resistance":15}}
+        known=mappings.get(key_name,{})
+        if value[key_name] in known and value[id_name] != known[value[key_name]]:
+            raise ValueError("Workout enum ID does not match its SDK key")
 
     enum(payload.get("sportType"), "sportTypeId", "sportTypeKey")
     total = 0
@@ -77,10 +85,25 @@ def validate_workout(payload):
             if not isinstance(step.get("stepOrder"), int) or isinstance(step["stepOrder"], bool) or step["stepOrder"] < 1:
                 raise ValueError("Each workout step requires positive stepOrder")
             enum(step.get("stepType"), "stepTypeId", "stepTypeKey")
+            for field in ("targetValueOne","targetValueTwo","secondaryTargetValueOne","secondaryTargetValueTwo","weightValue"):
+                value=step.get(field)
+                if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<0):
+                    raise ValueError("Workout target/load values must be finite nonnegative numbers")
+            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"]:
+                raise ValueError("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
+            if step.get("category") is not None:
+                from garminconnect.exercises import CATEGORIES,EXERCISES
+                if step["category"] not in CATEGORIES:
+                    raise ValueError("Unknown Garmin exercise category")
+                name=step.get("exerciseName")
+                if name and not any(e["category"]==step["category"] and e["exercise"]==name for e in EXERCISES):
+                    raise ValueError("Exercise name does not match its Garmin category")
             if step.get("type") == "RepeatGroupDTO":
                 count = step.get("numberOfIterations")
                 if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 100:
                     raise ValueError("Repeat groups require 1–100 iterations")
+                if step["stepType"].get("stepTypeKey") != "repeat":
+                    raise ValueError("Repeat groups require the repeat step type")
                 steps(step.get("workoutSteps"), depth + 1)
             elif step.get("type") == "ExecutableStepDTO":
                 enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
@@ -101,7 +124,7 @@ def validate_workout(payload):
         steps(segment.get("workoutSteps"))
 
 
-def validate(operation, parameters):
+def _validate(operation, parameters):
     """Validate a fixed SDK operation; never accept endpoints or local file paths."""
     from garminconnect import Garmin
     if operation not in OPERATIONS or not isinstance(parameters, dict):
@@ -123,17 +146,62 @@ def validate(operation, parameters):
     if operation == "upload_activity_file":
         if set(parameters) != {"format", "content_base64"} or parameters["format"] not in {"fit", "tcx", "gpx"}:
             raise ValueError("Provide format and base64 content; local paths are forbidden")
-        content = base64.b64decode(parameters["content_base64"], validate=True)
+        try:
+            content = base64.b64decode(parameters["content_base64"], validate=True)
+        except (ValueError,TypeError):
+            raise WriteInputError(operation,"content_base64 must contain valid base64-encoded file bytes") from None
         if not content or len(content) > 2 * 1024 * 1024:
-            raise ValueError("Activity file must be 1 byte–2 MiB")
-        if parameters["format"] == "fit" and (len(content) < 12 or content[8:12] != b".FIT"):
-            raise ValueError("Invalid FIT header")
+            raise WriteInputError(operation,"Activity file must be 1 byte–2 MiB")
+        if parameters["format"] == "fit":
+            from garminconnect.fit import _calcCRC
+            if len(content)<14 or content[0] not in (12,14) or content[8:12]!=b".FIT":
+                raise WriteInputError(operation,"Invalid FIT header")
+            size=int.from_bytes(content[4:8],"little")
+            if len(content)!=content[0]+size+2:
+                raise WriteInputError(operation,"FIT declared data length does not match file length")
+            crc=0
+            for byte in content: crc=_calcCRC(crc,byte)
+            if crc!=0: raise WriteInputError(operation,"FIT file checksum is invalid")
+            from garmin_fit_sdk import Decoder,Stream
+            count=0
+            def bounded_message(number,value):
+                nonlocal count
+                count+=1
+                if count>50000: raise ValueError("FIT message count exceeds limit")
+            messages,errors=Decoder(Stream.from_byte_array(bytearray(content))).read(mesg_listener=bounded_message)
+            if errors:
+                raise WriteInputError(operation,"FIT content is invalid or unsupported by the pinned Garmin FIT SDK")
+            if (not messages.get("file_id_mesgs") or messages["file_id_mesgs"][0].get("type") != "activity"
+                    or not messages.get("session_mesgs") or not messages.get("lap_mesgs") or len(messages.get("activity_mesgs",[])) != 1):
+                raise WriteInputError(operation,"Only FIT activity recordings with session, lap and one activity message are accepted; health/course files are not activity uploads")
         if parameters["format"] != "fit":
             from defusedxml import ElementTree
-            root = ElementTree.fromstring(content)
+            from defusedxml.common import DefusedXmlException
+            from xml.etree.ElementTree import ParseError
+            try: root = ElementTree.fromstring(content)
+            except (DefusedXmlException,ParseError):
+                raise WriteInputError(operation,"Activity XML is malformed or contains forbidden entities") from None
             expected = "gpx" if parameters["format"] == "gpx" else "TrainingCenterDatabase"
             if root.tag.split("}")[-1] != expected:
                 raise ValueError("Invalid activity XML format")
+            kind="trkpt" if parameters["format"]=="gpx" else "Trackpoint"
+            points=[v for v in root.iter() if v.tag.split("}")[-1]==kind]
+            if not 2<=len(points)<=25000:
+                raise WriteInputError(operation,"Activity XML needs 2–25,000 timestamped track points")
+            times=[]
+            for point in points:
+                field="time" if parameters["format"]=="gpx" else "Time"
+                value=next((v.text for v in point if v.tag.split("}")[-1]==field),None)
+                try:
+                    parsed=datetime.fromisoformat(value)
+                    if parsed.tzinfo is None: raise ValueError
+                except (ValueError,TypeError):
+                    raise WriteInputError(operation,"Every activity track point needs an ISO timestamp with timezone") from None
+                times.append(parsed)
+            if any(b<a for a,b in zip(times,times[1:])):
+                raise WriteInputError(operation,"Activity track timestamps must not run backwards")
+            if times[-1]<=times[0]:
+                raise WriteInputError(operation,"Activity recording needs positive elapsed time")
         return parameters
     method = METHODS[operation]
     try:
@@ -153,7 +221,7 @@ def validate(operation, parameters):
         validate_workout(payload)
     for name, value in parameters.items():
         if name.endswith("_id"):
-            if isinstance(value, bool) or not str(value).isdigit() or int(value) <= 0:
+            if isinstance(value, bool) or not str(value).isdigit() or int(value) < (0 if name == "parent_type_id" else 1):
                 raise ValueError("Explicit positive IDs required")
         if isinstance(value, str) and name != "workout_json" and len(value) > 2000:
             raise ValueError("Text too long")
@@ -168,6 +236,8 @@ def validate(operation, parameters):
             parsed = datetime.fromisoformat(parameters[name])
             if name == "timestamp" and parsed.tzinfo is None:
                 raise ValueError("Timestamp needs a timezone offset")
+            if name == "start_datetime":
+                parameters[name]=parsed.isoformat(timespec="milliseconds")
     if operation in {"add_weight", "add_body_composition", "add_hydration", "add_blood_pressure", "create_manual_activity"}:
         required = "start_datetime" if operation == "create_manual_activity" else "timestamp"
         if required not in parameters:
@@ -213,12 +283,26 @@ def validate(operation, parameters):
     return parameters
 
 
+def validate(operation, parameters):
+    from .write_contracts import check
+    if operation == "schedule_workout" and isinstance(parameters, dict):
+        validate_schedule(parameters)
+    check(operation,parameters)
+    try:
+        result = _validate(operation,parameters)
+    except WriteInputError:
+        raise
+    except (ValueError,TypeError,KeyError,IndexError,AttributeError):
+        raise WriteInputError(operation,"Invalid operation-specific content. Query get_garmin_write_schema and use a complete original template where required.") from None
+    return result
+
+
 def identifiers(raw):
     result = {}
     def walk(value):
         if isinstance(value, dict):
             for name, child in value.items():
-                if name in {"workoutId", "activityId", "scheduledWorkoutId", "internalId", "id"} and isinstance(child, (str,int)):
+                if name in {"workoutId", "activityId", "scheduledWorkoutId", "internalId", "id", "samplePk", "version", "messageId"} and isinstance(child, (str,int)) and not isinstance(child,bool):
                     result.setdefault(name, []).append(str(child))
                 elif isinstance(child, (dict,list)):
                     walk(child)
@@ -226,6 +310,75 @@ def identifiers(raw):
             for child in value[:100]: walk(child)
     walk(raw)
     return {name: values[:100] for name, values in result.items()}
+
+
+@contextmanager
+def prevent_sdk_replay(client):
+    """SDK 0.3.17 replays a request after 401; never replay account mutations."""
+    native=getattr(client,"client",None)
+    session=getattr(native,"_api_session",None)
+    if session is None:
+        yield  # Intercepted/offline SDK transports do not have an API session.
+        return
+    class Session:
+        sent=False
+        def __getattr__(self,name): return getattr(session,name)
+        def request(self,method,*args,**kwargs):
+            if method.upper() in {"POST","PUT","PATCH","DELETE"}:
+                if self.sent: raise RequestError("WRITE_REPLAY_BLOCKED")
+                self.sent=True
+            return session.request(method,*args,**kwargs)
+    native._api_session=Session()
+    try: yield
+    finally: native._api_session=session
+
+
+def invoke_write(client,method,*args,**kwargs):
+    with prevent_sdk_replay(client):
+        return getattr(client,method)(*args,**kwargs)
+
+
+def preflight(client,operation,p):
+    """Fixed reads establish existing targets and catalog tuples before mutation."""
+    if operation in {"update_workout","schedule_workout","send_workout_to_device"}:
+        if not isinstance(client.get_workout_by_id(p["workout_id"]),dict):
+            raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+    if operation=="schedule_workout":
+        day=date.fromisoformat(p["date_str"])
+        raw=client.get_scheduled_workouts(day.year,day.month)
+        if not isinstance(raw,dict): raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+        for row in raw.get("calendarItems",[]):
+            if row.get("itemType")=="workout" and str(row.get("date","")).startswith(p["date_str"]) and any(
+                    str(row.get(k))==str(p["workout_id"]) for k in ("workoutId","groupId")):
+                raise RequestError("ALREADY_SCHEDULED")
+    if operation=="unschedule_workout":
+        if not isinstance(client.get_scheduled_workout_by_id(p["scheduled_workout_id"]),dict):
+            raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+    if operation=="send_workout_to_device":
+        rows=client.get_devices()
+        if not isinstance(rows,list) or not any(str(v.get("deviceId"))==str(p["device_id"]) or
+                str(v.get("userDeviceId"))==str(p["device_id"]) for v in rows):
+            raise RequestError("DEVICE_NOT_FOUND")
+    if operation in {"set_activity_name","set_activity_description","set_activity_type","replace_strength_sets"}:
+        if not isinstance(client.get_activity(p["activity_id"]),dict):
+            raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+    if operation=="replace_strength_sets":
+        original=client.get_activity_exercise_sets(p["activity_id"])
+        if not isinstance(original,dict) or not isinstance(original.get("exerciseSets"),list):
+            raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+        for field in ("exerciseSetId","exerciseSetUUID"):
+            known={str(v[field]) for v in original["exerciseSets"] if field in v}
+            if any(field in v and str(v[field]) not in known for v in p["payload"]["exerciseSets"]):
+                raise RequestError("EXERCISE_SET_TARGET_MISMATCH")
+    if operation in {"set_activity_type","create_manual_activity"}:
+        rows=client.get_activity_types()
+        if not isinstance(rows,list): raise RequestError("INVALID_PREFLIGHT_RESPONSE")
+        if operation=="set_activity_type":
+            if not any(all(v.get(k)==p[field] for k,field in (
+                    ("typeId","type_id"),("typeKey","type_key"),("parentTypeId","parent_type_id"))) for v in rows):
+                raise RequestError("ACTIVITY_TYPE_MISMATCH")
+        elif not any(v.get("typeKey")==p["type_key"] for v in rows):
+            raise RequestError("ACTIVITY_TYPE_MISMATCH")
 
 
 class WriteService:
@@ -281,6 +434,14 @@ class WriteService:
                 raise
             raise RequestError("WRITE_OUTCOME_UNKNOWN") from error
 
+    def status(self,draft_id):
+        if not isinstance(draft_id,str) or not 20<=len(draft_id)<=80: raise ValueError("Invalid draft ID")
+        with session_lock(self.store):
+            state=json.loads(self.store.load()) if self.store.exists() else {}
+            draft=next((v for v in state.values() if v["draft_id"]==draft_id),None)
+            if draft is None: raise RequestError("DRAFT_NOT_FOUND")
+            return {k:draft.get(k) for k in ("draft_id","operation","status","result","steps","error")}
+
 
 def execute(client, directory, draft_id):
     service = WriteService(directory)
@@ -293,17 +454,29 @@ def execute(client, directory, draft_id):
             return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],
                     "error":draft.get("error")}
         if draft["expires_at"] <= time.time(): raise RequestError("DRAFT_EXPIRED")
-        operation, parameters = draft["operation"], validate(draft["operation"],draft["parameters"])
+        operation=draft["operation"]
+        try:
+            parameters=validate(operation,draft["parameters"])
+            preflight(client,operation,parameters)
+        except Exception as error:
+            draft["status"]="rejected"
+            draft["error"]={"code":"INVALID_WRITE_INPUT" if isinstance(error,WriteInputError) else error_code(error),
+                "stage":"validation" if isinstance(error,WriteInputError) else "preflight",
+                "garmin_mutation_sent":False,
+                "guidance":"No Garmin mutation was attempted. Correct the input or resolve the read/preflight error before preparing a reviewed new intent."}
+            service.store.save(json.dumps(state))
+            return {
+                "draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],"error":draft["error"]}
         draft["status"] = "in_progress"
         service.store.save(json.dumps(state))  # Persist before the first network mutation.
         try:
             if operation == "create_training_calendar":
                 for index,item in enumerate(parameters["workouts"]):
-                    raw = client.upload_workout(item["workout"])
+                    raw = invoke_write(client,"upload_workout",item["workout"])
                     workout_id = raw["workoutId"]
                     draft["steps"].append({"index":index,"created_workout_id":str(workout_id)})
                     service.store.save(json.dumps(state))
-                    client.schedule_workout(workout_id,item["date"])
+                    invoke_write(client,"schedule_workout",workout_id,item["date"])
                     draft["steps"][-1]["scheduled_date"] = item["date"]
                     service.store.save(json.dumps(state))
                 result = {"kind":"scheduled_workouts","count":len(draft["steps"])}
@@ -311,11 +484,16 @@ def execute(client, directory, draft_id):
                 with tempfile.TemporaryDirectory(dir=service.store.directory) as temporary:
                     path = Path(temporary) / ("activity."+parameters["format"])
                     path.write_bytes(base64.b64decode(parameters["content_base64"]))
-                    raw = client.upload_activity(str(path))
+                    raw = invoke_write(client,"upload_activity",str(path))
                 result = identifiers(raw)
             else:
-                raw = getattr(client,METHODS[operation])(**parameters)
+                raw = invoke_write(client,METHODS[operation],**parameters)
                 result = identifiers(raw)
+            draft["result"] = result
+            if operation in {"upload_activity_file","add_body_composition"} and isinstance(raw,dict):
+                report=raw.get("detailedImportResult",{})
+                if isinstance(report,dict) and report.get("failures"):
+                    raise RequestError("IMPORT_REJECTED_OR_PARTIAL")
             draft["result"], draft["status"] = result,"completed"
         except Exception as error:
             draft["status"] = "unknown"

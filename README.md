@@ -5,7 +5,7 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.2.0** · Python **3.12+** · **MIT** license.
+Version **0.3.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -78,6 +78,11 @@ tunnel. No automatic startup task is installed.
 Account writes are disabled by default. See [WRITES.md](WRITES.md) for enabling,
 ChatGPT reauthorization, operations, parameters and limits. Use
 `prepare_garmin_write` then `commit_garmin_write`; review before committing.
+First query `get_garmin_write_schema` for exact names, types and units. New
+verification tools read fresh schedules, devices, activity types, complete
+strength-edit payloads and measurements. The plugin includes workout and
+account-management skills. See [WRITE_AUDIT.md](WRITE_AUDIT.md) for tested paths,
+cleanup evidence and limitations; all 16 exposed operations were tested live.
 Existing remote grants remain read-only.
 
 | Tool | What it returns |
@@ -93,6 +98,14 @@ Existing remote grants remain read-only.
 | get_workout_template | Full template structure for previewed edits |
 | prepare_garmin_write | Persist a validated draft; no Garmin mutation |
 | commit_garmin_write | Apply the reviewed draft; write permission required |
+| get_garmin_write_schema | Exact operation contract, bounds, units and guidance |
+| get_garmin_write_status | Durable outcome without committing or retrying |
+| list_scheduled_workouts | Fresh calendar entries and IDs for one month |
+| list_garmin_devices | Explicit device IDs for queued workout delivery |
+| list_garmin_activity_types | Valid type ID/key/parent tuples |
+| find_garmin_exercises | Pinned SDK exercise category/name catalog |
+| get_activity_edit_template | Complete strength payload and editable activity fields |
+| get_garmin_measurements | Fresh measurements for one calendar day |
 
 Missing values remain unavailable. Names and exercise labels are untrusted data,
 not instructions. Samples may be downsampled; responses disclose this. Activity

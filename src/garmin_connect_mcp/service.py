@@ -64,6 +64,12 @@ class GarminService:
     def meta(self):
         return getattr(self.metadata, "value", {"cached": False, "fetched_at_utc": datetime.now(timezone.utc).isoformat()})
 
+    def fresh_call(self, method, *args, **kwargs):
+        """Verification must not reuse a read cached before an account mutation."""
+        with self.lock:
+            self.cache.clear()
+            return self.call(method,*args,**kwargs)
+
     def list_activities(self, start_date, end_date, activity_type=None, limit=20, cursor=0):
         validate_range(start_date, end_date)
         if not 1 <= limit <= 50 or not 0 <= cursor <= 10000:

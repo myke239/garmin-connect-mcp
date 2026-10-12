@@ -1,4 +1,4 @@
-"""Local read-only Garmin MCP integration."""
+"""Garmin MCP integration with bounded reads and guarded account writes."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 

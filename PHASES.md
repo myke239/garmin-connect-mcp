@@ -1,5 +1,15 @@
 # Verification record
 
+## Version 0.3 — account-write audit
+
+All 16 exposed write operations were exercised through the real SDK with an
+intercepted transport and through authorized live test resources. Scheduling and
+duplicate preflight rejection were verified with fresh calendar reads. Activity
+edits, all three upload formats and health writes were read back; imports can
+appear asynchronously. Known test records were cleaned up. Device queue success
+does not prove physical download. See [WRITE_AUDIT.md](WRITE_AUDIT.md) for the
+full matrix, failed variant, cleanup evidence and SDK-only operation exclusions.
+
 ## Phase 1 — passed
 Windows / Python 3.13 / MCP 1.30.0: real subprocess initialization, tool discovery,
 status call, unknown write-tool rejection and clean shutdown.
