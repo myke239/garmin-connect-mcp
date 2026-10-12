@@ -9,10 +9,10 @@ transport provider. Your PC and the tunnel process must remain running.
 ## Install and start (Windows)
 
 ```powershell
-cd D:\developer\garmin-connect-mcp
-.\.venv313\Scripts\python.exe -m pip install -e '.[remote]'
-.\.venv313\Scripts\python.exe -m garmin_connect_mcp.tunnel setup
-.\.venv313\Scripts\python.exe -m garmin_connect_mcp.tunnel run
+cd garmin-connect-mcp
+.\.venv\Scripts\python.exe -m pip install -e '.[remote]'
+.\.venv\Scripts\python.exe -m garmin_connect_mcp.tunnel setup
+.\.venv\Scripts\python.exe -m garmin_connect_mcp.tunnel run
 ```
 
 Setup prompts for the ngrok authtoken without echoing it. Tokens and remote
@@ -23,10 +23,14 @@ Ctrl+C closes the foreground server and tunnel. No startup task is installed.
 
 ## Connect ChatGPT
 
-In ChatGPT's web settings, enable developer mode if available and add a custom
-MCP app using the printed HTTPS URL and OAuth authentication. Availability
+Open https://chatgpt.com/plugins on the web, select + then Add custom MCP server,
+and enter the printed HTTPS URL. Select OAuth, then Dynamic Client Registration
+(DCR); leave static client ID and secret blank, and keep `garmin:read` selected.
+The CIMD-unavailable notice is informational; this server supports DCR.
+Create the plugin and install it. Availability
 depends on your account and workspace. When the connection opens its consent
-page, run the exact approval command shown there in your local PowerShell,
+page, activate the project's virtual environment and run the approval command
+shown there in your local PowerShell,
 review the callback and type `APPROVE`. Return to the page and select Continue.
 Only ChatGPT callback URLs are permitted. Connection requests expire after five
 minutes; restart authorization if needed.
@@ -38,7 +42,7 @@ successful local test does not establish mobile support.
 ## Revoke and troubleshoot
 
 ```powershell
-.\.venv313\Scripts\python.exe -m garmin_connect_mcp.remote reset
+.\.venv\Scripts\python.exe -m garmin_connect_mcp.remote reset
 ```
 
 Type `RESET` to revoke all remote tokens and registrations. This preserves the
@@ -55,3 +59,11 @@ service, not a multi-user public Garmin integration.
 Offline tests cover discovery, local consent, PKCE, code replay, resource binding,
 refresh rotation, revocation, expiry and HTTP boundary checks. Public tunnel and
 ChatGPT connection checks require the owner's ngrok token and account.
+
+## Troubleshooting HTTPS inspection
+
+If antivirus HTTPS inspection replaces ngrok certificates or damages HTTP
+response framing, use narrowly scoped Web Shield exceptions for the ngrok
+agent hostname, your assigned public hostname and your loopback port.
+Keep antivirus protection and TLS certificate validation enabled.
+

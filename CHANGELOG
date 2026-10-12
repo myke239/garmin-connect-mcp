@@ -1,0 +1,15 @@
+# Changelog
+
+## 0.1.0 — 2026-10-11
+
+Initial public release:
+- Seven bounded, read-only Garmin activity and training tools over MCP stdio.
+- Interactive login and MFA; Windows DPAPI session encryption.
+- Local Codex plugin and interpreter-aware Windows installer.
+- Optional ngrok HTTPS access with OAuth, PKCE, local consent, refresh rotation
+  and revocation. Owner verified access in ChatGPT on a phone.
+- Offline tests and Windows/Linux CI; current ChatGPT callback-ID support.
+
+Limits: unofficial Garmin API; personal single-owner remote service; PC must
+stay online. Remote setup is tested on Windows. ChatGPT mobile availability
+depends on the account and workspace.

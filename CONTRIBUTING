@@ -1,0 +1,23 @@
+# Contributing
+
+Open an issue before large changes. Never include passwords, session files,
+tokens, workout exports, location data or unredacted logs. Use synthetic data.
+
+Create a Python 3.12+ virtual environment, then run:
+```text
+python -m pip install -e ".[dev,remote]"
+python -m pytest -q
+```
+
+Send a pull request describing changed behavior and verification. Preserve the
+fixed read-only allowlist, explicit units, bounded responses, local OAuth consent,
+PKCE and audience validation. Do not add generic endpoints or account-write
+tools. Update documentation and CHANGELOG for user-visible changes; synchronize
+VERSION and pyproject.toml. Installation regenerates the local interpreter path
+in the plugin manifest; do not commit a machine-specific path.
+
+CI and default tests must remain offline. Live checks are opt-in:
+`python scripts/verify_live.py`; they read an account but print only check results.
+Verify unauthenticated remote calls return 401. Never disable TLS verification.
+For vulnerabilities, use GitHub private reporting if available or contact the
+maintainer privately before publishing details. Contributions use the MIT license.

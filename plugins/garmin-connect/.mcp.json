@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "garmin-connect": {
-      "command": "D:/developer/garmin-connect-mcp/.venv313/Scripts/python.exe",
+      "command": "python",
       "args": [
         "-m",
         "garmin_connect_mcp.cli",

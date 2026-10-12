@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "garmin-connect-mcp"
 version = "0.1.0"
 license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
 description = "Local read-only Garmin Connect tools for MCP clients"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,6 +18,11 @@ remote = ["ngrok==1.7.0", "uvicorn==0.54.0"]
 
 [project.scripts]
 garmin-connect-mcp = "garmin_connect_mcp.cli:main"
+
+[project.urls]
+Repository = "https://github.com/myke239/garmin-connect-mcp"
+Issues = "https://github.com/myke239/garmin-connect-mcp/issues"
+Changelog = "https://github.com/myke239/garmin-connect-mcp/blob/main/CHANGELOG"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/garmin_connect_mcp"]

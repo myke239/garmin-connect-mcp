@@ -120,8 +120,8 @@ class OwnerProvider:
                 return HTMLResponse("<h1>Approve your Garmin connection on your PC</h1>"
                     "<p>This gives ChatGPT read access to your Garmin workout statistics. "
                     "Only approve a connection you just started.</p>"
-                    "<p>On your PC, run this command in the Garmin project's terminal:</p>"
-                    "<pre>.\\.venv313\\Scripts\\python.exe -m garmin_connect_mcp.remote approve "
+                    "<p>On your PC, activate this project's Python environment, then run:</p>"
+                    "<pre>python -m garmin_connect_mcp.remote approve "
                     + html.escape(ticket) + "</pre><p>Then select Continue.</p>"
                     '<form method="get" action="/consent"><input type="hidden" name="ticket" value="'
                     + html.escape(ticket, quote=True) + '"><button>Continue</button></form>')

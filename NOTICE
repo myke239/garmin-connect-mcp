@@ -1,0 +1,17 @@
+Garmin Connect MCP
+Copyright (c) 2026 Garmin Connect MCP contributors
+Licensed under the MIT License; see LICENSE.
+
+Independent, unofficial project. Not affiliated with, endorsed by or supported
+by Garmin, OpenAI or ngrok. Trademarks belong to their respective owners.
+
+Thanks to python-garminconnect's maintainers and contributors:
+https://github.com/cyberjunky/python-garminconnect
+
+Third-party dependencies retain their own copyrights and licenses. This project's
+MIT license does not replace them. See pyproject.toml and the installed packages
+for dependency license notices.
+
+Garmin access uses unofficial endpoints rather than the partner API. Users are
+responsible for complying with service terms. Ngrok carries remote tool responses.
+Data requested by ChatGPT or Codex becomes available to the conversation.

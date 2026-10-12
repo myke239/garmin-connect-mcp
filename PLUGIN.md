@@ -2,7 +2,7 @@
 
 The compatibility package lives at `plugins/garmin-connect`: manifest, local
 stdio MCP configuration, and one narrowly scoped training-analysis skill.
-`.agents/plugins/marketplace.json` exposes it through the private `myke-garmin`
+`.agents/plugins/marketplace.json` exposes it through the local `myke-garmin`
 catalog. There are no lifecycle hooks, new listening ports, or automated uploads.
 
 Installation deliberately reuses the tested project environment instead of
@@ -10,7 +10,7 @@ copying dependencies into the plugin cache. `scripts/install_plugin.ps1` resolve
 the interpreter for each checkout and writes its absolute path into `.mcp.json`.
 This makes the package independent of the chat's working directory. The Windows
 launcher configuration is machine-specific and is regenerated when installed on
-another machine. All project work stays on D:; Codex controls its normal cache.
+another machine. Source stays in your checkout; Codex controls its normal cache.
 
 Authentication remains in the MCP server's encrypted session store. The package
 contains no tokens or account statistics. A new computer needs its own login.

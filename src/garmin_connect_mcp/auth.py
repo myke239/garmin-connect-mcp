@@ -12,7 +12,10 @@ def data_directory() -> Path:
     if configured:
         return Path(configured).expanduser().absolute()
     if os.name == "nt":
-        return Path("D:/developer/.garmin-connect-mcp")
+        legacy = Path("D:/developer/.garmin-connect-mcp")
+        if legacy.is_dir():
+            return legacy  # Preserve existing credentials without moving them.
+        return Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "garmin-connect-mcp"
     return Path.home() / ".local/share/garmin-connect-mcp"
 
 
