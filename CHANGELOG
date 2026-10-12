@@ -8,6 +8,8 @@
 - Per-type activity creation contracts from the live catalog; system/restricted
   types are blocked. Updated skills distinguish planned workouts from actual logs.
 - Multisport global step-order guard; single-sport segment identity checks.
+- Live audit verified all 12 workout sports and all 139 eligible activity types,
+  plus four zero-distance variants; fixtures removed and cleanup checked.
 - Block legacy walking/hiking workout enums that Garmin reads back without sport
   identity; completed walking/hiking activity logs remain supported.
 

@@ -108,3 +108,25 @@ audit cleanup operates only on its explicitly authorized synthetic fixtures.
 Unknown outcomes stop dependent writes and require reconciliation; never retry
 through a new intent key. The builder and schemas do not grant write permission:
 local opt-in and remote garmin:write are still required.
+
+## Release audit evidence
+
+Version 0.6.0 validation on 2026-10-12:
+
+- 241 offline tests, including schemas for every supported workout sport, builders,
+  read-only MCP discovery, type-specific contracts and invalid-input guard cases.
+- All 12 advertised workout sports: create, update, readback, calendar scheduling,
+  unscheduling and deletion of each synthetic template.
+- All 139 eligible live recorded-activity types: private manual creation with a
+  synthetic one-minute/one-metre fixture, matching activity-type readback and deletion.
+- Additional zero-distance yoga, Pilates, strength and mobility logs: creation,
+  matching readback and deletion. These check stationary session inputs.
+- All 15 restricted/system catalog types excluded from manual creation; builder
+  and commit-preflight guards tested without creating safety events.
+- Complete library/calendar and audit-date activity searches found no remaining
+  fixtures. Initial unknown multisport outcome had no matching template in the
+  full bounded library search; its journal outcome was retained rather than reset.
+
+These are basic payload acceptance checks, not proof of every advanced field,
+historical timestamp, imported data variant or physical watch capability.
+No credentials, private account statistics or account identifiers are published.

@@ -26,7 +26,7 @@ blocked. Do not create a future activity log to simulate a scheduled workout.
 If the desired sport has no workout schema, explain the planning limit rather
 than silently changing its sport. Manual logs cannot be scheduled on the calendar.
 
-Manual activities use a local timestamp with an IANA timezone, km and whole minutes. The server normalizes milliseconds and rejects ambiguous/nonexistent daylight-saving times. It creates a private activity. SDK acceptance varies: a live historical strength/zero-distance variant failed upstream, while current-date walking with positive distance succeeded. Do not promise every valid input will be accepted.
+Manual activities use a local timestamp with an IANA timezone, km and whole minutes. The server normalizes milliseconds and rejects ambiguous/nonexistent daylight-saving times. It creates a private activity. The live audit accepted basic logs for all eligible types and current-date zero-distance yoga/Pilates/strength/mobility. An older historical strength/zero-distance variant failed upstream; do not promise every data or timestamp variant will be accepted.
 
 Import only a user-provided recording (or an explicitly authorized synthetic test). Supply base64 bytes and fit/tcx/gpx, never a host file path. FIT checks CRC and uses the pinned official Garmin FIT decoder to require activity/session/lap messages; health and course files are rejected. XML needs timestamped tracks with positive elapsed time and rejects entities. Format validation cannot guarantee Garmin import success; GPS may enter the conversation/service.
 

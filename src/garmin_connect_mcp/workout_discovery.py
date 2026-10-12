@@ -79,7 +79,7 @@ def workout_schema(sport):
         limit="Illustrative run-bike segments, not the user selected sports. Supply explicit requested constituent sports/segments to build_garmin_workout; never choose these implicitly."
     json_schema=workout.BaseWorkout.model_json_schema()
     json_schema["properties"]["sportType"]={"type":"object","required":["sportTypeId","sportTypeKey"],"properties":{"sportTypeId":{"const":header["sportTypeId"]},"sportTypeKey":{"const":sport}},"additionalProperties":True}
-    result={"json_schema":json_schema,"sportType":header,"reps_condition":{"conditionTypeId":10,"conditionTypeKey":"reps","displayOrder":10},
+    result={"creation_supported":True,"calendar_scheduling_supported":True,"json_schema":json_schema,"sportType":header,"reps_condition":{"conditionTypeId":10,"conditionTypeKey":"reps","displayOrder":10},
         "example_step":step,"example_workout":template,"example_only":True,"sdk_version":version("garminconnect"),
         "required_workout_fields":["workoutName","sportType","estimatedDurationInSecs","workoutSegments"],
         "example_limit":limit,"guidance":"Use the complete example_workout or build_garmin_workout for the user's requested sport/name/duration. Examples are not authorization to save. Prepare create_workout, authorize the preview, commit and verify. Schedule workout_id with date_str, or use create_training_calendar. Recorded activity types are separate; no automatic substitution with other sports."}
