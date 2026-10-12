@@ -410,6 +410,29 @@ def preflight(client,operation,p):
             raise RequestError("ACTIVITY_TYPE_MISMATCH")
 
 
+COMMIT_TOOLS = {
+    "create_workout": "commit_garmin_workout_creation",
+    "update_workout": "commit_garmin_workout_update",
+    "schedule_workout": "commit_garmin_workout_schedule",
+    "create_training_calendar": "commit_garmin_training_calendar",
+}
+
+
+def review_context(operation, parameters, digest):
+    """Public review fields identify immutable intent; they never replace stored parameters."""
+    context = {"content_sha256": digest}
+    if operation in {"create_workout", "update_workout"}:
+        workout = parameters["workout_json"]
+        context.update(workout_name=workout["workoutName"], sport=workout["sportType"]["sportTypeKey"])
+        if operation == "update_workout": context["workout_id"] = str(parameters["workout_id"])
+    elif operation == "schedule_workout":
+        context.update(workout_id=str(parameters["workout_id"]), date_str=parameters["date_str"])
+    elif operation == "create_training_calendar":
+        context["workouts"] = [{"date": item["date"], "workout_name": item["workout"]["workoutName"],
+            "sport": item["workout"]["sportType"]["sportTypeKey"]} for item in parameters["workouts"]]
+    return context
+
+
 class WriteService:
     def __init__(self, directory=None, runner=bounded_request):
         self.directory = Path(directory or data_directory())
@@ -446,6 +469,10 @@ class WriteService:
                 self.store.save(json.dumps(state))
             preview = dict(draft)
             preview.pop("digest")
+            if operation in COMMIT_TOOLS:
+                preview["commit_tool"] = COMMIT_TOOLS[operation]
+                preview["commit_arguments"] = {"draft_id": draft["draft_id"],
+                    **review_context(operation, draft["parameters"], draft["digest"])}
             preview["warning"] = "Review before commit. Updates and exercise sets replace existing content. Calendar plans are scheduled workouts, not Garmin Coach plans. Do not retry unknown outcomes."
             if operation == "upload_activity_file":
                 content = base64.b64decode(parameters["content_base64"])
@@ -462,6 +489,20 @@ class WriteService:
             if error.code in {"DRAFT_NOT_FOUND","DRAFT_EXPIRED","WRITES_DISABLED","AUTH_REQUIRED"}:
                 raise
             raise RequestError("WRITE_OUTCOME_UNKNOWN") from error
+
+    def commit_reviewed(self, draft_id, operation, context):
+        self.require_enabled()
+        if not isinstance(draft_id, str) or not 20 <= len(draft_id) <= 80:
+            raise WriteInputError(operation, "Use the draft_id returned by preparation.")
+        with session_lock(self.store):
+            state = json.loads(self.store.load()) if self.store.exists() else {}
+            draft = next((value for value in state.values() if value["draft_id"] == draft_id), None)
+            if draft is None: raise RequestError("DRAFT_NOT_FOUND")
+            if (draft["operation"] != operation or context != review_context(
+                    draft["operation"], draft["parameters"], draft["digest"])):
+                raise WriteInputError(operation, "Commit operation/review fields must exactly match prepared commit_arguments. No Garmin request was sent; re-read the preview rather than changing the approved intent.")
+        # Draft payloads are immutable; the existing execution lock handles concurrent/repeated commits.
+        return self.commit(draft_id)
 
     def status(self,draft_id):
         if not isinstance(draft_id,str) or not 20<=len(draft_id)<=80: raise ValueError("Invalid draft ID")

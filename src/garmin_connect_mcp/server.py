@@ -220,17 +220,49 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             Activity files accept format fit/tcx/gpx and content_base64 (max 2 MiB), never paths.
             Health entries require explicit timezone-aware timestamp; weight is kg/lbs, hydration ml,
             body-composition weight kg, blood pressure mmHg and pulse bpm. Reuse idempotency_key for the same intent.
-            Show the returned preview to the user before calling commit_garmin_write.
+            Show the returned preview to the user; use its commit_tool and unchanged commit_arguments after approval. Other operations use commit_garmin_write.
             """
             def prepare():
                 write_permission()
                 return writes.prepare(operation, parameters, idempotency_key)
             return safe_call(prepare)
 
+        def reviewed_commit(draft_id, operation, context):
+            def apply():
+                write_permission()
+                result = writes.commit_reviewed(draft_id, operation, context)
+                with backend.lock: backend.cache.clear()
+                return result
+            return safe_call(apply)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_workout_creation(draft_id: str, workout_name: str, sport: SportKey, content_sha256: str) -> dict:
+            """Save one NEW workout template in the user's Garmin account after approval of the full prepared preview. Does not replace an existing workout, schedule it, delete data, or send it to devices. All arguments must match prepare_garmin_write's commit_arguments; content_sha256 binds the reviewed full payload. Uses the same write scope, expiry and durable at-most-once controls. On unknown/in_progress inspect status and Garmin; do not create a new intent."""
+            return reviewed_commit(draft_id,"create_workout",dict(workout_name=workout_name,sport=sport,content_sha256=content_sha256))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_workout_schedule(draft_id: str, workout_id: str, date_str: str, content_sha256: str) -> dict:
+            """Add an existing workout template to the user's Garmin calendar on the approved date. Creates no template and does not replace/remove entries or send to a device. Use exact commit_arguments from a prepared schedule_workout preview (workout_id, YYYY-MM-DD date_str, hash). Existing scope, expiry, duplicate preflight and durable write controls apply. No new intent after unknown/in_progress."""
+            return reviewed_commit(draft_id,"schedule_workout",dict(workout_id=workout_id,date_str=date_str,content_sha256=content_sha256))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_training_calendar(draft_id: str, workouts: list[dict], content_sha256: str) -> dict:
+            """Create NEW workout templates and add their approved calendar entries (up to 20). Does not replace existing templates/entries or send to devices. workouts is the ordered review list of date, workout_name, sport from prepare's commit_arguments; the hash binds full payloads. Requires approval of the full preview and existing write scope. Partial batches do not roll back; inspect returned steps and unknown status before further actions."""
+            return reviewed_commit(draft_id,"create_training_calendar",dict(workouts=workouts,content_sha256=content_sha256))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_workout_update(draft_id: str, workout_id: str, workout_name: str, sport: SportKey, content_sha256: str) -> dict:
+            """REPLACE an existing Garmin workout template with the fully approved prepared content; schedules referring to it may be affected. Use exact commit_arguments from update_workout's preview. Review fields/hash must match the immutable stored draft. Existing scope, expiry, target preflight and durable write controls apply. Inspect unknown outcomes; never change draft payload or blindly recreate intent."""
+            return reviewed_commit(draft_id,"update_workout",dict(workout_id=workout_id,workout_name=workout_name,sport=sport,content_sha256=content_sha256))
+
         @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True),
             meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
         def commit_garmin_write(draft_id: str) -> dict:
-            """Apply the exact prepared write only after user approval of its preview.
+            """Compatibility/general commit: applies a prepared account write after approval of its full preview. For workout creation/update/scheduling/calendar prefer the operation-specific commit_tool returned by preparation.
             Updates replace existing data. Never retry unknown/in_progress outcomes with a new draft;
             inspect Garmin first. Calendar batches report partial progress and do not roll back.
             """

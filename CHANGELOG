@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 — 2026-10-12
+
+- Add operation-specific workout commits with accurate creation/scheduling/replacement annotations.
+- Prepared previews include exact commit arguments with immutable-payload hashes and review fields. Mismatches are rejected before Garmin access.
+- Preserve generic commit compatibility, OAuth, approval, expiry and at-most-once execution.
+- These changes improve reviewability; resolution of ChatGPT safety blocks is not established.
+
 ## 0.7.0 — 2026-10-12
 
 - Discover all 85 verified yoga POSE identifiers with paginated exercise search.

@@ -138,8 +138,8 @@ def test_pkce_replay_refresh_revocation_and_restart(remote):
     assert initialized.status_code == 200, initialized.text
     listing = client.post("/mcp", headers=headers, json={"jsonrpc": "2.0", "id": 2,
         "method": "tools/list", "params": {}}).json()
-    assert len(listing["result"]["tools"]) == 26
-    assert {tool["name"] for tool in listing["result"]["tools"] if not tool["annotations"]["readOnlyHint"]} == {"prepare_garmin_write", "commit_garmin_write"}
+    assert len(listing["result"]["tools"]) == 30
+    assert {tool["name"] for tool in listing["result"]["tools"] if not tool["annotations"]["readOnlyHint"]} == {"prepare_garmin_write", "commit_garmin_write", "commit_garmin_workout_creation", "commit_garmin_workout_update", "commit_garmin_workout_schedule", "commit_garmin_training_calendar"}
     denied = client.post("/mcp", headers=headers, json={"jsonrpc":"2.0", "id":3,
         "method":"tools/call", "params":{"name":"prepare_garmin_write", "arguments":{
             "operation":"add_weight", "parameters":{"weight":70,"timestamp":"2026-10-11T12:00:00+00:00"},

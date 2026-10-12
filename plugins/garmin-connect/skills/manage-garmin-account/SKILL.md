@@ -45,3 +45,19 @@ Use a stable intent key per exact payload. Validation errors say `garmin_request
 On `unknown` or `in_progress`, stop dependent writes. Read `get_garmin_write_status(draft_id)` and inspect Garmin with fresh verification tools. Preserve IDs, partial batch steps and safe error categories. Do not retry with a new key or delete the journal. SDK mutation replay is blocked, including after an HTTP 401; reauthorization does not make an old unknown write safe to repeat. Report partial-import failures even if the HTTP request returned successfully.
 
 Bulk deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, local write opt-in and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.
+
+## Reviewable workout commits
+
+Workout preparation returns `commit_tool` and `commit_arguments`. After approval
+of the full preview, call that tool with the returned arguments unchanged:
+creation uses `commit_garmin_workout_creation`, scheduling uses
+`commit_garmin_workout_schedule`, calendar batches use
+`commit_garmin_training_calendar`, and replacement uses
+`commit_garmin_workout_update`. Name/sport/ID/date fields communicate the action;
+content_sha256 binds the full stored payload. Do not invent or recompute these
+fields to change an approved draft. Replacement remains destructive.
+
+`commit_garmin_write` remains compatible for old drafts and other operations.
+A platform safety block is distinct from a connector error. Preserve the exact
+error and draft status; do not switch tools, SDK, or HTTP paths to evade a block.
+The new tools improve reviewability but are not a proven safety-block fix.
