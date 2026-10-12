@@ -1,5 +1,7 @@
 # Personal HTTPS access
 
+[Documentation home](../README.md)
+
 The optional remote service exposes the read tools and opt-in previewed writes through
 Streamable HTTP at `/mcp`. It requires OAuth with PKCE and explicit approval in
 the owner's local terminal. Garmin credentials never go to ChatGPT or ngrok.
@@ -8,12 +10,16 @@ transport provider. Your PC and the tunnel process must remain running.
 
 ## Install and start (Windows)
 
+Install with remote dependencies first (`scripts/install.ps1 -Remote`, optionally `-Desktop`). Then run from any directory:
+
 ```powershell
-cd garmin-connect-mcp
-.\.venv\Scripts\python.exe -m pip install -e '.[remote]'
-.\.venv\Scripts\python.exe -m garmin_connect_mcp.tunnel setup
-.\.venv\Scripts\python.exe -m garmin_connect_mcp.tunnel run
+$Garmin = Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP\bin\garmin-connect.ps1'
+& $Garmin verify
+& $Garmin tunnel-setup
+& $Garmin tunnel
 ```
+
+On Linux, install with `--remote`, then use the absolute installed launcher with the same commands. For a background tunnel use `background-start`; startup registration is separately opt-in. See [installation](installation.md#optional-background-operation).
 
 Setup prompts for the ngrok authtoken without echoing it. Tokens and remote
 OAuth state use Windows account encryption in the existing private data
@@ -23,7 +29,7 @@ Ctrl+C closes the foreground server and tunnel. No startup task is installed.
 
 ## Connect ChatGPT
 
-Open https://chatgpt.com/plugins on the web, select + then Add custom MCP server,
+In the web app, open the custom MCP connection setup (the tested interface was at https://chatgpt.com/plugins), then Add custom MCP server. UI names and availability can change;
 and enter the printed HTTPS URL. Select OAuth, then Dynamic Client Registration
 (DCR); leave static client ID and secret blank, and keep `garmin:read` selected.
 Use the name **Garmin Connect**. For opt-in writes, also select `garmin:write`.
@@ -49,7 +55,8 @@ successful local test does not establish mobile support.
 ## Revoke and troubleshoot
 
 ```powershell
-.\.venv\Scripts\python.exe -m garmin_connect_mcp.remote reset
+# Use the Python path from your installation.json receipt.
+& '<absolute installed python path>' -m garmin_connect_mcp.remote reset
 ```
 
 Type `RESET` to revoke all remote tokens and registrations. This preserves the
@@ -78,7 +85,7 @@ Keep antivirus protection and TLS certificate validation enabled.
 
 ## Account writes
 
-See [WRITES.md](WRITES.md). Enable writes locally, refresh the ChatGPT tool list,
+See [account writes](../guides/account-writes.md). Enable writes locally, refresh the ChatGPT tool list,
 and reconnect with both garmin:read and garmin:write. Existing read-only tokens
 are not upgraded. Review every draft before commit.
 
@@ -98,9 +105,9 @@ MCP diagnostic does not establish that ChatGPT's classifier will permit a call.
 Do not switch execution paths to evade a platform block. The owner reported
 success after the 0.8.0 update; this is one case, not a guaranteed remedy.
 
-## Installed launchers (0.8.1)
+## Installed launchers
 
-[INSTALL.md](INSTALL.md) provides Windows/Linux per-user setup. Include remote
+[installation](installation.md) provides Windows/Linux per-user setup. Include remote
 extras, then use the full launcher path with `tunnel-setup`, `tunnel` and
 `approve <ticket>` instead of activating Python or changing directories.
 The current HTTPS process and credentials are not moved by installation.

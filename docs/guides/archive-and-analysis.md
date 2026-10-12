@@ -1,5 +1,7 @@
 # Local recording archive and workout management
 
+[Documentation home](../README.md)
+
 Enable archive storage locally with the installed launcher `archive-enable`;
 `archive-disable` stops access without deleting prior records. This capability
 reads Garmin and writes local files; it does not require Garmin write scope.
@@ -8,11 +10,11 @@ ORIGINAL ZIP, validates FIT length/checksum and decodes at most 50,000 records.
 Exactly one FIT file is accepted, with a 16 MiB compressed/uncompressed bound.
 Archive paths are never extracted from ZIP filenames.
 
-Default records contain timestamps, HR bpm, watts, cadence rpm, speed m/s,
+Default records contain timestamps, HR bpm, watts, SDK-decoded FIT cadence (`cadence_rpm`), speed m/s,
 elevation metres and distance metres. Coordinates, device serial numbers,
 developer fields and free text are omitted. Original FIT retention is a separate
 explicit choice and may retain GPS. Records use Windows DPAPI or Linux owner-only
-storage. Treat Linux backups as sensitive; permissions alone are not encryption.
+storage, optionally encrypted through Secret Service. Treat Linux backups as sensitive; permissions alone are not encryption.
 Re-archiving replaces that activity's local record, including its raw-retention
 choice. `list_archived_activities` pages metadata; analysis never returns raw FIT.
 
@@ -24,7 +26,7 @@ observation, not proof of steady effort or a diagnosis. Sparse recordings return
 unavailable values, never fabricated estimates. No CTL/ATL/TSB is inferred.
 
 `get_activity_samples` supports heart_rate, power, cadence, speed and elevation,
-up to 1,000 points. These Garmin chart responses may be downsampled; use archived
+up to 1,000 points. Chart cadence follows its source descriptor and is not assumed rpm. These Garmin chart responses may be downsampled; use archived
 full-resolution analysis for power windows. `compare_garmin_intervals` compares
 caller-selected lap indices across 2–5 sessions. Select equivalent work laps;
 it does not guess whether a lap is a work interval or recovery.

@@ -1,9 +1,11 @@
 # Write audit — 2026-10-11–12
 
-This audit covers all 16 MCP write operations against python-garminconnect
+[Documentation home](../README.md)
+
+This historical audit covers the original 16 MCP write operations against python-garminconnect
 0.3.17, both through intercepted SDK transport tests and explicitly authorized
 live-account tests. Synthetic resources were used; existing user workouts were
-preserved. Live tests are never run by default tests or CI.
+preserved. Live tests are never run by default tests or CI. Version 0.12.0 adds three lifecycle operations (rename, delete, and scheduling existing batches); their live acceptance/readback/cleanup is recorded in [archive and analysis](../guides/archive-and-analysis.md). There are now 19 allowlisted operations.
 
 | MCP operation | Live evidence |
 | --- | --- |

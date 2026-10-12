@@ -1,8 +1,18 @@
-# Installation release — 0.8.1 (2026-10-12)
+# Verification history
+
+[Documentation home](../README.md)
+
+## Current release — 0.12.0 (2026-10-12)
+
+All four software phases merged through PRs #21–#24. Windows and WSL installed-runtime MCP discovery exposed 44 default tools and unauthenticated HTTP returned 401. The Windows saved Garmin session verified; the public endpoint returned 401 and OAuth metadata advertised read/write scopes. The final WSL suite passed 419 tests. Windows/Linux Python, installation, executable, container and quality CI jobs passed.
+
+Watch execution and macOS/ARM executable support remain unverified. Dated prior gates below are historical evidence, not current tool/test counts.
+
+## Installation release — 0.8.1 (2026-10-12)
 
 Per-user Windows/Linux setup, isolated release environments, absolute launchers
 and offline installation diagnostics. Graphical/tray UI remains future work.
-See [INSTALL.md](INSTALL.md) for usage and platform limitations.
+See [installation](../getting-started/installation.md) for usage and platform limitations.
 
 # Verification record
 
@@ -25,7 +35,7 @@ intercepted transport and through authorized live test resources. Scheduling and
 duplicate preflight rejection were verified with fresh calendar reads. Activity
 edits, all three upload formats and health writes were read back; imports can
 appear asynchronously. Known test records were cleaned up. Device queue success
-does not prove physical download. See [WRITE_AUDIT.md](WRITE_AUDIT.md) for the
+does not prove physical download. See [write audit](write-audit.md) for the
 full matrix, failed variant, cleanup evidence and SDK-only operation exclusions.
 
 ## Phase 1 — passed
@@ -69,7 +79,7 @@ included in these records.
 
 ## Comparison roadmap (2026-10-12)
 
-See [ROADMAP.md](ROADMAP.md) and phase PRs #21–#23 for recovery/builders, archive/
+See [roadmap](roadmap.md) and phase PRs #21–#24 for recovery/builders, archive/
 analytics/lifecycle and permissions/protected-storage verification. The deployment
 phase adds actual executable, desktop and Docker protocol gates. Default CI stays
 offline with respect to Garmin and never uses account credentials. Physical watch

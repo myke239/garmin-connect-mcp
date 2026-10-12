@@ -1,5 +1,7 @@
 # Permissions, tool profiles and optional Linux encryption
 
+[Documentation home](../README.md)
+
 Account writes remain locally disabled by default and require remote
 `garmin:write` scope. The installed launcher supports:
 

@@ -1,6 +1,6 @@
 # Project rules
 
-Follow the phase gates in README.md. Never claim a gate passed without running
+Follow the phase gates in docs/development/verification-history.md. Never claim a gate passed without running
 its checks. Do not advance to Garmin authentication until the MCP foundation is
 verified. Never request credentials in chat or add tokens to source control.
 Use fixed read and write allowlists, explicit units and bounded results.

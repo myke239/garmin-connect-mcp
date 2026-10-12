@@ -1,5 +1,7 @@
 # Recovery and workout builders
 
+[Documentation home](../README.md)
+
 `get_garmin_recovery(kind, calendar_date)` exposes sleep, HRV, stress,
 body battery, readiness, training status, VO2 max, thresholds, race predictions,
 heart-rate zones, daily summary and personal records. Undated SDK endpoints
