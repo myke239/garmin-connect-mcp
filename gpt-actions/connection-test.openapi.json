@@ -1,0 +1,46 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Garmin Direct Connection Test",
+    "version": "0.1.0",
+    "description": "Experimental read-only connection test for an approved Garmin developer application. Does not retrieve workout statistics. OAuth PKCE compatibility must be verified in ChatGPT before use."
+  },
+  "servers": [{"url": "https://apis.garmin.com"}],
+  "security": [{"garminOAuth": []}],
+  "paths": {
+    "/wellness-api/rest/user/id": {
+      "get": {
+        "operationId": "getConnectedGarminUserId",
+        "summary": "Verify access to the connected Garmin developer API account",
+        "description": "Returns the connected account's API identifier. This is not a workout lookup. Requires a Garmin-issued developer API access token obtained through the approved OAuth flow.",
+        "x-openai-isConsequential": false,
+        "responses": {
+          "200": {
+            "description": "Connected Garmin API account identifier",
+            "content": {"application/json": {"schema": {
+              "type": "object",
+              "properties": {"userId": {"type": "string"}},
+              "required": ["userId"]
+            }}}
+          },
+          "401": {"description": "Missing, invalid, or expired access token"},
+          "403": {"description": "Developer application or account permission denied"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "garminOAuth": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://connect.garmin.com/oauth2Confirm",
+            "tokenUrl": "https://diauth.garmin.com/di-oauth2-service/oauth/token",
+            "scopes": {}
+          }
+        }
+      }
+    }
+  }
+}

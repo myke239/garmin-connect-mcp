@@ -103,6 +103,11 @@ seven days." Ask for date ranges explicitly when you need a particular timezone.
 
 ## Tools
 
+A separate experimental direct-GPT-Actions feasibility test is documented in
+[gpt-actions/README.md](gpt-actions/README.md). Its schema validates, but Garmin
+developer access and GPT Actions PKCE compatibility have not been verified. It
+is not an installed or working ChatGPT mobile integration.
+
 | Tool | Scope |
 | --- | --- |
 | connection_status | Local saved-session status; does not claim live verification |
