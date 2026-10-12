@@ -20,9 +20,9 @@ def safe_call(function, *args):
         return {"error": {"code": "INTERNAL_ERROR", "message": "Request failed; no exception details or credentials are returned."}}
 
 
-def create_server(adapter: GarminAdapter | None = None) -> FastMCP:
+def create_server(adapter: GarminAdapter | None = None, **server_options) -> FastMCP:
     backend = adapter if adapter is not None else GarminService()
-    server = FastMCP("garmin-connect-mcp", log_level="WARNING")
+    server = FastMCP("garmin-connect-mcp", log_level="WARNING", **server_options)
 
     @server.tool(annotations=ToolAnnotations(
         readOnlyHint=True, destructiveHint=False, openWorldHint=False,

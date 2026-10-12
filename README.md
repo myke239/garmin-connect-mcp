@@ -143,6 +143,9 @@ to Codex becomes part of the requesting conversation.
 
 ## Verification
 
+Optional authenticated HTTPS access is documented in [REMOTE.md](REMOTE.md).
+The local Codex plugin continues to use stdio.
+
 Default tests are offline. Explicit live tests read your account but only print
 check results:
 
