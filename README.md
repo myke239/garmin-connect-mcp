@@ -158,3 +158,6 @@ with synthetic data and redacted logs.
 
 See [SPORTS.md](SPORTS.md) for workout/recorded-activity schemas, creation examples,
 verified coverage and sport-specific limits.
+
+See [YOGA_POSES.md](YOGA_POSES.md) for 85 catalog poses individually verified
+through SDK/Garmin upload and readback, and the current MCP pose-step limitation.
