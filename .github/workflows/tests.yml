@@ -7,12 +7,36 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python: ['3.12', '3.13']
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[dev]'
       - run: python -m pytest -q
-
+  installation:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install package and exercise installed launcher and MCP
+        shell: python
+        run: |
+          import json, os, pathlib, subprocess, sys
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "Garmin install with spaces"
+          subprocess.run([sys.executable, "scripts/install.py", "--install-dir", str(root),
+                          "--python", sys.executable, "--remote"], check=True)
+          metadata = json.loads((root / "installation.json").read_text())
+          launcher = metadata["launcher"]
+          command = (["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher]
+                     if os.name == "nt" else [launcher])
+          subprocess.run(command + ["doctor"], cwd=root, check=True)
+          subprocess.run([metadata["python"], "scripts/verify_install.py",
+                          str(root / "installation.json")], check=True)

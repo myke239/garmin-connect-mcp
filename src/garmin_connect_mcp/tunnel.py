@@ -25,7 +25,8 @@ def main():
         if not token or any(character.isspace() for character in token):
             raise SystemExit("Expected a single ngrok authtoken")
         store.save(json.dumps({"authtoken": token}))
-        print("Tunnel token saved with Windows account encryption.")
+        print("Tunnel token saved with " +
+              ("Windows account encryption." if os.name == "nt" else "owner-only file permissions."))
         return
     if args.command == "status":
         print(status.load() if status.exists() else "Tunnel has not started.")

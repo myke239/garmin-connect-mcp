@@ -1,3 +1,9 @@
+# Installation release — 0.8.1 (2026-10-12)
+
+Per-user Windows/Linux setup, isolated release environments, absolute launchers
+and offline installation diagnostics. Graphical/tray UI remains future work.
+See [INSTALL.md](INSTALL.md) for usage and platform limitations.
+
 # Verification record
 
 ## Current release — 0.8.0 (2026-10-12)

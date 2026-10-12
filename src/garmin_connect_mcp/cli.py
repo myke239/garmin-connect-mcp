@@ -7,7 +7,7 @@ from .auth import TokenStore, interactive_login, restore_session
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Read-only Garmin Connect MCP")
+    parser = argparse.ArgumentParser(description="Garmin Connect MCP with opt-in guarded writes")
     parser.add_argument("command", nargs="?", choices=["serve", "login", "verify", "logout"], default="serve")
     args = parser.parse_args()
     if args.command == "serve":
@@ -18,7 +18,8 @@ def main() -> None:
     try:
         if args.command == "login":
             interactive_login(store)
-            print("Login verified; encrypted session saved locally.")
+            print("Login verified; session saved locally with " +
+                  ("Windows account encryption." if sys.platform == "win32" else "owner-only file permissions."))
         elif args.command == "verify":
             from .runtime import session_lock
             with session_lock(store):

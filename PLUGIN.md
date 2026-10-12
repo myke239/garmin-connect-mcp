@@ -8,7 +8,12 @@ SDK field conventions, preview/commit consent, and ambiguous-outcome handling.
 `.agents/plugins/marketplace.json` exposes it through the local `myke-garmin`
 catalog. There are no lifecycle hooks, new listening ports, or automated uploads.
 
-Installation deliberately reuses the tested project environment instead of
+The new [per-user installer](INSTALL.md) installs an isolated runtime and copies
+the plugin marketplace without changing source manifests. Its launcher provides
+`install-plugin` on Windows/Linux. The legacy development installer below
+remains supported.
+
+Development installation deliberately reuses the tested project environment instead of
 copying dependencies into the plugin cache. `scripts/install_plugin.ps1` resolves
 the interpreter for each checkout and writes its absolute path into `.mcp.json`.
 This makes the package independent of the chat's working directory. The Windows
