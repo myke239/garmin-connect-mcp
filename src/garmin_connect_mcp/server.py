@@ -109,8 +109,8 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             return safe_call(exercises,term,limit,start,category)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
-        def get_garmin_workout_schema(sport: Literal["running","cycling","swimming","walking","hiking","strength_training"] = "strength_training") -> dict:
-            """Get SDK sport enum IDs, reps condition and example step fields. Strength is 5/strength_training; reps is 10/reps.
+        def get_garmin_workout_schema(sport: Literal["running","cycling","swimming","walking","hiking","strength_training","yoga"] = "strength_training") -> dict:
+            """Get SDK sport enum IDs, reps condition and example step fields. Strength is 5/strength_training; reps is 10/reps. Yoga is 7/yoga and returns a complete timed example_workout.
             Includes strength categories and verified SDK load-unit conventions; examples do not create a workout.
             """
             from .workout_discovery import workout_schema

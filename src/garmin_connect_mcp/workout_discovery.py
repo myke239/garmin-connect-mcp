@@ -66,19 +66,26 @@ def workout_schema(sport):
     models={"running":workout.RunningWorkout,"cycling":workout.CyclingWorkout,
         "swimming":workout.SwimmingWorkout,"walking":workout.WalkingWorkout,
         "hiking":workout.HikingWorkout,"strength_training":workout.StrengthWorkout}
-    if sport not in models: raise ValueError("Unsupported workout sport")
-    sport_type=models[sport].model_fields["sportType"].default_factory()
+    if sport not in models and sport!="yoga": raise ValueError("Unsupported workout sport")
+    sport_type=({"sportTypeId":workout.SportType.YOGA,"sportTypeKey":"yoga","displayOrder":7}
+                if sport=="yoga" else models[sport].model_fields["sportType"].default_factory())
     example=(workout.create_strength_exercise_step("SQUAT",1,1,"SQUAT") if sport=="strength_training"
+             else workout.create_interval_step(300,1) if sport=="yoga"
              else workout.create_distance_interval_step(1000,1)).model_dump(exclude_none=True,mode="json")
     result={"sportType":sport_type,"reps_condition":{"conditionTypeId":10,"conditionTypeKey":"reps","displayOrder":10},
         "example_step":example,"example_only":True,"sdk_version":version("garminconnect"),
         "required_workout_fields":["workoutName","sportType","workoutSegments"],
         "guidance":"Get actual exercise enum pairs from find_garmin_exercises and build exact reps/load steps with build_garmin_strength_step. Example quantities are illustrative, not the user's routine. Scheduling uses workout_id and date_str. Never substitute unavailable movements."}
+    if sport=="yoga":
+        result["example_workout"]={"workoutName":"Example timed yoga session", "sportType":sport_type,
+            "estimatedDurationInSecs":300,"workoutSegments":[{"segmentOrder":1,"sportType":sport_type,"workoutSteps":[example]}]}
+        result["example_limit"]="A timed untargeted yoga session, not a pose sequence. Change name and seconds to the requested session; estimatedDurationInSecs and endConditionValue must agree. No poses are encoded in a description. Copy a verified yoga template for pose-specific fields; strength/stretch catalog entries do not establish yoga pose IDs."
+        result["guidance"]="Yoga can be created and scheduled with create_workout or create_training_calendar. Use the complete example_workout with requested name/duration, prepare, authorize, commit and verify. Schedule saved workout_id with date_str. Example is not authorization to save."
     if sport=="strength_training":
         from garminconnect.exercises import CATEGORIES
         result["exercise_categories"]=CATEGORIES
         result["load_target_units"]={"input":"weight_kg","weightValue":"grams",
             "weightUnit":workout.WEIGHT_UNIT_KILOGRAM,"conversion":"weightValue = weight_kg * 1000"}
-    else:
+    elif sport!="yoga":
         result["example_limit"]="Illustrates basic time/distance step fields; use a real sport-specific template for swimming strokes/equipment and other advanced fields."
     return result

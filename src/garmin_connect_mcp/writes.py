@@ -31,7 +31,7 @@ WriteOperation = Literal["create_workout", "update_workout", "schedule_workout",
     "send_workout_to_device", "create_manual_activity", "upload_activity_file", "set_activity_name",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
     "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar"]
-SPORTS = {"running", "cycling", "swimming", "walking", "hiking", "strength_training"}
+SPORTS = {"running", "cycling", "swimming", "walking", "hiking", "strength_training", "yoga"}
 
 
 class WriteInputError(ValueError):
@@ -63,7 +63,7 @@ def validate_workout(payload):
                 or isinstance(value.get(id_name), bool) or value[id_name] < 1
                 or not isinstance(value.get(key_name), str) or not value[key_name]):
             raise ValueError(f"Workout {key_name} requires its numeric {id_name} and string key")
-        mappings={"sportTypeKey":{"running":1,"cycling":2,"swimming":4,"strength_training":5,"walking":17,"hiking":18},
+        mappings={"sportTypeKey":{"running":1,"cycling":2,"swimming":4,"strength_training":5,"yoga":7,"walking":17,"hiking":18},
             "stepTypeKey":{"warmup":1,"cooldown":2,"interval":3,"recovery":4,"rest":5,"repeat":6,"other":7,"main":8},
             "conditionTypeKey":{"lap.button":1,"time":2,"distance":3,"calories":4,"power":5,"heart.rate":6,"iterations":7,"fixed.rest":8,"fixed.repetition":9,"reps":10},
             "workoutTargetTypeKey":{"no.target":1,"power.zone":2,"cadence":3,"heart.rate.zone":4,"speed.zone":5,"pace.zone":6,"grade":7,"heart.rate.lap":8,"power.lap":9,"resistance":15}}
@@ -125,6 +125,8 @@ def validate_workout(payload):
         if not isinstance(segment, dict):
             raise ValueError("Workout segments must be objects")
         enum(segment.get("sportType"), "sportTypeId", "sportTypeKey")
+        if payload["sportType"]["sportTypeKey"]=="yoga" and segment["sportType"]["sportTypeKey"]!="yoga":
+            raise ValueError("Yoga segments must use the yoga sport enum")
         steps(segment.get("workoutSteps"))
 
 

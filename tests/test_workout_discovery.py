@@ -79,3 +79,38 @@ def test_discovery_and_builder_are_available_through_mcp_without_authentication(
         assert all(v.annotations.readOnlyHint for v in tools if v.name in {
             "find_garmin_exercises","get_garmin_workout_schema","build_garmin_strength_step"})
     asyncio.run(run())
+
+
+def test_yoga_complete_schema_encodes_time_and_validates_calendar():
+    from garminconnect.workout import SportType
+    schema=workout_schema("yoga")
+    template=schema["example_workout"]
+    assert template["sportType"]["sportTypeId"]==SportType.YOGA==7
+    assert template["sportType"]["sportTypeKey"]=="yoga"
+    step=template["workoutSegments"][0]["workoutSteps"][0]
+    assert step["endCondition"]["conditionTypeKey"]=="time"
+    assert step["endConditionValue"]==template["estimatedDurationInSecs"]==300
+    assert step["targetType"]["workoutTargetTypeKey"]=="no.target"
+    validate("create_workout",{"workout_json":template})
+    validate("create_training_calendar",{"workouts":[{"date":"2026-10-20","workout":template}]})
+
+
+def test_yoga_rejects_wrong_sport_id_and_mixed_segment():
+    import copy
+    template=workout_schema("yoga")["example_workout"]
+    wrong=copy.deepcopy(template);wrong["sportType"]["sportTypeId"]=5
+    with pytest.raises(ValueError): validate("create_workout",{"workout_json":wrong})
+    wrong=copy.deepcopy(template);wrong["workoutSegments"][0]["sportType"]={"sportTypeId":1,"sportTypeKey":"running"}
+    with pytest.raises(ValueError): validate("create_workout",{"workout_json":wrong})
+
+
+def test_yoga_schema_accessible_as_readonly_mcp_tool():
+    async def check():
+        server=create_server()
+        tool=next(t for t in await server.list_tools() if t.name=="get_garmin_workout_schema")
+        assert tool.annotations.readOnlyHint
+        result=await server.call_tool("get_garmin_workout_schema",{"sport":"yoga"})
+        blocks=result[0] if isinstance(result,tuple) else result
+        body=json.loads(blocks[0].text)
+        assert body["example_workout"]["sportType"]["sportTypeKey"]=="yoga"
+    asyncio.run(check())

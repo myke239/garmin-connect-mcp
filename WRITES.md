@@ -184,3 +184,14 @@ conventions. find_garmin_exercises exposes exact matches, variants and paginatio
 from the pinned picker snapshot, not a live complete Garmin catalog. Never
 substitute a missing movement. Planned weight_kg is encoded as grams by the SDK;
 recorded exerciseSets units remain unverified. See the plugin [strength reference](plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md).
+
+## Timed yoga sessions
+
+`get_garmin_workout_schema(sport="yoga")` returns a complete illustrative timed
+workout in `example_workout`: sport 7/yoga, time duration in seconds and no target.
+Change its name and duration to the user's request; keep both duration fields
+consistent. Create with `create_workout`, then schedule its verified ID using
+`workout_id`/`date_str`, or use `create_training_calendar`. A live synthetic test
+verified creation and calendar scheduling; its template and entry were removed.
+Pose sequences need a verified yoga template; descriptions do not encode poses
+and the strength catalog does not prove yoga pose enum compatibility.
