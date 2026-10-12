@@ -15,6 +15,22 @@ For strength, read [references/strength-workouts.md](references/strength-workout
 
 Before constructing or modifying workout JSON, read [references/workout-schema.md](references/workout-schema.md). It includes a validated running example and the SDK's enum and duration conventions. Use retrieved templates for other sports or advanced targets rather than inventing IDs. Never claim a distance/time/target is encoded merely because it appears in a description.
 
+## Yoga sessions
+
+Query `get_garmin_workout_schema(sport="yoga")`; yoga is supported for creation
+and scheduling. Use its complete `example_workout` for a timed untargeted session.
+Replace the example name and set both `estimatedDurationInSecs` and the timed
+step's `endConditionValue` to the requested seconds (minutes × 60). Preserve the
+yoga sport enum in both header and segment. A session description may explain
+intent, but does not encode a pose sequence. Do not turn an open-ended yoga
+suggestion into a saved workout or choose its duration without user direction.
+
+For specific poses, copy a verified yoga template and preserve its pose fields.
+Do not use strength/stretch catalog entries as proof of yoga pose identifiers.
+If those identifiers are unresolved, explain that narrower limit; do not claim
+all yoga creation/scheduling is unsupported. Use the normal preview, authorized
+commit and readback workflow below; schedule with workout_id and date_str.
+
 ## Prepare and commit
 
 First query `get_garmin_write_schema(operation)` for the current contract. Read `list_scheduled_workouts(year, month)` to verify dates, find existing entries and distinguish scheduled entry IDs from template IDs.
