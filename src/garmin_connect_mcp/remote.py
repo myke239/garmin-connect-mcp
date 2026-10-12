@@ -293,7 +293,7 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
         resource_server_url=AnyHttpUrl(provider.resource), validate_token_resource=True,
         required_scopes=[READ_SCOPE],
         client_registration_options=ClientRegistrationOptions(enabled=True,
-            valid_scopes=[READ_SCOPE,WRITE_SCOPE], default_scopes=[READ_SCOPE]),
+            valid_scopes=[READ_SCOPE,WRITE_SCOPE], default_scopes=[READ_SCOPE, WRITE_SCOPE]),
         revocation_options=RevocationOptions(enabled=True))
     security = TransportSecuritySettings(allowed_hosts=[urlsplit(provider.origin).netloc,
         f"127.0.0.1:{port}", f"localhost:{port}"], allowed_origins=[provider.origin])

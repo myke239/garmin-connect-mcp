@@ -80,6 +80,45 @@ def test_unauthorized_discovery_and_no_browser_approval(remote):
     assert exchange(client, identity, ticket).status_code == 400
 
 
+@pytest.mark.parametrize("requested_scope", ["garmin:read", "garmin:read garmin:write"])
+def test_registration_without_scope_can_request_write_but_grants_only_consent(remote, requested_scope):
+    client, provider = remote
+    registered = client.post("/register", json={"redirect_uris": [CALLBACK],
+        "token_endpoint_auth_method": "none",
+        "grant_types": ["authorization_code", "refresh_token"], "response_types": ["code"]})
+    assert registered.status_code == 201, registered.text
+    assert set(registered.json()["scope"].split()) == {"garmin:read", "garmin:write"}
+    identity = registered.json()["client_id"]
+    response = client.get("/authorize", params={"client_id": identity, "response_type": "code",
+        "redirect_uri": CALLBACK, "scope": requested_scope, "state": "browser-state",
+        "code_challenge": CHALLENGE, "code_challenge_method": "S256", "resource": RESOURCE})
+    assert response.status_code == 302, response.text
+    ticket = parse_qs(urlsplit(response.headers["location"]).query)["ticket"][0]
+    with provider.state() as state:
+        assert not state["access"]
+        assert state["pending"][ticket]["params"]["scopes"] == requested_scope.split()
+        state["pending"][ticket]["approved"] = True
+    redirect = client.get("/consent", params={"ticket": ticket})
+    code = parse_qs(urlsplit(redirect.headers["location"]).query)["code"][0]
+    tokens = exchange(client, identity, code)
+    assert tokens.status_code == 200, tokens.text
+    assert tokens.json()["scope"] == requested_scope
+
+
+def test_explicit_read_registration_cannot_request_write(remote):
+    client, provider = remote
+    registered = register(client)
+    assert registered.json()["scope"] == "garmin:read"
+    response = client.get("/authorize", params={"client_id": registered.json()["client_id"],
+        "response_type": "code", "redirect_uri": CALLBACK, "scope": "garmin:read garmin:write",
+        "state": "browser-state", "code_challenge": CHALLENGE,
+        "code_challenge_method": "S256", "resource": RESOURCE})
+    assert "invalid_scope" in response.text or "invalid_scope" in response.headers.get("location", "")
+    with provider.state() as state:
+        assert not state["pending"]
+        assert not state["access"]
+
+
 def test_pkce_replay_refresh_revocation_and_restart(remote):
     client, provider = remote
     identity, code = approved_code(client, provider)
