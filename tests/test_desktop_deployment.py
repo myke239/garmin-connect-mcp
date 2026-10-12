@@ -72,3 +72,12 @@ def test_fit_addon_missing_and_path_escape_fail_closed(tmp_path,monkeypatch):
     with pytest.raises(RequestError,match='FIT_SUPPORT_REQUIRED'):fit_support.decode(b'bad')
     (tmp_path/'installation.json').write_text(json.dumps({'python':str(tmp_path.parent/'outside'),'script':str(tmp_path/'script.py')}))
     with pytest.raises(ValueError,match='private add-on'):fit_support.decode(b'bad')
+
+
+def test_cadence_source_unit_preserved():
+    from garmin_connect_mcp.analytics import samples
+    raw={'metricDescriptors':[{'key':'directDoubleCadence','metricsIndex':0,'unit':{'key':'stepsPerMinute','factor':1}}],
+        'activityDetailMetrics':[{'metrics':[170]}]}
+    value=samples(raw,'cadence',1)
+    assert value['samples'][0]['cadence_raw']==170 and value['source_unit']['key']=='stepsPerMinute'
+    assert not value['unit_factor_applied']

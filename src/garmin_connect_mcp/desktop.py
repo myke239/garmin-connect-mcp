@@ -104,7 +104,9 @@ class Application:
             icon=Image.new('RGB',(32,32),'#163B29');ImageDraw.Draw(icon).text((9,7),'G',fill='white')
             def show(icon,item):self.root.after(0,self.root.deiconify)
             def quit_app(icon,item):icon.stop();self.root.after(0,self.root.destroy)
-            self.tray=pystray.Icon('Garmin Connect',icon,'Garmin Connect',pystray.Menu(pystray.MenuItem('Open',show),pystray.MenuItem('Exit',quit_app)))
+            self.tray=pystray.Icon('Garmin Connect',icon,'Garmin Connect',pystray.Menu(pystray.MenuItem('Open',show,default=True),pystray.MenuItem('Exit',quit_app)))
+            if not self.tray.HAS_MENU:
+                self.tray=None;self.show('This tray backend has no usable menu. Keep the setup window open; CLI/background features remain available.');return
             self.tray.run_detached()
         except Exception:
             self.tray=None;self.show('Tray support is unavailable on this desktop. The setup window remains usable.')
