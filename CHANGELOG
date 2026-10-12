@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Added a discoverable workout creation/scheduling skill to Garmin Connect,
+  with SDK schema guidance, a validated example, and safe verification workflow.
 - Reject malformed workout enums and duration/distance fields, including nested
   repeat steps, before preparing standalone or calendar writes. Unknown write
   results now include a safe error category without upstream messages or secrets.
