@@ -307,7 +307,22 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
     async def health(request):
         from .writes import WriteService
         return JSONResponse({"status": "ready", "authentication": "oauth", "read_only": not WriteService().enabled()})
-    return Boundary(server.streamable_http_app(), provider.origin, port), provider
+    app = server.streamable_http_app()
+    # SDK 1.30 derives advertised scopes from required_scopes. Write is supported
+    # but optional: publish both without requiring write grants for read tools.
+    from mcp.server.auth.routes import create_protected_resource_routes
+    metadata_routes = create_protected_resource_routes(
+        resource_url=AnyHttpUrl(provider.resource),
+        authorization_servers=[AnyHttpUrl(provider.origin)],
+        scopes_supported=[READ_SCOPE, WRITE_SCOPE])
+    for replacement in metadata_routes:
+        for index, route in enumerate(app.routes):
+            if getattr(route, "path", None) == replacement.path:
+                app.routes[index] = replacement
+                break
+        else:
+            raise RuntimeError("Expected protected-resource metadata route missing")
+    return Boundary(app, provider.origin, port), provider
 
 
 def main():
