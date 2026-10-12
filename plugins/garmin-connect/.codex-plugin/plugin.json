@@ -1,6 +1,6 @@
 {
   "name": "garmin-connect",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Garmin activity analysis and opt-in previewed account writes.",
   "author": {
     "name": "myke239"
@@ -11,8 +11,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Garmin Connect",
-    "shortDescription": "Analyze your runs and workouts",
-    "longDescription": "Read Garmin activities and workout templates; optionally preview and commit workouts, calendar entries and measurements.",
+    "shortDescription": "Analyze, create and manage workouts",
+    "longDescription": "Analyze Garmin training and use SDK-aware skills, queryable operation contracts and guarded writes to manage workouts, schedules, activities and actual measurements.",
     "developerName": "myke239",
     "category": "Productivity",
     "capabilities": [

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 — 2026-10-12
+
+- Queryable write schemas and durable status, fresh calendar/device/type/health
+  verification reads, complete activity edit templates and exercise catalog search.
+- All-operation schema/type validation; unit/date/DST/FIT-range checks, upload
+  integrity and decoded activity-file checks with the official Garmin FIT SDK.
+- Target/device/catalog preflights, duplicate scheduling and foreign-set guards;
+  terminal rejected outcomes explicitly distinguish no mutation from unknown.
+- Block SDK account-mutation replay after HTTP 401. Partial import failures remain
+  unknown with preserved successful identifiers and no automatic retry.
+- Account-management skill and updated workout skill/documentation. Live audit
+  tested all 16 exposed operations, all three upload formats, and cleanup.
+  Delayed imports, one failed manual variant and physical-device limitations documented.
+
 ## 0.2.0 — 2026-10-11
 
 - Scheduling preparation now returns specific local-validation errors for names,

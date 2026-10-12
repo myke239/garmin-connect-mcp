@@ -24,9 +24,13 @@ step/condition/target objects. A time or distance step needs positive
 `endCondition.conditionValue`. Convert miles using exactly 1609.344 metres per
 mile; 12 miles is 19312.128 metres. Do not infer a duration for a distance step.
 
-No target uses ID 1 and key `no.target`. For pace/heart-rate/power targets,
-copy a known valid template's target structure and verify numeric units before
-editing it. Natural-language RPE or pace text in a description is advisory,
+No target uses ID 1 and key `no.target`. The pinned SDK's PaceTarget and
+SpeedTarget use **metres/second**, with slower speed as targetValueOne and faster
+speed as targetValueTwo. Convert pace by distance metres / duration seconds;
+for example 8:00/mile is 1609.344 / 480 m/s. Heart-rate range targets use bpm,
+power ranges watts, cadence steps/revolutions per minute; numbered zones require
+zoneNumber from the user's actual settings. Copy a known valid template's
+target structure before editing it. Natural-language RPE or pace text is advisory,
 not a machine-enforced target.
 
 Repeat groups use `type: RepeatGroupDTO`, `stepType` 6 / repeat,

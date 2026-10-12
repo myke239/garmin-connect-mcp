@@ -17,7 +17,7 @@ CASES = {
     "unschedule_workout":{"scheduled_workout_id":2},
     "send_workout_to_device":{"workout_id":1,"device_id":3},
     "create_manual_activity":{"start_datetime":"2026-10-11T12:00:00","time_zone":"UTC","type_key":"running","distance_km":5,"duration_min":30,"activity_name":"Synthetic run"},
-    "upload_activity_file":{"format":"gpx","content_base64":base64.b64encode(b'<gpx version="1.1"></gpx>').decode()},
+    "upload_activity_file":{"format":"gpx","content_base64":base64.b64encode(b'<gpx version="1.1"><trk><trkseg><trkpt lat="0" lon="0"><time>2000-01-02T10:00:00Z</time></trkpt><trkpt lat="0" lon="0.001"><time>2000-01-02T10:01:00Z</time></trkpt></trkseg></trk></gpx>').decode()},
     "set_activity_name":{"activity_id":"1","title":"Synthetic"},
     "set_activity_description":{"activity_id":"1","description":"Synthetic"},
     "set_activity_type":{"activity_id":"1","type_id":1,"type_key":"running","parent_type_id":17},
@@ -36,6 +36,10 @@ class FakeClient:
         def call(*args,**kwargs):
             self.calls.append((name,args,kwargs))
             if name == self.fail: raise TimeoutError("private upstream detail")
+            if name == "get_scheduled_workouts": return {"calendarItems":[]}
+            if name == "get_devices": return [{"deviceId":3}]
+            if name == "get_activity_types": return [{"typeId":1,"typeKey":"running","parentTypeId":17}]
+            if name == "get_activity_exercise_sets": return {"exerciseSets":[]}
             return {"workoutId":123,"activityId":456,"privateField":"not returned"}
         return call
 
@@ -143,6 +147,8 @@ def test_schedule_uses_sdk_arguments_and_payload_without_network(tmp_path, worko
     assert draft["status"] == "prepared"
     calls = []
     class Transport:
+        def connectapi(self,path,**kwargs):
+            return {"calendarItems":[]} if "calendar" in path else {"workoutId":123}
         def post(self, *args, **kwargs):
             calls.append((args,kwargs))
             return {"workoutId":123}

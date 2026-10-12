@@ -15,12 +15,14 @@ Before constructing or modifying workout JSON, read [references/workout-schema.m
 
 ## Prepare and commit
 
+First query `get_garmin_write_schema(operation)` for the current contract. Read `list_scheduled_workouts(year, month)` to verify dates, find existing entries and distinguish scheduled entry IDs from template IDs.
+
 - New template: `prepare_garmin_write(operation="create_workout", parameters={"workout_json": template}, idempotency_key=stable_intent_key)`.
 - Replace existing template: `update_workout`, parameters `workout_id` and the complete replacement `workout_json`. Explain that this changes the existing template, including schedules referring to it.
 - Schedule existing template: `schedule_workout`, parameters `workout_id` and `date_str` in YYYY-MM-DD format.
   Example: `{"operation":"schedule_workout","parameters":{"workout_id":"123456789","date_str":"2026-10-12"},"idempotency_key":"schedule-existing-2026-10-12"}`. Replace the example ID with the verified saved template ID. Do not use `date` or `workoutId` as parameter names. A local `INVALID_WRITE_INPUT` means no Garmin request was sent; correct only the named validation issue and prepare again.
 - Create and schedule new templates together: `create_training_calendar`, parameters `{"workouts": [{"date": "YYYY-MM-DD", "workout": template}]}`. Up to 20 entries; each creates a template, including when the same content is used on multiple dates. To reuse one existing template on multiple dates, schedule its ID separately.
-- Remove a scheduled entry: `unschedule_workout` needs its calendar entry ID, not its template ID. If that ID is unavailable, stop and ask for it; the current read tools do not expose a calendar listing.
+- Remove a scheduled entry: `unschedule_workout` needs its calendar entry ID from `list_scheduled_workouts`, not its template ID. Verify the entry's date and identity first.
 
 Keep one stable intent key for each exact operation and payload. Show the returned preview with name, sport, units, encoded targets, dates, and replacement/partial-batch warnings. Ask the user to approve that exact preview unless they already approved identical content. Commit only the returned `draft_id`, using `commit_garmin_write`. Preparation is not creation and approval of a general plan is not approval of an unseen payload.
 
@@ -28,7 +30,7 @@ Writes require local opt-in; remote calls also require `garmin:write`. On authen
 
 ## Verify and report
 
-`completed` confirms the server recorded success. Report returned IDs and successful batch `steps`; verify created content with `get_workout_template` when an ID is returned. The current tools have no schedule-read endpoint: distinguish a successful schedule commit from independent calendar verification.
+`completed` confirms the SDK call returned successfully. Report returned IDs and successful batch `steps`; verify created content with `get_workout_template` when an ID is returned and schedules with a fresh `list_scheduled_workouts` read. Use `get_garmin_write_status` for durable outcomes without recommitting. Local validation or preflight `rejected` outcomes mean no mutation was sent; explain the specific issue before preparing corrected content.
 
 On `unknown` or `in_progress`, stop dependent scheduling and do not recommit through a new key or edit the journal. Preserve the draft ID, returned error category, and partial steps. An empty steps list for standalone creation does not prove that no request was sent. Upstream error categories do not prove whether a mutation occurred.
 

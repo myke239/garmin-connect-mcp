@@ -1,0 +1,34 @@
+---
+name: manage-garmin-account
+description: Edit Garmin activities or strength sets, import activity files, record actual health measurements, or send saved workouts to a device using guarded Garmin Connect MCP writes.
+---
+
+Use the Garmin Connect MCP server for account changes. Before preparing an operation, call `get_garmin_write_schema(operation)` and follow its current names, types, units, bounds and verification guidance. The server owns SDK calls; do not bypass it with direct HTTP, SDK scripts or journal edits. For workout construction/calendar workflows, use the plugin's `create-schedule-workouts` skill.
+
+Honor the user's authorized scope. Establish the exact target and content before writing, show the preview, and commit only with authorization covering it. Existing explicit authorization for a bounded test or identical payload need not be requested again. Examples and proposed coaching advice are not measurements or permission to save them.
+
+## Activity edits and imports
+
+Read `get_activity_edit_template(activity_id)` before name, description, type or strength changes. Verify the ID, not just the name. Use `list_garmin_activity_types` for the complete typeId/typeKey/parentTypeId tuple. Server preflight rejects nonexistent targets and mismatched catalog tuples.
+
+Strength replacement takes the complete original `exercise_sets_payload`, with a matching activity ID. Preserve untouched sets, timestamps, UUIDs and metadata. Use `find_garmin_exercises` for valid category/exercise names; a known category with null exercise name is allowed. Foreign set IDs are rejected. Do not convert `weight` without verified units: recorded set weights are Garmin raw units. An empty array clears every set and needs explicit authorization for that effect.
+
+Manual activities use a local timestamp with an IANA timezone, km and whole minutes. The server normalizes milliseconds and rejects ambiguous/nonexistent daylight-saving times. It creates a private activity. SDK acceptance varies: a live historical strength/zero-distance variant failed upstream, while current-date walking with positive distance succeeded. Do not promise every valid input will be accepted.
+
+Import only a user-provided recording (or an explicitly authorized synthetic test). Supply base64 bytes and fit/tcx/gpx, never a host file path. FIT checks CRC and uses the pinned official Garmin FIT decoder to require activity/session/lap messages; health and course files are rejected. XML needs timestamped tracks with positive elapsed time and rejects entities. Format validation cannot guarantee Garmin import success; GPS may enter the conversation/service.
+
+Garmin imports may be asynchronous and return no IDs. `completed` then means the SDK returned without error, not that every record is already visible. Search the relevant date with `list_activities`, follow cursors and match timestamp/duration/distance and other evidence. Use a fresh read; report pending verification instead of creating a duplicate. Never identify a match solely by name.
+
+## Measurements and devices
+
+Use actual user-supplied measurements and explicit timestamp/offset. Never estimate weight, composition, hydration or blood pressure from exercise data. Omit unmeasured optional fields. Query schemas for units: weight input kg/lbs, composition mass kg, percentages, energy kcal/day, hydration ml, blood pressure mmHg/pulse bpm. FIT encoding bounds are technical limits, not medical advice. Hydration date must agree with the timestamp's local date. Verify one-day entries with `get_garmin_measurements`; raw weight responses may be grams, even when input was kg. Composition imports can take time to appear.
+
+For device push, read `list_garmin_devices`, confirm the requested device, and specify both IDs. Preflight checks membership. A successful commit confirms queue acceptance, not physical download or watch sync. Do not send to an implicitly selected device.
+
+## Failure and recovery
+
+Use a stable intent key per exact payload. Validation errors say `garmin_request_sent: false`; terminal preflight/validation `rejected` results say `garmin_mutation_sent: false`. Fix the named issue and obtain/reuse authorization for corrected content before a new intent. Do not mistake a preflight read for a mutation.
+
+On `unknown` or `in_progress`, stop dependent writes. Read `get_garmin_write_status(draft_id)` and inspect Garmin with fresh verification tools. Preserve IDs, partial batch steps and safe error categories. Do not retry with a new key or delete the journal. SDK mutation replay is blocked, including after an HTTP 401; reauthorization does not make an old unknown write safe to repeat. Report partial-import failures even if the HTTP request returned successfully.
+
+Bulk deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, local write opt-in and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.

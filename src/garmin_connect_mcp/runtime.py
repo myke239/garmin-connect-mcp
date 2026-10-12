@@ -12,6 +12,8 @@ from .auth import TokenStore, restore_session, restrict
 
 ALLOWED = {"get_activity", "get_activity_splits", "get_activity_details", "get_activity_exercise_sets", "connectapi"}
 ALLOWED |= {"mcp_commit_write", "get_workouts", "get_workout_by_id"}
+ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_devices", "get_activity_types",
+            "get_body_composition", "get_hydration_data", "get_blood_pressure"}
 
 
 class RequestError(Exception):
@@ -21,6 +23,7 @@ class RequestError(Exception):
 
 
 def error_code(error):
+    if isinstance(error,RequestError): return error.code
     from garminconnect import GarminConnectAuthenticationError, GarminConnectTooManyRequestsError
     if isinstance(error, GarminConnectTooManyRequestsError):
         return "RATE_LIMITED"
