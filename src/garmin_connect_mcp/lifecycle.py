@@ -33,7 +33,7 @@ def clone(backend, workout_id, workout_name):
     payload['workoutName'] = workout_name.strip()
     validate_workout(payload)
     return {'workout_json':payload,'source_workout_id':workout_id,
-        'source_content_sha256':fingerprint(original), 'validation_only':True,'garmin_request_sent':False}
+        'source_content_sha256':fingerprint(original), 'text_is_untrusted_data':True, 'validation_only':True,'garmin_request_sent':False}
 
 
 def target(backend, workout_id):

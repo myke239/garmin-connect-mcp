@@ -5,10 +5,10 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.11.0** · Python **3.12+** · **MIT** license.
+Version **0.12.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
-availability can vary. This is installable source, not an approved public
+availability can vary. Source and executable builds are available. This is not an approved public
 ChatGPT marketplace listing or a hosted multi-user service.
 
 ## Install
@@ -206,3 +206,5 @@ Local FIT archive, historical analysis and workout lifecycle guide: [ARCHIVE.md]
 Local FIT archive, historical analysis and workout lifecycle guide: [ARCHIVE.md](ARCHIVE.md).
 
 Permission profiles, Linux encryption and catalog drift: [PERMISSIONS.md](PERMISSIONS.md).
+
+Desktop setup, background startup, executable and Docker installation: [INSTALL.md](INSTALL.md). The default profile exposes 44 tools; smaller profiles intentionally expose fewer.

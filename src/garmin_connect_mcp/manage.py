@@ -12,7 +12,7 @@ from .auth import TokenStore, data_directory
 
 def installation():
     # Installed runtime: <release>/environment/{bin,Scripts}/python.
-    path = Path(sys.executable).absolute().parents[2] / "installation.json"
+    path = (Path(sys.executable).absolute().parent if getattr(sys,"frozen",False) else Path(sys.executable).absolute().parents[2]) / "installation.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
 
 
@@ -43,13 +43,17 @@ def register_plugin(codex, marketplace):
             subprocess.run([codex, "plugin", "add", "garmin-connect@myke-garmin"], check=True)
         raise
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Garmin Connect setup and launch commands")
     parser.add_argument("command", choices=["login", "verify", "logout", "serve", "approve",
         "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
-        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check"])
+        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check", "install-local", "fit-setup", "desktop", "diagnostics", "background-start", "background-stop", "background-status", "background-install", "background-uninstall"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    if args.command == "serve":
+        if args.arguments:parser.error("serve takes no arguments")
+        from .server import main as serve
+        serve();return
     if args.command == "doctor":
         if args.arguments:
             parser.error("doctor takes no arguments")
@@ -68,16 +72,16 @@ def main():
         register_plugin(codex, metadata["marketplace"])
         print("Plugin installed. Open a new Codex chat.")
         return
-    mapping = {"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
+    mapping = {"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
         "writes-status": ("writes", ["status"]), "approve": ("remote", ["approve"]), "tunnel-setup": ("tunnel", ["setup"]),
         "tunnel": ("tunnel", ["run"]), "tunnel-status": ("tunnel", ["status"])}
     module, prefix = mapping.get(args.command, ("cli", [args.command]))
     if module in {"remote", "tunnel"} and not remote_available():
         parser.error("Re-run the installer with --remote (Windows: -Remote) to enable phone access.")
-    raise SystemExit(subprocess.call([sys.executable, "-m", "garmin_connect_mcp." + module, *prefix, *args.arguments]))
+    raise SystemExit(subprocess.call(__import__("garmin_connect_mcp.launching",fromlist=["command"]).command(module,[*prefix,*args.arguments])))
 
 
-def remote_available():
+def remote_available() -> bool:
     import importlib.util
     return all(importlib.util.find_spec(name) is not None for name in ("ngrok", "uvicorn"))
 

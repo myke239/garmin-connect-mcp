@@ -11,6 +11,7 @@ def samples(raw, metric, maximum):
         raise ValueError('Choose heart_rate/power/cadence/speed/elevation; 1–1000 points')
     descriptors = {d.get('key'): d for d in (raw.get('metricDescriptors') or []) if isinstance(d, dict)}
     channel, field = CHANNELS[metric]
+    if metric=='cadence' and 'directDoubleCadence' in descriptors:channel='directDoubleCadence'
     if channel not in descriptors:
         return {'available': False, 'samples': [], 'metric': metric}
     def read(values, key):

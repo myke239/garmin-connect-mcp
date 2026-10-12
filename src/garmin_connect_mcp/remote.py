@@ -67,7 +67,8 @@ def approval_command(ticket):
         args = [installed["launcher"], "approve", ticket]
     else:
         # Do not resolve venv symlinks: their target lacks this environment's packages.
-        args = [str(Path(sys.executable).absolute()), "-m", "garmin_connect_mcp.remote", "approve", ticket]
+        from .launching import command
+        args = command("remote",["approve",ticket])
     if os.name == "nt":
         return "& " + " ".join("'" + arg.replace("'", "''") + "'" for arg in args)
     return shlex.join(args)

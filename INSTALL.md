@@ -1,9 +1,8 @@
 # Per-user installation
 
-Version 0.8.1 adds command-line installers and standalone launch commands.
-This is the first installation stage: managed Python, no manual environment
-activation, and no working-directory dependency. A graphical installer/tray app
-or frozen executable is not included.
+Version 0.12.0 includes managed installers, a desktop setup/tray application,
+optional per-user background startup and downloadable frozen builds. Every
+launcher works from any directory with no environment activation.
 
 ## Standard locations
 
@@ -27,7 +26,8 @@ use `%LOCALAPPDATA%\garmin-connect-mcp`. Linux retains
 `~/.local/share/garmin-connect-mcp`, honoring an absolute `XDG_DATA_HOME`.
 `GARMIN_MCP_DATA_DIR` overrides this on either platform. Do not point Windows and
 Linux at the same session: Windows DPAPI files are not Linux tokens. Linux
-sessions are owner-only plaintext files, not encrypted by this application.
+sessions default to owner-only files. Optional Secret Service encryption and
+migration are described in [PERMISSIONS.md](PERMISSIONS.md).
 
 ## Windows
 
@@ -50,7 +50,8 @@ If local PowerShell policy blocks an unsigned script, invoke it using
 for that process only, where your organization permits it.
 
 Use `-InstallDir 'D:\apps\GarminConnectMCP'` to override the application location.
-Add `-Remote` to install phone/tunnel dependencies.
+Add `-Remote` for phone access, `-Desktop` for the setup/tray app and application
+menu shortcut, or `-Secure` for optional protected Linux storage dependencies.
 
 ## Linux and WSL
 
@@ -72,7 +73,8 @@ WSL and Windows Codex installations are separate; Windows Codex should use the
 Windows launcher, not a WSL registration.
 
 Set `GARMIN_INSTALL_DIR=/absolute/custom/path` for an alternate application
-directory. Use `--remote` for optional tunnel dependencies. Linux downloads
+directory. Use `--remote` for tunnel dependencies, `--desktop` for setup/tray and an app-menu
+shortcut, and `--secure` for optional Linux encryption dependencies. Linux downloads
 Astral's official installer only if `uv` is missing and never modifies PATH.
 
 ## Launch and authenticate
@@ -132,3 +134,61 @@ To repeat installed protocol checks with synthetic temporary state, run the
 installed Python from its receipt against `scripts/verify_install.py` and
 pass the absolute path to `installation.json`. CI performs isolated installs
 on Windows/Linux and tests Python 3.12/3.13.
+
+## Executables and desktop setup
+
+Download a platform build from [GitHub releases](https://github.com/myke239/garmin-connect-mcp/releases).
+Extract the entire bundle, including _internal. Windows users open
+`garmin-connect-desktop.exe`, then choose **Install this app locally**. Linux users
+run the extracted `garmin-connect install-local`, then open Garmin Connect from
+the application menu or use the absolute executable printed by installation.
+The console executable accepts doctor/login/verify/install-plugin/serve and all
+other launcher commands. A managed-Python installation opens the same setup
+window using its launcher `desktop --tray`. Installation preserves old releases
+and existing credentials, grants and journals.
+
+The public frozen build excludes Garmin's separately licensed official FIT SDK.
+Choose **Install FIT support** in the setup app or run the executable `fit-setup`.
+That obtains managed Python and the SDK directly from PyPI into the application's
+fit-support directory. No activation or checkout is needed. Normal source/managed
+installations already obtain that dependency directly. Review Garmin's FIT
+Protocol License Agreement; this project's MIT license does not replace it.
+
+Frozen builds are unsigned and target Windows x64 and Linux x86-64 with glibc
+2.35 or newer. macOS/ARM frozen builds have not been tested. Linux graphical mode
+needs a display, X11/Tk libraries and a supported tray host; CLI operation remains
+available on headless systems. Keep all bundle files together.
+
+## Optional background operation
+
+`background-start` starts only the managed tunnel; `background-stop` sends its
+own instance a stop request and never kills an unrelated PID. An occupied port
+prevents starting another service. `background-status` and `diagnostics` report
+process state and whether localhost MCP rejects unauthenticated calls with 401.
+After a 30-second grace period, three failed checks 10 seconds apart restart the
+owned child. The watchdog attempts at most four launches with backoff.
+
+`background-install` enables startup on user sign-in without starting now.
+Windows uses a per-user Startup entry; Linux uses a systemd user unit with restart
+limits. `background-uninstall` removes only the project's owned entry. Re-register
+startup after upgrading so it points to the new release. A Secret Service keyring
+must already be unlocked in the service's D-Bus session. Installation never
+silently enables startup or write permissions. PCs must remain awake for phone
+access; close the setup window to the tray or exit without stopping the service.
+
+## Build and container verification
+
+Build your own executables with `pip install -e '.[dev,desktop,package,remote,secure]'`
+and `python -m PyInstaller scripts/garmin-connect.spec`. The spec excludes the FIT
+SDK and retains dependency source/license metadata. Run scripts/verify_frozen.py
+against the console executable. CI independently builds Windows and Linux and
+constructs the desktop UI.
+
+For Docker, build `docker build -t garmin-connect-mcp .`, then use
+`docker run --rm -i garmin-connect-mcp serve` for stdio. The image runs as UID 10001.
+Use a private volume at /home/garmin/.local/share/garmin-connect-mcp and log in
+interactively with `docker run --rm -it -v garmin-data:/home/garmin/.local/share/garmin-connect-mcp garmin-connect-mcp login`.
+Windows DPAPI credentials cannot be reused in Linux containers. The image is built
+locally; no prebuilt image embedding Garmin's FIT SDK is published. Container
+phone access uses the normal OAuth/ngrok flow and private tunnel token. The CLI
+and Docker docs do not grant Garmin write scope automatically.
