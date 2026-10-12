@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 — 2026-10-12
+
+- Discoverable exercise-catalog browsing skill with first-call examples,
+  pagination, exact-match selection and snapshot coverage guidance.
+- MCP tool documentation exposes the same quick-start to remote ChatGPT agents.
+
 ## 0.4.0 — 2026-10-12
 
 - Read-only workout schemas and validated strength-step builder with explicit units.

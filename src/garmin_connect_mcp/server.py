@@ -98,7 +98,10 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def find_garmin_exercises(term: str = "", limit: int = 20, start: int = 0, category: str | None = None) -> dict:
             """Search/browse the SDK exercise picker snapshot by display name or exact enum, tolerating hyphens/underscores.
-            Returns exact matches separately from equipment variants, total count and next_start pagination.
+            Standalone catalog browse: {"term":"","limit":50,"start":0}. total_matches counts all matches, not page size.
+            Repeat with start=next_start and unchanged filters until next_start is null. Fetch all pages only when needed.
+            Movement search: {"term":"standing calf raises","limit":20,"start":0}.
+            Returns exact_matches, selection_required, equipment variants, total_matches and next_start.
             category filters SDK categories. Empty term browses. No account access; not_found is not a live Garmin absence proof.
             Preserve requested movements; never select related exercises or variants implicitly.
             """

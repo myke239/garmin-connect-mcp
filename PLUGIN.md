@@ -45,3 +45,8 @@ To repeat the installed-package live check (explicit, account-reading operation)
 ```powershell
 .\.venv313\Scripts\python.exe scripts/verify_live.py --plugin-root '<installedPath from codex plugin add --json>'
 ```
+
+The `browse-garmin-exercises` skill handles standalone catalog browsing, exact
+movement lookup and pagination. ChatGPT remote connections receive equivalent
+quick-start instructions in the MCP tool description; local skill files are
+loaded by Codex. Refresh the client tool list after a server update.
