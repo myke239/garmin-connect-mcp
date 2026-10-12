@@ -103,7 +103,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             Repeat with start=next_start and unchanged filters until next_start is null. Fetch all pages only when needed.
             Movement search: {"term":"standing calf raises","limit":20,"start":0}.
             Returns exact_matches, selection_required, equipment variants, total_matches and next_start.
-            category filters SDK categories. Empty term browses. No account access; not_found is not a live Garmin absence proof.
+            category filters SDK categories or POSE (85 verified yoga identifiers). Use category="POSE" for yoga; names are enum-derived labels. Empty term browses. No account access; not_found is not a live Garmin absence proof.
             Preserve requested movements; never select related exercises or variants implicitly.
             """
             from .workout_discovery import exercises
@@ -141,6 +141,12 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             """Validate complete create_manual_activity parameters against the live type catalog without mutation. Actual completed session only; explicit km, whole minutes, local start_datetime and IANA time_zone. Never use future logs to simulate plans."""
             from .sport_schemas import build_manual_activity
             return safe_call(lambda: build_manual_activity(backend.fresh_call("get_activity_types"),parameters))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_yoga_step(exercise: str, duration_seconds: StrictInt, step_order: StrictInt) -> dict:
+            """Build a verified exact POSE identifier into a timed untargeted yoga ExecutableStepDTO, without writing. Discover via find_garmin_exercises(category="POSE"). Duration 1-86400 whole seconds, order 1-100. Assemble steps in yoga segments with build_garmin_workout, then prepare/authorize/commit and schedule workout_id/date_str. No substitution or watch-animation claim."""
+            from .yoga import pose_step
+            return safe_call(pose_step,exercise,duration_seconds,step_order)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def build_garmin_strength_step(category: str, exercise: str, reps: StrictInt, step_order: StrictInt, weight_kg: StrictFloat | None = None) -> dict:

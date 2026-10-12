@@ -52,11 +52,23 @@ yoga sport enum in both header and segment. A session description may explain
 intent, but does not encode a pose sequence. Do not turn an open-ended yoga
 suggestion into a saved workout or choose its duration without user direction.
 
-For specific poses, copy a verified yoga template and preserve its pose fields.
-Do not use strength/stretch catalog entries as proof of yoga pose identifiers.
-If those identifiers are unresolved, explain that narrower limit; do not claim
-all yoga creation/scheduling is unsupported. Use the normal preview, authorized
-commit and readback workflow below; schedule with workout_id and date_str.
+For specific poses, query `find_garmin_exercises(category="POSE", term=...)`.
+There are 85 pinned identifiers verified through SDK/Garmin upload and readback.
+Browse empty term with limit 50 and follow next_start. Preserve exact exercise
+values; labels are derived from enums, not official translations. Resolve missing
+or ambiguous matches rather than substituting another pose.
+
+For each selected pose call `build_garmin_yoga_step(exercise, duration_seconds,
+step_order)` using the requested hold time in whole seconds and sequence order.
+Assemble returned steps in a segment using the builder's yoga sportType header.
+Call `build_garmin_workout(sport="yoga", workout_name=...,
+workout_segments=[{"segmentOrder":1,"sportType":header,"workoutSteps":steps}])`.
+Pass returned workout_json into the normal guarded workflow below. The explicit
+segment builder reports estimated duration unknown (0); step holds encode exact
+durations. POSE supports only timed untargeted yoga steps (including yoga segments
+of multisport). Watch animations and device compatibility remain unverified.
+After saving, verify exact pose identifiers/durations, then schedule the saved
+workout_id with date_str.
 
 ## Prepare and commit
 

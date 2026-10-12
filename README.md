@@ -5,7 +5,7 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.6.0** · Python **3.12+** · **MIT** license.
+Version **0.7.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -160,4 +160,6 @@ See [SPORTS.md](SPORTS.md) for workout/recorded-activity schemas, creation examp
 verified coverage and sport-specific limits.
 
 See [YOGA_POSES.md](YOGA_POSES.md) for 85 catalog poses individually verified
-through SDK/Garmin upload and readback, and the current MCP pose-step limitation.
+through SDK/Garmin upload and readback, with connector support for timed pose sequences.
+
+Yoga pose sequences: discover `find_garmin_exercises(category="POSE")`, build each selected hold with `build_garmin_yoga_step`, then assemble yoga segments using `build_garmin_workout` and the existing prepare/commit/calendar workflow.

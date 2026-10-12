@@ -53,3 +53,13 @@ conventions. Browsing does not authorize saving or scheduling a workout.
 If the tool is missing from the agent's available tools, explain that an updated
 Garmin Connect connection/tool list is needed. Do not infer that the installed
 server lacks browsing from a stale client tool list.
+
+## Yoga pose lookup
+
+Use `find_garmin_exercises(category="POSE", term=...)` to search the 85 verified
+Garmin yoga identifiers. Empty term browses; follow next_start for all pages.
+Return exact exercise values; labels are enum-derived, not official translations.
+Do not reinterpret a Sanskrit/common name without a verified mapping or user
+selection. For selected poses use `build_garmin_yoga_step` with whole hold seconds
+and sequence order, then the create-schedule-workouts workflow. Do not pass POSE
+to the strength builder or claim watch animations.

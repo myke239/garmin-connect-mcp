@@ -28,16 +28,11 @@ on every watch, every timing/target variant, or clinical suitability. Garmin's
 distinguishes premade animated workouts from custom workouts; catalog presence
 and API acceptance alone do not establish animation availability.
 
-The current MCP connector (0.6.0) still validates exercise category/name pairs
-against the SDK's strength catalog, which lacks POSE. A local preparation check
-confirmed that it rejects these steps before a Garmin mutation. This research
-verifies SDK/Garmin support; it does not claim that pose-step creation is already
-exposed through the MCP connector. Yoga timed sessions remain supported there.
-
-[Machine-readable JSON](docs/verified-yoga-poses.json) and
-[CSV](docs/verified-yoga-poses.csv) contain all identifiers and verification flags.
-No private account IDs, credentials or Garmin instructional descriptions are
-included. This is a dated catalog snapshot, not a perpetual availability claim.
+Version 0.7.0 exposes all verified POSE identifiers through catalog discovery,
+a timed step builder, and guarded create/update/calendar writes. During release
+testing every pose passed guarded creation and exact Garmin readback in four
+batches; update, scheduling and unscheduling also passed. All fixtures were
+removed. Version 0.6.0 had rejected POSE against its strength-only catalog.
 
 ## Exact identifiers
 
@@ -132,3 +127,7 @@ Use **category: POSE** for every row and preserve exerciseName exactly.
 | 85 | `WIDE_SIDE_LUNGE` |
 
 Catalog SHA-256: `548b79660774cae75ff55f1eb1cef220bd69ea2492bd23dcc4145e5daa7f19b8`.
+
+## MCP 0.7.0 support
+
+The connector now exposes these 85 identifiers through `find_garmin_exercises(category="POSE")` and builds timed steps with `build_garmin_yoga_step`. Assemble explicit yoga segments with `build_garmin_workout`, then use the existing preview/commit and calendar workflow. Unknown identifiers, other segment sports, reps/targets/loads and fractional hold seconds are rejected locally. The earlier guard limitation describes version 0.6.0 only.
