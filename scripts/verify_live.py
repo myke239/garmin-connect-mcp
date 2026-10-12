@@ -3,9 +3,8 @@
 import asyncio
 import json
 import sys
-import os
 import argparse
-import tomllib
+import subprocess
 from pathlib import Path
 from datetime import date, timedelta
 
@@ -16,9 +15,9 @@ from mcp.client.stdio import stdio_client
 async def verify(codex_config=False, plugin_root=None):
     command, arguments = sys.executable, ["-m", "garmin_connect_mcp.cli", "serve"]
     if codex_config:
-        config_path = Path(os.environ.get("CODEX_HOME", str(Path.home()/".codex"))) / "config.toml"
-        config = tomllib.loads(config_path.read_text(encoding="utf-8"))
-        server = config["mcp_servers"]["garmin-connect"]
+        resolved = subprocess.run(["codex", "mcp", "get", "garmin-connect", "--json"],
+                                  check=True, capture_output=True, text=True, timeout=30)
+        server = json.loads(resolved.stdout)["transport"]
         command, arguments = server["command"], server["args"]
     parameters = StdioServerParameters(command=command, args=arguments)
     if plugin_root:
