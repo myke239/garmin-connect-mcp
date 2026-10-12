@@ -13,7 +13,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 
-async def verify(codex_config=False):
+async def verify(codex_config=False, plugin_root=None):
     command, arguments = sys.executable, ["-m", "garmin_connect_mcp.cli", "serve"]
     if codex_config:
         config_path = Path(os.environ.get("CODEX_HOME", str(Path.home()/".codex"))) / "config.toml"
@@ -21,6 +21,9 @@ async def verify(codex_config=False):
         server = config["mcp_servers"]["garmin-connect"]
         command, arguments = server["command"], server["args"]
     parameters = StdioServerParameters(command=command, args=arguments)
+    if plugin_root:
+        server = json.loads((Path(plugin_root)/".mcp.json").read_text(encoding="utf-8"))["mcpServers"]["garmin-connect"]
+        parameters = StdioServerParameters(command=server["command"], args=server["args"])
     async with stdio_client(parameters) as (read, write):
         async with ClientSession(read, write) as client:
             await client.initialize()
@@ -55,5 +58,6 @@ async def verify(codex_config=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--codex-config", action="store_true")
+    parser.add_argument("--plugin-root", help="Verify the actual installed plugin's MCP configuration")
     options = parser.parse_args()
-    asyncio.run(asyncio.wait_for(verify(options.codex_config), timeout=180))
+    asyncio.run(asyncio.wait_for(verify(options.codex_config, options.plugin_root), timeout=180))

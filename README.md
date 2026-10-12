@@ -50,6 +50,44 @@ On this machine:
 
 ## Connect Codex
 
+### Install as a local plugin (recommended)
+
+The Garmin Connect plugin bundles the seven read-only MCP tools and an
+`analyze-training` skill. Source and the Python environment stay in this project;
+Codex manages its installed plugin copy in its normal application cache.
+Your encrypted Garmin session is shared with the existing server, never packaged.
+
+After installing the Python environment above, run:
+
+```powershell
+& .\scripts\install_plugin.ps1
+codex plugin list --marketplace myke-garmin --json
+```
+
+The installer resolves this checkout's interpreter and updates the plugin's local
+MCP command, registers the private `myke-garmin` marketplace, and installs/enables
+`garmin-connect`. Supply `-PythonPath` if your environment has another location.
+This is a Windows local plugin; install and authenticate independently on each
+machine. It does not provide web/mobile/cloud access or publish a public plugin.
+
+Open a fresh chat or restart Codex after installation. Example: "Summarize my
+running over the last four weeks." The skill can also be invoked explicitly as
+`$garmin-connect:analyze-training` when loaded by the client.
+
+If you previously registered a standalone server with the same name, remove it
+after installing the plugin so that it does not override the plugin configuration:
+
+```powershell
+codex mcp remove garmin-connect
+codex mcp list --json
+```
+
+To update after changing the source, rerun `scripts/install_plugin.ps1`. To
+uninstall, use `codex plugin remove garmin-connect@myke-garmin`; this leaves your
+source, Python environment and encrypted session intact.
+
+### Standalone MCP alternative
+
 ```powershell
 codex mcp add garmin-connect -- 'D:/developer/garmin-connect-mcp/.venv313/Scripts/python.exe' -m garmin_connect_mcp.cli serve
 codex mcp get garmin-connect --json

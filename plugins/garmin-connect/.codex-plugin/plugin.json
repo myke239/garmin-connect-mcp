@@ -1,0 +1,19 @@
+{
+  "name": "garmin-connect",
+  "version": "0.1.0",
+  "description": "Read private Garmin workouts through a local, encrypted-session MCP server.",
+  "author": {"name": "myke239"},
+  "repository": "https://github.com/myke239/garmin-connect-mcp",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Garmin Connect",
+    "shortDescription": "Analyze your runs and workouts",
+    "longDescription": "Read activities, splits, heart rate, strength sets and training summaries from your local Garmin session.",
+    "developerName": "myke239",
+    "category": "Productivity",
+    "capabilities": ["Read"],
+    "defaultPrompt": ["Summarize my running over the last four weeks", "Analyze my latest workout"]
+  }
+}
