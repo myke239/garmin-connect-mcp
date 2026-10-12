@@ -220,3 +220,29 @@ def test_installed_approval_cli_runs_outside_project(tmp_path):
     assert result.returncode != 0
     assert "Connection request expired or not found" in result.stderr
     assert "ModuleNotFoundError" not in result.stderr
+
+
+@pytest.mark.parametrize("scope", ["garmin:read","garmin:read garmin:write"])
+def test_terminal_consent_displays_actual_authority(remote,monkeypatch,capsys,scope):
+    client,provider=remote
+    _,ticket=pending(client)
+    with provider.state() as state: state["pending"][ticket]["params"]["scopes"]=scope.split()
+    prompts=[]
+    monkeypatch.setattr("sys.stdin.isatty",lambda:True)
+    monkeypatch.setattr("builtins.input",lambda prompt:prompts.append(prompt) or "APPROVE")
+    provider.approve(ticket)
+    assert scope in capsys.readouterr().out
+    assert ("modify" in prompts[0]) == ("garmin:write" in scope)
+    with provider.state() as state: assert state["pending"][ticket]["approved"] is True
+
+
+def test_terminal_consent_rejects_authority_changed_during_review(remote,monkeypatch):
+    client,provider=remote
+    _,ticket=pending(client)
+    monkeypatch.setattr("sys.stdin.isatty",lambda:True)
+    def altered(prompt):
+        with provider.state() as state: state["pending"][ticket]["params"]["scopes"].append("garmin:write")
+        return "APPROVE"
+    monkeypatch.setattr("builtins.input",altered)
+    with pytest.raises(ValueError,match="changed during review"): provider.approve(ticket)
+    with provider.state() as state: assert state["pending"][ticket]["approved"] is False
