@@ -1,4 +1,10 @@
 0.12.0 - 2026-10-12
+
+## Unreleased
+
+- Reorganize user guides, references, catalogs and dated verification under docs/.
+- Rewrite the README around training workflows, reviewed writes and fair differentiation; add installation choices, troubleshooting and a complete 44-tool reference.
+- Correct stale current counts/status/storage guidance and validate documentation links, headings, root layout and tool inventory in CI.
 - Local setup/tray UI, menu shortcuts, explicit private-terminal login/consent and opt-in restartable per-user background startup with OAuth health checks.
 - Windows/Linux frozen executables and local installation; separately licensed FIT SDK excluded from bundles and obtained through a bounded user-local add-on.
 - Non-root Docker build; lint, typed launcher/diagnostic interfaces, secret/private-artifact, build, dependency and frozen/container CI gates.

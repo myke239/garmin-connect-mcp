@@ -1,15 +1,23 @@
 # Opt-in account writes
 
-Version 0.8 provides guarded prepare/commit tools, queryable operation contracts/status,
-and bounded verification tools. Writes
-are disabled on new installations. Enable them locally in your virtual environment:
+[Documentation home](../README.md)
+
+Version 0.12.0 exposes 19 allowlisted operations through guarded prepare/commit tools and queryable contracts. Writes are disabled on new installations. Enable only the operations you need using the installed absolute launcher:
 
 ```powershell
-python -m garmin_connect_mcp.writes enable
-python -m garmin_connect_mcp.writes status
+$Garmin = Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP\bin\garmin-connect.ps1'
+& $Garmin writes-enable --operations create_workout schedule_workout
+& $Garmin writes-status
 ```
 
-Disable future writes with `python -m garmin_connect_mcp.writes disable`.
+```sh
+garmin="${XDG_DATA_HOME:-$HOME/.local/share}/garmin-connect-mcp/application/bin/garmin-connect"
+"$garmin" writes-enable --operations create_workout schedule_workout
+"$garmin" writes-status
+```
+
+Use `writes-disable` with the same launcher to disable future writes. Omit `--operations` to preserve an existing policy; an empty `--operations` denies all operations. See [permissions](permissions-and-storage.md) for full policy behavior.
+
 This does not cancel an already running mutation or undo existing Garmin data.
 Refresh your client's tool list. ChatGPT additionally needs a new OAuth consent
 with both `garmin:read` and `garmin:write`. Existing tokens retain their original
@@ -25,7 +33,7 @@ key of 8–128 characters for that user intent. It validates arguments and saves
 private draft without changing Garmin. Show its complete preview to the user,
 including affected IDs, dates and overwrite warnings. After user approval,
 call the returned `commit_tool` with unchanged `commit_arguments` for workout operations, or `commit_garmin_write(draft_id)` for other/legacy operations. Prepare/commit tools are annotated as writes so clients
-can require confirmation; commit is also marked potentially destructive.
+can require confirmation; commit annotations distinguish additions from destructive replacements/deletions; the general commit remains potentially destructive.
 Before preparing, call `get_garmin_write_schema(operation)` for the maintained
 contract, including required/optional names, types, bounds, units and guidance.
 The contract is available to all MCP clients, including ChatGPT; local Codex
@@ -60,8 +68,8 @@ belong in `endConditionValue` on the executable step, in seconds and metres;
 
 The journal retains up to 1,000 intents within 16 MiB; it refuses new intents
 when full instead of forgetting duplicate protection. It contains private
-payloads: DPAPI encryption on Windows, owner-only plaintext on other platforms,
-like the Garmin session store. Do not delete the journal to retry ambiguous writes.
+payloads: DPAPI encryption on Windows, owner-only files on Linux, with optional Secret Service encryption,
+like the Garmin session store. See [permissions and storage](permissions-and-storage.md). Do not delete the journal to retry ambiguous writes.
 
 ## Operations and parameters
 
@@ -86,6 +94,9 @@ SDK fields are described below. Numeric IDs must be explicit and positive.
 | operation | parameters |
 | --- | --- |
 | create_workout | `workout_json`: complete named Garmin workout object |
+| rename_workout | `workout_id`, `expected_name`, `expected_content_sha256`, `workout_name` |
+| delete_workout | `workout_id`, `expected_name`, `expected_content_sha256`, `confirm_calendar_removal`: true |
+| schedule_existing_workouts | `workouts`: 1–20 `{workout_id, date_str}` entries |
 | update_workout | `workout_id`, `workout_json`: complete replacement |
 | schedule_workout | `workout_id`, `date_str`: YYYY-MM-DD |
 | unschedule_workout | `scheduled_workout_id`: calendar item, not template ID |
@@ -122,7 +133,7 @@ field bounds. Null optional fields are allowed; required weight cannot be null.
 
 Workout objects require `workoutName`, the sport enum ID/key pair and
 `workoutSegments[].workoutSteps`. Supported sports: running, cycling, swimming,
-strength_training, cardio_training, yoga, pilates, hiit, multi_sport, mobility, rucking and other. Walking/hiking workout enums are blocked; see SPORTS.md. There are at most 20 segments, 100 total steps,
+strength_training, cardio_training, yoga, pilates, hiit, multi_sport, mobility, rucking and other. Walking/hiking workout enums are blocked; see [sport coverage](../reference/sports.md). There are at most 20 segments, 100 total steps,
 five nested repeat levels and 100 iterations per group. Start with `get_workout_template` for correct Garmin step/target
 enums; `list_workout_templates` lists IDs and names. Update and strength-set
 operations replace existing content: read the original first and preserve fields
@@ -158,7 +169,7 @@ checks one day of health data. Raw weight readback may be grams despite kg input
 Recorded strength weights remain unverified raw units. Name matching or an
 unchanged first library page is insufficient evidence of absence.
 
-See [WRITE_AUDIT.md](WRITE_AUDIT.md) for live evidence, cleanup and the inventory
+See [write audit](../development/write-audit.md) for live evidence, cleanup and the inventory
 of SDK mutation methods that are intentionally unavailable through MCP.
 
 ## Example: schedule an existing workout
@@ -183,7 +194,7 @@ Use get_garmin_workout_schema and build_garmin_strength_step for SDK sport/step
 conventions. find_garmin_exercises exposes exact matches, variants and pagination
 from the pinned picker snapshot, not a live complete Garmin catalog. Never
 substitute a missing movement. Planned weight_kg is encoded as grams by the SDK;
-recorded exerciseSets units remain unverified. See the plugin [strength reference](plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md).
+recorded exerciseSets units remain unverified. See the plugin [strength reference](../../plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md).
 
 ## Timed yoga sessions
 
@@ -198,7 +209,7 @@ and the strength catalog does not prove yoga pose enum compatibility.
 
 ## Other workout sports and recorded activities
 
-Use [SPORTS.md](SPORTS.md) for live sport discovery, complete schemas and readonly
+Use [sport coverage](../reference/sports.md) for live sport discovery, complete schemas and readonly
 builders. All 12 advertised workout sports use the same guarded create/update/
 schedule/device workflows. Recorded activity type IDs/keys form a separate
 catalog; manual logs use actual completed-session data and cannot be scheduled
@@ -207,4 +218,4 @@ readback lost their sport identity. Multisport stepOrder must be globally unique
 
 Workout previews include operation-specific commit_tool/commit_arguments. Pass these unchanged after full-preview approval; content_sha256 and contextual fields must match the immutable stored intent. Generic commit remains supported. These tools retain scope, expiry, journal and preflight protections; do not use them to circumvent a platform rejection.
 
-Additional lifecycle operations: rename_workout and delete_workout require a fresh expected_name/expected_content_sha256 from get_garmin_workout_mutation_target; deletion also requires confirm_calendar_removal=true. schedule_existing_workouts takes 1-20 workout_id/date_str pairs and creates no templates. Clone drafts, lifecycle verification and partial-batch recovery are documented in [ARCHIVE.md](ARCHIVE.md). Operation allowlists apply again at commit; see [PERMISSIONS.md](PERMISSIONS.md).
+Additional lifecycle operations: rename_workout and delete_workout require a fresh expected_name/expected_content_sha256 from get_garmin_workout_mutation_target; deletion also requires confirm_calendar_removal=true. schedule_existing_workouts takes 1-20 workout_id/date_str pairs and creates no templates. Clone drafts, lifecycle verification and partial-batch recovery are documented in [archive and analysis](archive-and-analysis.md). Operation allowlists apply again at commit; see [permissions and storage](permissions-and-storage.md).

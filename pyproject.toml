@@ -23,6 +23,7 @@ remote = ["ngrok==1.7.0", "uvicorn==0.54.0"]
 garmin-connect-mcp = "garmin_connect_mcp.cli:main"
 
 [project.urls]
+Documentation = "https://github.com/myke239/garmin-connect-mcp/blob/main/docs/README.md"
 Repository = "https://github.com/myke239/garmin-connect-mcp"
 Issues = "https://github.com/myke239/garmin-connect-mcp/issues"
 Changelog = "https://github.com/myke239/garmin-connect-mcp/blob/main/CHANGELOG"
@@ -33,4 +34,3 @@ packages = ["src/garmin_connect_mcp"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--basetemp=work/pytest-tmp"
-

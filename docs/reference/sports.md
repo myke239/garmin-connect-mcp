@@ -1,5 +1,7 @@
 # Workout sports and recorded activities
 
+[Documentation home](../README.md)
+
 A planned workout is a template that can be saved, edited, scheduled, or queued
 for a compatible device. A manual activity is a private log of an already
 completed session. These use different type catalogs and APIs. Never create a

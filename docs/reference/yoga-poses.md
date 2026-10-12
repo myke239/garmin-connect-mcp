@@ -1,5 +1,7 @@
 # Verified Garmin yoga poses
 
+[Documentation home](../README.md)
+
 Verified on **2026-10-12** with **python-garminconnect 0.3.17**.
 
 Garmin's [Yoga.json catalog](https://connect.garmin.com/web-data/exercises/Yoga.json)
@@ -33,6 +35,8 @@ a timed step builder, and guarded create/update/calendar writes. During release
 testing every pose passed guarded creation and exact Garmin readback in four
 batches; update, scheduling and unscheduling also passed. All fixtures were
 removed. Version 0.6.0 had rejected POSE against its strength-only catalog.
+
+[Download the verified CSV](catalogs/verified-yoga-poses.csv) · [JSON](catalogs/verified-yoga-poses.json)
 
 ## Exact identifiers
 

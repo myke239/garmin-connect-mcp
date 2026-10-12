@@ -38,3 +38,5 @@ Quality gates: critical Python lint across source/scripts/tests, strict typed
 launcher/diagnostic interfaces, package build, tracked secret/private-artifact
 checks and dependency audit. Legacy modules do not yet have complete strict
 type coverage. Desktop/frozen/container checks are separate offline CI jobs.
+
+Documentation belongs under the categorized docs/ tree; see [documentation maintenance](docs/development/documentation.md). Run `python scripts/check_docs.py` after moving pages or changing links/contracts. Keep the README focused on user value and the starting path. Use evidence-backed comparisons, retain dated audits, and never describe watch execution as verified from server readback.
