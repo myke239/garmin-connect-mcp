@@ -483,11 +483,16 @@ class WriteService:
     def enabled(self):
         return self.settings.exists() and json.loads(self.settings.load()).get("enabled") is True
 
-    def require_enabled(self):
+    def require_enabled(self,operation=None):
         if not self.enabled(): raise RequestError("WRITES_DISABLED")
+        settings=json.loads(self.settings.load())
+        if operation is not None and "operations" in settings:
+            allowed=settings["operations"]
+            if not isinstance(allowed,list) or any(v not in OPERATIONS for v in allowed) or operation not in allowed:
+                raise RequestError("WRITE_OPERATION_DENIED")
 
     def prepare(self, operation, parameters, idempotency_key):
-        self.require_enabled()
+        self.require_enabled(operation)
         parameters = validate(operation, parameters)
         if not isinstance(idempotency_key,str) or not 8 <= len(idempotency_key) <= 128:
             raise ValueError("Use a stable 8–128 character idempotency key for this intent")
@@ -522,6 +527,7 @@ class WriteService:
     def commit(self, draft_id):
         self.require_enabled()
         if not isinstance(draft_id,str) or not 20 <= len(draft_id) <= 80: raise ValueError("Invalid draft ID")
+        self.require_enabled(self.status(draft_id)["operation"])
         # Never use the read service's retry/cache loop for mutations.
         try:
             return self.runner(self.directory,"mcp_commit_write",(draft_id,),{})
@@ -565,6 +571,7 @@ def execute(client, directory, draft_id):
                     "error":draft.get("error")}
         if draft["expires_at"] <= time.time(): raise RequestError("DRAFT_EXPIRED")
         operation=draft["operation"]
+        service.require_enabled(operation)
         try:
             parameters=validate(operation,draft["parameters"])
             preflight(client,operation,parameters)
@@ -636,10 +643,14 @@ def execute(client, directory, draft_id):
 def main():
     parser = argparse.ArgumentParser(description="Enable or disable account-write tools locally")
     parser.add_argument("command", choices=["enable","disable","status"])
+    parser.add_argument("--operations",nargs="*",choices=OPERATIONS,help="Restrict writes to exactly these operations (empty denies all)")
     args = parser.parse_args()
     service = WriteService()
     if args.command != "status":
-        service.settings.save(json.dumps({"enabled":args.command == "enable"}))
+        settings=json.loads(service.settings.load()) if service.settings.exists() else {}
+        settings["enabled"]=args.command == "enable"
+        if args.operations is not None: settings["operations"]=args.operations
+        service.settings.save(json.dumps(settings))
     print("Account writes:", "enabled" if service.enabled() else "disabled")
 
 

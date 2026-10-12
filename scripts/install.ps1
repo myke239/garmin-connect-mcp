@@ -1,4 +1,4 @@
-param([string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP'), [switch]$Remote)
+param([string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP'), [switch]$Remote, [switch]$Secure)
 $ErrorActionPreference = 'Stop'
 $installer = Join-Path $PSScriptRoot 'install.py'
 $uvCommand = Get-Command uv -ErrorAction SilentlyContinue
@@ -33,6 +33,7 @@ try {
     $env:UV_PYTHON_INSTALL_DIR = Join-Path $InstallDir 'python'
     $installerArgs = @('run', '--no-project', '--python', '3.13', $installer, '--uv', $uvPath, '--install-dir', $InstallDir)
     if ($Remote) { $installerArgs += '--remote' }
+    if ($Secure) { $installerArgs += '--secure' }
     & $uvPath @installerArgs
     if ($LASTEXITCODE -ne 0) { throw 'Garmin Connect installation failed; existing launcher was retained.' }
 } finally {

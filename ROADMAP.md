@@ -27,3 +27,7 @@ Phases 2–4 remain in progress; this is not a claim that the roadmap is complet
 Phase 1 merged as PR #21. Phase 2 implemented: local FIT archive, richer samples,
 interval comparison, power/drift analysis, clone/rename/delete and existing-workout
 calendar batches. Live lifecycle and original-recording checks passed with cleanup.
+
+Phase 2 merged as PR #22. Phase 3 implemented: operation allowlists, callable tool
+profiles, optional protected Linux storage and catalog drift checks. Real WSL
+Secret Service migration/readback passed with an isolated temporary keyring.

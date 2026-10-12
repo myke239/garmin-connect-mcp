@@ -20,7 +20,11 @@ def safe_call(function, *args):
         return {"error": {"code": "INVALID_WRITE_INPUT", "operation": error.operation,
             "stage": "validation", "garmin_request_sent": False, "message": str(error)}}
     except RequestError as error:
-        messages = {"WRITES_DISABLED":"Enable writes locally with python -m garmin_connect_mcp.writes enable.",
+        messages = {"WRITE_OPERATION_DENIED":"This operation is denied by the local owner policy; use the installed launcher to review allowed operations.",
+            "ARCHIVE_DISABLED":"Local archive is disabled; the owner can opt in with the installed launcher archive-enable.",
+            "ARCHIVE_NOT_FOUND":"This activity has no local archived recording.",
+            "WORKOUT_TARGET_CHANGED":"The workout changed since review; obtain a fresh target and review a new intent. No automatic retry.",
+            "WRITES_DISABLED":"Enable writes locally with python -m garmin_connect_mcp.writes enable.",
             "WRITE_SCOPE_REQUIRED":"Reconnect ChatGPT with garmin:read and garmin:write; existing read grants cannot write.",
             "WRITE_OUTCOME_UNKNOWN":"Inspect Garmin and the existing draft; do not create a new intent or retry blindly.",
             "DRAFT_EXPIRED":"Draft expired before writing. Review a newly prepared intent.",
@@ -32,7 +36,7 @@ def safe_call(function, *args):
         return {"error": {"code": "INTERNAL_ERROR", "message": "Request failed; no exception details or credentials are returned."}}
 
 
-def create_server(adapter: GarminAdapter | None = None, remote_access=False, **server_options) -> FastMCP:
+def create_server(adapter: GarminAdapter | None = None, remote_access=False, tool_profile=None, **server_options) -> FastMCP:
     backend = adapter if adapter is not None else GarminService()
     server = FastMCP("garmin-connect-mcp", log_level="WARNING", **server_options)
 
@@ -416,6 +420,8 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             Deletion can remove associated calendar entries. Review exact target first."""
             return safe_call(target,backend,workout_id)
 
+    from .profiles import apply
+    apply(server,tool_profile)
     return server
 
 

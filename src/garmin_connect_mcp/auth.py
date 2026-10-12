@@ -73,6 +73,9 @@ class TokenStore:
         if os.name == "nt":
             import win32crypt
             raw = win32crypt.CryptProtectData(raw, "Garmin MCP", None, None, None, 1)
+        else:
+            from .protected_storage import encode
+            raw = encode(self.directory,raw)
         descriptor, temporary = tempfile.mkstemp(dir=self.directory, prefix="session-")
         temporary_path = Path(temporary)
         try:
@@ -94,6 +97,9 @@ class TokenStore:
         if os.name == "nt":
             import win32crypt
             raw = win32crypt.CryptUnprotectData(raw, None, None, None, 1)[1]
+        else:
+            from .protected_storage import decode
+            raw = decode(self.directory,raw)
         tokens = raw.decode("utf-8")
         json.loads(tokens)
         return tokens

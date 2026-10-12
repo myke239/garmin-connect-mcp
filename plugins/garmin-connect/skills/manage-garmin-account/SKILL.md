@@ -61,3 +61,5 @@ fields to change an approved draft. Replacement remains destructive.
 A platform safety block is distinct from a connector error. Preserve the exact
 error and draft status; do not switch tools, SDK, or HTTP paths to evade a block.
 The new tools improve reviewability but are not a proven safety-block fix.
+
+WRITE_OPERATION_DENIED means the owner's local operation allowlist rejects this write; do not attempt another operation or generic commit to evade it. Tool profiles may intentionally omit features. ARCHIVE_DISABLED needs the owner's local storage choice, never implicit enablement. Catalog drift changes require reviewed updates; do not adopt newly observed identifiers into production automatically.
