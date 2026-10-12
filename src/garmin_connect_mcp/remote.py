@@ -251,12 +251,31 @@ class Boundary:
                 delivered = True
                 return {"type": "http.request", "body": bytes(body), "more_body": False}
             return await receive()
+        response_start = None
+        response_body = bytearray()
         async def secure_send(message):
+            nonlocal response_start
             if message["type"] == "http.response.start":
                 message["headers"] = list(message.get("headers", [])) + [
                     (b"cache-control", b"no-store"), (b"referrer-policy", b"no-referrer"),
                     (b"x-content-type-options", b"nosniff"),
                     (b"content-security-policy", b"default-src 'none'; form-action 'self'; frame-ancestors 'none'")]
+                headers = dict(message["headers"])
+                # Finite JSON/HTML responses use explicit lengths. Some Windows
+                # traffic filters strip chunk framing while retaining its header.
+                if not headers.get(b"content-type", b"").startswith(b"text/event-stream"):
+                    response_start = message
+                    return
+            if message["type"] == "http.response.body" and response_start is not None:
+                response_body.extend(message.get("body", b""))
+                if message.get("more_body", False):
+                    return
+                response_start["headers"] = [(name, value) for name, value in response_start["headers"]
+                    if name.lower() not in (b"content-length", b"transfer-encoding")]
+                response_start["headers"].append((b"content-length", str(len(response_body)).encode()))
+                await send(response_start)
+                response_start = None
+                message = {"type": "http.response.body", "body": bytes(response_body), "more_body": False}
             await send(message)
         await self.app(scope, replay, secure_send)
 
