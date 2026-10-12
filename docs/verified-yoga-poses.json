@@ -1,0 +1,521 @@
+{
+  "verified_date": "2026-10-12",
+  "source_url": "https://connect.garmin.com/web-data/exercises/Yoga.json",
+  "source_sha256": "548b79660774cae75ff55f1eb1cef220bd69ea2492bd23dcc4145e5daa7f19b8",
+  "sdk_version": "0.3.17",
+  "verification": "SDK BaseWorkout/ExecutableStep model round-trip plus live upload_workout/get_workout_by_id category/exerciseName/time-duration assertions for every entry; four synthetic templates deleted and absence checked",
+  "category": "POSE",
+  "pose_count": 85,
+  "poses": [
+    {
+      "category": "POSE",
+      "exerciseName": "ALL_FOURS",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "ANKLE_TO_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BABY_COBRA",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BOAT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BOUND_ANGLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BOUND_SEATED_SINGLE_LEG_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BOW",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BOWED_HALF_MOON",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "BRIDGE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "CAT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "CHAIR",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "CHILDS",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "CORPSE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "COW_FACE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "COW",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DEVOTIONAL_WARRIOR",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOLPHIN_PLANK",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOLPHIN",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOWN_DOG_KNEE_TO_NOSE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOWN_DOG_SPLIT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOWN_DOG_SPLIT_OPEN_HIP_BENT_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "DOWNWARD_FACING_DOG",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "EAGLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "EASY_SEATED",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "EXTENDED_PUPPY",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "EXTENDED_SIDE_ANGLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "FISH",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "FOUR_LIMBED_STAFF",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "FULL_SPLIT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "GATE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HALF_CHAIR_HALF_ANKLE_TO_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HALF_MOON",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HEAD_TO_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HERON",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HEROS",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "HIGH_LUNGE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "KNEES_CHEST_CHIN",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "LIZARD",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "LOCUST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "LOW_LUNGE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "LOW_LUNGE_TWIST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "LOW_LUNGE_WITH_KNEE_DOWN",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "MERMAID",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "MOUNTAIN",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "ONE_LEGGED_DOWNWARD_FACING_POSE_OPEN_HIP_BENT_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "ONE_LEGGED_PIGEON",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "PEACEFUL_WARRIOR",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "PLOW",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "RECLINED_HAND_TO_FOOT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "REVOLVED_HALF_MOON",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "REVOLVED_HEAD_TO_KNEE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "REVOLVED_TRIANGLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "RUNNERS_LUNGE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SEATED_EASY_SIDE_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SEATED_EASY_TWIST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SEATED_LONG_LEG_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SEATED_WIDE_LEG_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SHOULDER_STAND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SIDE_BOAT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SPHINX",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SQUAT_OPEN_ARM_TWIST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SQUAT_PALM_PRESS",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STAFF",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_ARMS_UP",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_FORWARD_BEND_HALFWAY_UP",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_SIDE_OPENER",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_SINGLE_LEG_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_SPLIT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_WIDE_LEG_FORWARD_BEND",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "STANDING_WIDE_LEG_FORWARD_BEND_WITH_TWIST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "SUPINE_SPINAL_TWIST",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "TABLE_TOP",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "THREAD_THE_NEEDLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "THUNDERBOLT",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "THUNDERBOLT_POSE_BOTH_SIDES_ARM_STRETCH",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "TREE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "TRIANGLE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "UP_DOG",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "UPWARD_FACING_PLANK",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "WARRIOR_ONE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "WARRIOR_THREE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "WARRIOR_TWO",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "WHEEL",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    },
+    {
+      "category": "POSE",
+      "exerciseName": "WIDE_SIDE_LUNGE",
+      "sdk_model_verified": true,
+      "garmin_upload_readback_verified": true
+    }
+  ]
+}
