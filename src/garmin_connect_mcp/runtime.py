@@ -87,7 +87,7 @@ def worker(connection, directory, method, args, kwargs):
             print("Garmin worker: " + value, file=sys.stderr, flush=True)
     try:
         stage("started")
-        if method not in ALLOWED or (method == "connectapi" and args[0] != "/activitylist-service/activities/search/activities"):
+        if method not in ALLOWED or (method == "connectapi" and args[0] not in {"/activitylist-service/activities/search/activities", "/workout-service/workout/types"}):
             raise RequestError("INVALID_REQUEST")
         store = TokenStore(Path(directory))
         if not store.exists():

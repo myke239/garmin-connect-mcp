@@ -73,13 +73,13 @@ SCHEMAS = {
 }
 
 GUIDANCE = {
-    "create_workout":"Read get_garmin_workout_schema for sport enums. Use find_garmin_exercises and build_garmin_strength_step for strength; resolve equipment variants explicitly and never substitute missing exercises. Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
+    "create_workout":"Read list_garmin_workout_sports and get_garmin_workout_schema for exact sport enums/complete examples; build_garmin_workout validates JSON without writing. Use find_garmin_exercises and build_garmin_strength_step for strength; resolve equipment variants explicitly and never substitute missing exercises. Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
     "update_workout":"Read original template first. Complete replacement preserves all untouched fields and matching workoutId.",
     "schedule_workout":"Use workout_id/date_str, not workoutId/date. Read calendar first to avoid duplicate schedules; verify after commit.",
     "unschedule_workout":"Use calendar entry ID from list_scheduled_workouts, not workout template ID. This removes one scheduled entry.",
     "send_workout_to_device":"Choose an explicit ID from list_garmin_devices. Completed means queued, not downloaded by the physical device.",
     "create_training_calendar":"Creates a template per entry, then schedules it. Not atomic; stop on partial/unknown and preserve returned IDs.",
-    "create_manual_activity":"Local start time with no offset plus IANA timezone. Resolve ambiguous/nonexistent daylight-saving times first. km and whole minutes. Private activity.",
+    "create_manual_activity":"Use get_garmin_activity_schema for the exact live type and build_garmin_manual_activity to validate. Completed actual session only, not a planned calendar entry. Local start time with no offset plus IANA timezone. Resolve ambiguous/nonexistent daylight-saving times first. km and whole minutes. Private activity.",
     "upload_activity_file":"User-supplied activity file only; base64 bytes, never local paths. Max 2 MiB. Header/structure validation does not prove Garmin will accept it. GPS may be included.",
     "set_activity_name":"Verify activity ID and old name before edit. Changes name only; re-read after commit.",
     "set_activity_description":"Verify activity ID before edit. Empty description explicitly clears it.",
