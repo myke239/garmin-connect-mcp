@@ -65,3 +65,21 @@ def test_local_write_opt_in_and_tool_annotations(tmp_path):
             "parameters":{"weight":70,"timestamp":"2026-10-11T12:00:00+00:00"},"idempotency_key":"local-opt-in"})
         assert "draft_id" in str(result)
     asyncio.run(exercise())
+
+
+def test_schedule_preparation_through_mcp(tmp_path):
+    writes=WriteService(tmp_path)
+    writes.settings.save(json.dumps({"enabled":True}))
+    def no_network(*args):
+        raise AssertionError("Preparation must not call Garmin")
+    server=create_server(GarminService(TokenStore(tmp_path),runner=no_network))
+    async def exercise():
+        invalid=await server.call_tool("prepare_garmin_write",{"operation":"schedule_workout",
+            "parameters":{"workout_id":"123","date":"2026-10-12"},"idempotency_key":"mcp-invalid"})
+        assert "INVALID_WRITE_INPUT" in str(invalid)
+        assert "date_str" in str(invalid)
+        valid=await server.call_tool("prepare_garmin_write",{"operation":"schedule_workout",
+            "parameters":{"workout_id":"123","date_str":"2026-10-12"},"idempotency_key":"mcp-valid"})
+        assert "draft_id" in str(valid)
+        assert "prepared" in str(valid)
+    asyncio.run(exercise())

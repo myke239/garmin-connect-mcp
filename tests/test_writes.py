@@ -132,3 +132,47 @@ def test_write_failure_reports_safe_category_and_is_not_retried(tmp_path):
     assert not any(value in json.dumps(result) for value in ("secret-token","private-payload","private.example"))
     assert execute(client,tmp_path,draft["draft_id"]) == result
     assert len(client.calls) == 1
+
+
+@pytest.mark.parametrize("workout_id", [123, "123"])
+def test_schedule_uses_sdk_arguments_and_payload_without_network(tmp_path, workout_id):
+    from garminconnect import Garmin
+    service = WriteService(tmp_path)
+    service.settings.save(json.dumps({"enabled":True}))
+    draft = service.prepare("schedule_workout",{"workout_id":workout_id,"date_str":"2026-10-12"},"schedule-valid")
+    assert draft["status"] == "prepared"
+    calls = []
+    class Transport:
+        def post(self, *args, **kwargs):
+            calls.append((args,kwargs))
+            return {"workoutId":123}
+    client = Garmin()
+    client.client = Transport()
+    result = execute(client,tmp_path,draft["draft_id"])
+    assert result["status"] == "completed"
+    assert len(calls) == 1
+    assert calls[0][0][1].endswith("/123")
+    assert calls[0][1]["json"] == {"date":"2026-10-12"}
+
+
+@pytest.mark.parametrize("parameters,expected", [
+    ({"workout_id":123,"date":"2026-10-12"}, "exactly workout_id and date_str"),
+    ({"workoutId":123,"date_str":"2026-10-12"}, "exactly workout_id and date_str"),
+    ({"workout_id":True,"date_str":"2026-10-12"}, "positive integer"),
+    ({"workout_id":123.0,"date_str":"2026-10-12"}, "positive integer"),
+    ({"workout_id":"private-id-value","date_str":"2026-10-12"}, "positive integer"),
+    ({"workout_id":123,"date_str":"20261012"}, "YYYY-MM-DD"),
+    ({"workout_id":123,"date_str":"2026-02-30"}, "YYYY-MM-DD"),
+    ({"workout_id":123,"date_str":None}, "YYYY-MM-DD"),
+])
+def test_schedule_input_errors_are_specific_and_do_not_create_draft(tmp_path, parameters, expected):
+    from garmin_connect_mcp.server import safe_call
+    service = WriteService(tmp_path)
+    service.settings.save(json.dumps({"enabled":True}))
+    result = safe_call(service.prepare,"schedule_workout",parameters,"schedule-invalid")
+    assert result["error"]["code"] == "INVALID_WRITE_INPUT"
+    assert result["error"]["stage"] == "validation"
+    assert result["error"]["garmin_request_sent"] is False
+    assert expected in result["error"]["message"]
+    assert "private-id-value" not in json.dumps(result)
+    assert not service.store.exists()

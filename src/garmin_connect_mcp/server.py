@@ -7,11 +7,15 @@ from . import __version__
 from .adapter import GarminAdapter, UnauthenticatedAdapter
 from .service import GarminService
 from .runtime import RequestError
+from .writes import WriteInputError
 
 
 def safe_call(function, *args):
     try:
         return function(*args)
+    except WriteInputError as error:
+        return {"error": {"code": "INVALID_WRITE_INPUT", "operation": error.operation,
+            "stage": "validation", "garmin_request_sent": False, "message": str(error)}}
     except RequestError as error:
         messages = {"WRITES_DISABLED":"Enable writes locally with python -m garmin_connect_mcp.writes enable.",
             "WRITE_SCOPE_REQUIRED":"Reconnect ChatGPT with garmin:read and garmin:write; existing read grants cannot write.",
@@ -80,6 +84,8 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             Time/distance values belong in step.endConditionValue (seconds/metres), not endCondition.conditionValue.
             Validate nested repeat steps too; start from get_workout_template rather than guessing fields.
             create_training_calendar uses workouts:[{date:YYYY-MM-DD,workout:template}].
+            schedule_workout requires parameters:{workout_id:positive integer or digit string,date_str:YYYY-MM-DD}.
+            Use SDK names workout_id/date_str, not Garmin JSON names workoutId/date.
             Activity files accept format fit/tcx/gpx and content_base64 (max 2 MiB), never paths.
             Health entries require explicit timezone-aware timestamp; weight is kg/lbs, hydration ml,
             body-composition weight kg, blood pressure mmHg and pulse bpm. Reuse idempotency_key for the same intent.

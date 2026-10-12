@@ -33,6 +33,29 @@ WriteOperation = Literal["create_workout", "update_workout", "schedule_workout",
 SPORTS = {"running", "cycling", "swimming", "walking", "hiking", "strength_training"}
 
 
+class WriteInputError(ValueError):
+    """Locally generated guidance; never contains input values or upstream errors."""
+    def __init__(self, operation, message):
+        self.operation = operation
+        super().__init__(message)
+
+
+def validate_schedule(parameters):
+    if set(parameters) != {"workout_id", "date_str"}:
+        raise WriteInputError("schedule_workout",
+            "Use exactly workout_id and date_str. workoutId and date are not SDK parameter names.")
+    workout_id = parameters["workout_id"]
+    if (isinstance(workout_id, bool) or not isinstance(workout_id, (int, str))
+            or not str(workout_id).isascii() or not str(workout_id).isdigit() or int(workout_id) <= 0):
+        raise WriteInputError("schedule_workout", "workout_id must be a positive integer or a string of ASCII digits.")
+    value = parameters["date_str"]
+    try:
+        if not isinstance(value, str) or len(value) != 10 or date.fromisoformat(value).isoformat() != value:
+            raise ValueError
+    except ValueError:
+        raise WriteInputError("schedule_workout", "date_str must be a valid calendar date formatted YYYY-MM-DD.") from None
+
+
 def validate_workout(payload):
     def enum(value, id_name, key_name):
         if (not isinstance(value, dict) or not isinstance(value.get(id_name), int)
@@ -86,6 +109,8 @@ def validate(operation, parameters):
     parameters = json.loads(json.dumps(parameters, allow_nan=False))
     if operation != "upload_activity_file" and len(json.dumps(parameters)) > 12000:
         raise ValueError("Preview payload exceeds 12 KiB")
+    if operation == "schedule_workout":
+        validate_schedule(parameters)
     if operation == "create_training_calendar":
         if set(parameters) != {"workouts"} or not 1 <= len(parameters["workouts"]) <= 20:
             raise ValueError("Provide 1–20 dated workout templates")
@@ -111,7 +136,11 @@ def validate(operation, parameters):
                 raise ValueError("Invalid activity XML format")
         return parameters
     method = METHODS[operation]
-    inspect.signature(getattr(Garmin, method)).bind(None, **parameters)
+    try:
+        inspect.signature(getattr(Garmin, method)).bind(None, **parameters)
+    except TypeError:
+        names = ", ".join(name for name in inspect.signature(getattr(Garmin, method)).parameters if name != "self")
+        raise WriteInputError(operation, "Missing or unsupported SDK parameter names. Supported names: " + names) from None
     if operation in {"create_workout", "update_workout"}:
         payload = parameters["workout_json"]
         if not isinstance(payload, dict) or not isinstance(payload.get("workoutName"), str) or not payload["workoutName"].strip():
