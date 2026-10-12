@@ -49,7 +49,7 @@ class Application:
         ttk.Label(permissions,text='Select exactly the operations you want to allow. Empty selection denies every write.').pack(anchor='w',pady=6)
         self.operations=tk.Listbox(permissions,selectmode='multiple',exportselection=False,height=8)
         self.operations.pack(fill='both',expand=True)
-        current=json.loads(service.settings.load()).get('operations',list(OPERATIONS)) if service.settings.exists() else []
+        current=json.loads(service.settings.load()).get('operations',list(OPERATIONS)) if service.settings.exists() else list(OPERATIONS)
         for index,name in enumerate(OPERATIONS):
             self.operations.insert('end',name)
             if name in current:self.operations.selection_set(index)
@@ -118,7 +118,11 @@ def main() -> None:
     args=parser.parse_args()
     root=tk.Tk();application=Application(root,auto_diagnostics=not args.smoke_test)
     if args.smoke_test:
-        root.withdraw();root.update();assert len(application.buttons)==5;root.destroy();print('PASS: desktop setup UI constructed');return
+        root.withdraw();root.update();assert len(application.buttons)==5
+        from .writes import WriteService,OPERATIONS
+        if not WriteService().settings.exists():
+            assert application.enabled.get() and len(application.operations.curselection())==len(OPERATIONS)
+        root.destroy();print('PASS: desktop setup UI constructed and default policy matched');return
     if args.tray:application.enable_tray()
     try:root.mainloop()
     finally:

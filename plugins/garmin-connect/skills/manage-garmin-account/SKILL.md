@@ -44,7 +44,7 @@ Use a stable intent key per exact payload. Validation errors say `garmin_request
 
 On `unknown` or `in_progress`, stop dependent writes. Read `get_garmin_write_status(draft_id)` and inspect Garmin with fresh verification tools. Preserve IDs, partial batch steps and safe error categories. Do not retry with a new key or delete the journal. SDK mutation replay is blocked, including after an HTTP 401; reauthorization does not make an old unknown write safe to repeat. Report partial-import failures even if the HTTP request returned successfully.
 
-Bulk deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, local write opt-in and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.
+Bulk deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, explicit local write-policy denial and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.
 
 ## Reviewable workout commits
 

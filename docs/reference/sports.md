@@ -109,7 +109,7 @@ audit cleanup operates only on its explicitly authorized synthetic fixtures.
 
 Unknown outcomes stop dependent writes and require reconciliation; never retry
 through a new intent key. The builder and schemas do not grant write permission:
-local opt-in and remote garmin:write are still required.
+local policy (writes default to enabled) and remote garmin:write still apply.
 
 ## Release audit evidence
 

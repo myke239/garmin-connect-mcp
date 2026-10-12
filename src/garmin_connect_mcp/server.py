@@ -24,7 +24,7 @@ def safe_call(function, *args):
             "ARCHIVE_DISABLED":"Local archive is disabled; the owner can opt in with the installed launcher archive-enable.",
             "ARCHIVE_NOT_FOUND":"This activity has no local archived recording.",
             "WORKOUT_TARGET_CHANGED":"The workout changed since review; obtain a fresh target and review a new intent. No automatic retry.",
-            "WRITES_DISABLED":"Enable writes locally with python -m garmin_connect_mcp.writes enable.",
+            "WRITES_DISABLED":"Writes were explicitly disabled locally. Use the installed launcher writes-enable to re-enable them.",
             "WRITE_SCOPE_REQUIRED":"Reconnect ChatGPT with garmin:read and garmin:write; existing read grants cannot write.",
             "WRITE_OUTCOME_UNKNOWN":"Inspect Garmin and the existing draft; do not create a new intent or retry blindly.",
             "DRAFT_EXPIRED":"Draft expired before writing. Review a newly prepared intent.",
@@ -212,7 +212,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True),
             meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
         def prepare_garmin_write(operation: WriteOperation, parameters: dict, idempotency_key: str) -> dict:
-            """Preview a fixed account-write operation without changing Garmin. Requires local opt-in and garmin:write remotely.
+            """Preview a fixed account-write operation without changing Garmin. Enabled by default; owner policy and garmin:write remotely still apply.
             First call get_garmin_write_schema(operation) for exact names/types/units and verification guidance.
             Supply SDK-named parameters. Workouts use complete workout_json with sportType/workoutSegments.
             Include numeric sportTypeId, stepTypeId, conditionTypeId and workoutTargetTypeId with their keys.

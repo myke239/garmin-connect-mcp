@@ -83,7 +83,7 @@ First query `get_garmin_write_schema(operation)` for the current contract. Read 
 
 Keep one stable intent key for each exact operation and payload. Show the returned preview with name, sport, units, encoded targets, dates, and replacement/partial-batch warnings. Ask the user to approve that exact preview unless they already approved identical content. Commit using the returned `commit_tool` and unchanged `commit_arguments` described below; the generic tool remains available for legacy drafts. Preparation is not creation and approval of a general plan is not approval of an unseen payload.
 
-Writes require local opt-in; remote calls also require `garmin:write`. On authentication or scope failure, explain the server's guidance and stop dependent operations. Never ask for Garmin passwords or tokens in chat.
+Writes are enabled by default; explicit local disable/operation policy still applies, and remote calls also require `garmin:write`. On authentication or scope failure, explain the server's guidance and stop dependent operations. Never ask for Garmin passwords or tokens in chat.
 
 ## Verify and report
 

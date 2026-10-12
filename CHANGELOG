@@ -1,6 +1,11 @@
 0.12.0 - 2026-10-12
 
-## Unreleased
+## 0.13.0 — 2026-10-12
+
+- Enable all allowlisted account writes by default when no local policy exists; preserve explicit disables and operation allowlists.
+- Keep reviewed prepare/commit, schema validation, journals and separate remote OAuth write scope unchanged.
+- Match desktop default operation selection, agent guidance and documentation to the new policy.
+
 
 - Reorganize user guides, references, catalogs and dated verification under docs/.
 - Rewrite the README around training workflows, reviewed writes and fair differentiation; add installation choices, troubleshooting and a complete 44-tool reference.

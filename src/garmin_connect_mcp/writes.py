@@ -1,4 +1,4 @@
-"""Opt-in, previewed account writes with a durable at-most-once journal."""
+"""Default-enabled, previewed account writes with a durable at-most-once journal."""
 import argparse
 import base64
 import hashlib
@@ -476,11 +476,11 @@ class WriteService:
         self.runner = runner
 
     def enabled(self) -> bool:
-        return self.settings.exists() and json.loads(self.settings.load()).get("enabled") is True
+        return not self.settings.exists() or json.loads(self.settings.load()).get("enabled") is True
 
     def require_enabled(self,operation=None):
         if not self.enabled(): raise RequestError("WRITES_DISABLED")
-        settings=json.loads(self.settings.load())
+        settings=json.loads(self.settings.load()) if self.settings.exists() else {}
         if operation is not None and "operations" in settings:
             allowed=settings["operations"]
             if not isinstance(allowed,list) or any(v not in OPERATIONS for v in allowed) or operation not in allowed:

@@ -87,3 +87,26 @@ def test_drift_parser_never_executes_code_and_reports_changes(tmp_path):
     result=compare('yoga',json.dumps({'categories':{'POSE':{'exercises':{'CAT':{},'TEST_NEW_POSE':{}}}}}).encode())
     assert result['added']==[('POSE','TEST_NEW_POSE')]
     with pytest.raises(ValueError): compare('strength',b'_RAW: list = __import__("os").system("bad")')
+
+
+def test_default_writes_and_persisted_revocation_at_every_boundary(tmp_path):
+    service=WriteService(tmp_path,runner=lambda *args:pytest.fail('Revoked write must not reach worker'))
+    assert service.enabled() and not service.settings.exists()
+    draft=service.prepare('add_weight',CASES['add_weight'],'default-enabled-draft')
+    service.settings.save(json.dumps({'enabled':False,'operations':['add_weight']}))
+    reopened=WriteService(tmp_path,runner=service.runner)
+    assert not reopened.enabled()
+    with pytest.raises(RequestError,match='WRITES_DISABLED'):
+        reopened.prepare('add_weight',CASES['add_weight'],'disabled-new-draft')
+    with pytest.raises(RequestError,match='WRITES_DISABLED'): reopened.commit(draft['draft_id'])
+    client=FakeClient()
+    with pytest.raises(RequestError,match='WRITES_DISABLED'): execute(client,tmp_path,draft['draft_id'])
+    assert not client.calls and reopened.status(draft['draft_id'])['status']=='prepared'
+
+
+@pytest.mark.parametrize('settings',[{}, {'enabled':'true'}, {'enabled':1}, {'enabled':None}])
+def test_existing_ambiguous_enable_setting_is_not_promoted(tmp_path,settings):
+    service=WriteService(tmp_path)
+    service.settings.save(json.dumps(settings))
+    assert not service.enabled()
+    with pytest.raises(RequestError,match='WRITES_DISABLED'):service.require_enabled('create_workout')

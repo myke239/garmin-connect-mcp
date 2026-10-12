@@ -7,7 +7,7 @@ Bring your runs, recovery metrics, strength sessions and workout library into Co
 [![CI](https://github.com/myke239/garmin-connect-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/myke239/garmin-connect-mcp/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**[Download v0.12.0](https://github.com/myke239/garmin-connect-mcp/releases/tag/v0.12.0)** · **[Get started](docs/getting-started/installation.md)** · **[Documentation](docs/README.md)** · **[Changelog](CHANGELOG)**
+**[Download v0.13.0](https://github.com/myke239/garmin-connect-mcp/releases/tag/v0.13.0)** · **[Get started](docs/getting-started/installation.md)** · **[Documentation](docs/README.md)** · **[Changelog](CHANGELOG)**
 
 ## What you can do
 
@@ -21,7 +21,7 @@ Bring your runs, recovery metrics, strength sessions and workout library into Co
 | “Rename this workout and schedule my existing templates for the week.” | Fresh target checks, content hashes and individually journaled scheduling outcomes. |
 | “Analyze my recorded power without treating missing samples as zero.” | An opt-in local FIT archive and bounded power-window/drift analysis. |
 
-These are examples of requests, not permission to write. Account writes are **off by default**. The assistant first prepares a validated draft; you review its complete preview before an approved commit.
+These are examples of requests, not permission to write. Account writes are **enabled by default**; you can disable them or allow only selected operations locally. Existing explicit disable settings are preserved. The assistant first prepares a validated draft; you review its complete preview before an approved commit.
 
 ## Why choose this connector?
 
@@ -40,7 +40,7 @@ Other Garmin MCP projects also offer wellness data, native workout creation, FIT
 1. Follow the [installation guide](docs/getting-started/installation.md). Windows x64 and Linux x86-64 executable bundles are available; managed installers can obtain Python for you.
 2. Run the installed launcher's `login`, then `verify`. Enter credentials and MFA only on your machine—never in chat.
 3. Run `install-plugin` for Codex, then open a new chat. Other clients can use [the stdio configuration](docs/getting-started/codex.md#other-mcp-clients).
-4. Try: “Use Garmin Connect to summarize my last three runs.” Enable writes only when you need them, using the [account-write guide](docs/guides/account-writes.md).
+4. Try: “Use Garmin Connect to summarize my last three runs.” Review or restrict write access using the [account-write guide](docs/guides/account-writes.md).
 
 Launchers work from any directory without activating a virtual environment. Standard application locations are `%LOCALAPPDATA%\Programs\GarminConnectMCP` on Windows and `${XDG_DATA_HOME:-~/.local/share}/garmin-connect-mcp/application` on Linux. Credentials and journals stay in a separate private data directory.
 
@@ -55,9 +55,9 @@ For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/ch
 
 ## Compatibility and honest limits
 
-Version **0.12.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
+Version **0.13.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
 
-Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The final Ubuntu 22.04 WSL suite passed **419 tests**. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
+Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The 0.12.0 Ubuntu 22.04 WSL suite passed **419 tests**; the default-write change adds explicit policy/revocation regression coverage. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
 
 Garmin acceptance and queued device delivery do **not** prove execution or animation on your watch. Physical watch execution and macOS/ARM executable builds remain unverified. Public executables exclude Garmin's separately licensed FIT SDK; [local FIT setup](docs/getting-started/installation.md#executables-and-desktop-setup) obtains it directly when needed. Sparse recordings and unsupported sport fields are reported rather than invented.
 

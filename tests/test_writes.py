@@ -47,7 +47,7 @@ class FakeClient:
 @pytest.mark.parametrize("operation", list(CASES))
 def test_each_operation_is_previewed_and_committed_once(tmp_path,operation):
     service=WriteService(tmp_path)
-    service.settings.save(json.dumps({"enabled":True}))
+    assert service.enabled() and not service.settings.exists()
     draft=service.prepare(operation,CASES[operation],"unique-intent")
     client=FakeClient()
     result=execute(client,tmp_path,draft["draft_id"])
@@ -61,6 +61,7 @@ def test_each_operation_is_previewed_and_committed_once(tmp_path,operation):
 
 def test_disabled_validation_replay_and_expiry(tmp_path):
     service=WriteService(tmp_path)
+    service.settings.save(json.dumps({"enabled":False}))
     with pytest.raises(RequestError,match="WRITES_DISABLED"):
         service.prepare("add_weight",CASES["add_weight"],"test-key")
     service.settings.save(json.dumps({"enabled":True}))
