@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Corrected protected-resource discovery to advertise optional write scope while
+  retaining read-only minimum authentication and existing read grants.
+
 - Opt-in preview/commit tools with 16 fixed write operations: workouts,
   scheduling/removal, device push, manual activities, bounded FIT/TCX/GPX uploads,
   activity edits, strength sets and health measurements.

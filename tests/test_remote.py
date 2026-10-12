@@ -72,6 +72,7 @@ def test_unauthorized_discovery_and_no_browser_approval(remote):
     assert client.get("/.well-known/oauth-authorization-server").json()["code_challenge_methods_supported"] == ["S256"]
     metadata = client.get("/.well-known/oauth-protected-resource/mcp").json()
     assert metadata["resource"] == RESOURCE
+    assert set(metadata["scopes_supported"]) == {"garmin:read", "garmin:write"}
     assert client.get("/mcp", headers={"Authorization": "Bearer invented"}).status_code == 401
     assert client.post("/consent", data={"approved": "true"}).status_code == 405
     identity, ticket = pending(client)
