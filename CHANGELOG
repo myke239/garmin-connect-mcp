@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Registrations that omit scope now support requesting read and write. Tokens
+  still carry only locally approved authorization scopes; existing clients and
+  explicitly read-only registrations remain unchanged.
 - Corrected protected-resource discovery to advertise optional write scope while
   retaining read-only minimum authentication and existing read grants.
 

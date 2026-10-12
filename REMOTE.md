@@ -26,6 +26,12 @@ Ctrl+C closes the foreground server and tunnel. No startup task is installed.
 Open https://chatgpt.com/plugins on the web, select + then Add custom MCP server,
 and enter the printed HTTPS URL. Select OAuth, then Dynamic Client Registration
 (DCR); leave static client ID and secret blank, and keep `garmin:read` selected.
+Use the name **Garmin Connect**. For opt-in writes, also select `garmin:write`.
+New DCR registrations that omit scope support both scopes, but tokens receive
+only the scopes approved through local consent. Explicit read-only registrations
+remain read-only. If authorization reports that the client was not registered
+with `garmin:write`, delete that ChatGPT connection and create a fresh one with
+both scopes selected; reconnecting the old client does not change its registration.
 The CIMD-unavailable notice is informational; this server supports DCR.
 Create the plugin and install it. Availability
 depends on your account and workspace. When the connection opens its consent
