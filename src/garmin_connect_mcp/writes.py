@@ -114,6 +114,10 @@ def validate_workout(payload):
                     value = step.get("endConditionValue")
                     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
                         raise ValueError("Time/distance steps require positive endConditionValue (seconds/metres)")
+                if step["endCondition"]["conditionTypeKey"] == "reps":
+                    value=step.get("endConditionValue")
+                    if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not 1<=value<=1000 or not float(value).is_integer():
+                        raise ValueError("Rep-based steps require 1–1000 whole repetitions in endConditionValue")
             else:
                 raise ValueError("Use ExecutableStepDTO or RepeatGroupDTO")
 

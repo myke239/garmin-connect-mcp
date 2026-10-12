@@ -27,7 +27,7 @@ async def verify(codex_config=False, plugin_root=None):
         async with ClientSession(read, write) as client:
             await client.initialize()
             tools = await client.list_tools()
-            assert len(tools.tools) == 19
+            assert len(tools.tools) == 21
             assert {tool.name for tool in tools.tools if not tool.annotations.readOnlyHint} == {"prepare_garmin_write", "commit_garmin_write"}
             async def call(name, args):
                 result = await client.call_tool(name, args)
@@ -51,7 +51,7 @@ async def verify(codex_config=False, plugin_root=None):
             summary = await call("get_training_summary", {"start_date":(end-timedelta(days=6)).isoformat(),
                                                           "end_date":end.isoformat()})
             assert "coverage_complete" in summary
-            print("Live MCP passed: 19 tools discovered; read operations and cache verified; no writes performed.")
+            print("Live MCP passed: 21 tools discovered; read operations and cache verified; no writes performed.")
 
 
 if __name__ == "__main__":
