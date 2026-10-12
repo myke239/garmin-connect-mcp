@@ -56,6 +56,9 @@ No account identifiers or measurement values are published in this report.
   guard blocks replays of account mutations while allowing reads/token refresh.
 - Durable status reads do not require a commit. Unknown/in-progress outcomes
   retain the no-retry rule; validation/preflight rejections are distinguished.
+- Authenticated public HTTP discovery/schema/calendar checks passed and a
+  temporary read grant correctly rejected writes; that audit connection was removed.
+  Terminal consent now displays actual scopes and labels write grants explicitly.
 
 ## SDK-only mutation inventory
 

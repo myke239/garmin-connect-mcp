@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-10-12
+
+- Terminal OAuth approval displays actual scopes and explicitly distinguishes
+  read access from permission to modify the account. Reject requests changed
+  while the owner reviews consent.
+
 ## 0.3.0 — 2026-10-12
 
 - Queryable write schemas and durable status, fresh calendar/device/type/health

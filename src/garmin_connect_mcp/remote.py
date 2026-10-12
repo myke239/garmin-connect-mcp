@@ -160,15 +160,21 @@ class OwnerProvider:
                 raise ValueError("Connection request expired or not found")
             print("Callback:", pending["params"]["redirect_uri"])
             print("Client ID:", pending["client_id"])
+            scopes=pending["params"]["scopes"]
+            print("Requested scopes:"," ".join(scopes))
+            reviewed=json.dumps([pending["client_id"],pending["params"]],sort_keys=True)
         # Do not hold the session lock while the owner reviews the request.
         if not sys.stdin.isatty():
             raise ValueError("Approval requires your interactive local terminal")
-        if input("Allow this connection to read your Garmin stats? Type APPROVE: ") != "APPROVE":
+        action="read and modify your Garmin account" if WRITE_SCOPE in scopes else "read your Garmin stats"
+        if input("Allow this connection to "+action+"? Type APPROVE: ") != "APPROVE":
             raise ValueError("Not approved")
         with self.state() as state:
             pending = state["pending"].get(ticket)
             if not pending:
                 raise ValueError("Connection request expired or not found")
+            if json.dumps([pending["client_id"],pending["params"]],sort_keys=True)!=reviewed:
+                raise ValueError("Connection changed during review. Restart authorization.")
             pending["approved"] = True
 
     async def load_authorization_code(self, client, authorization_code):
