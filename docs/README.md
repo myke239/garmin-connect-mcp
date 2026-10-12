@@ -10,7 +10,6 @@ Choose a guide by what you want to do. Start with installation; API details and 
 2. [Connect Codex or another MCP client](getting-started/codex.md): registration, skills and stdio configuration.
 3. [Connect ChatGPT and your phone](getting-started/chatgpt.md): personal HTTPS tunnel, OAuth and local consent.
 
-[Is this the right connector for you?](overview.md) explains benefits, tradeoffs and alternatives.
 
 ## Task guides
 

@@ -33,7 +33,7 @@ The focus is the complete path from understanding a session to preparing and man
 - **A guided first use for agents.** The Codex plugin includes focused skills. Every MCP client can query exact write contracts, catalog identifiers and workout schemas from the server itself.
 - **A choice of deployment.** Windows/Linux installers and executable bundles, local stdio, optional authenticated HTTPS, desktop setup, and a locally built Docker image share the same validated tools.
 
-Other Garmin MCP projects also offer wellness data, native workout creation, FIT analysis or simpler single-binary deployment. This project's differentiator is their combination with reviewable account management, verified catalogs and explicit outcome handling. See [fit, tradeoffs and alternatives](docs/overview.md) before choosing.
+Verified catalogs, training analysis and reviewable account management work together in one connector, with explicit handling of partial or uncertain outcomes.
 
 ## Start here
 

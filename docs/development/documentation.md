@@ -15,11 +15,7 @@ Keep the root README focused on purpose, concrete use cases, benefits, a short s
 
 Every guide links back to `docs/README.md`. Link to the canonical explanation rather than appending the same release notes to multiple guides. Preserve historical evidence with its tested version/date, and put current status above it. Avoid personal machine paths, except explicitly marked legacy-data compatibility notes. Skills stay next to the plugin; they are operational agent instructions, not duplicated user manuals.
 
-## Reference projects
-
-The reorganization was informed by [uv](https://github.com/astral-sh/uv) and [FastAPI](https://github.com/fastapi/fastapi), reviewed on 2026-10-12. Both lead with a clear purpose and useful starting examples, then point to structured documentation and dedicated contributor material. We adopt that separation without copying their text, adding a documentation-site build or claiming their popularity proves our implementation quality.
-
-The alternatives page cites Garmin MCP repositories directly. Describe each project's documented emphasis, date the review, and avoid unverified claims that other projects lack a feature.
+Describe this project through concrete capabilities, workflows and verified limits. Do not include direct comparisons with other projects or an alternatives/tradeoffs page.
 
 ## Checks before merging
 
@@ -32,4 +28,4 @@ The documentation checker verifies local Markdown targets and heading fragments,
 
 For a changed install command or schema example, verify against the launcher/parser or offline MCP contract. Runtime changes still need appropriate tests. Documentation-only changes retain VERSION; update CHANGELOG under Unreleased. Preserve encrypted journals, private audits and active installed runtimes.
 
-The tool reference is based on offline `create_server(tool_profile="all").list_tools()` for 0.12.0. Refresh names/parameters when tools change. Never equate Garmin readback or queueing with physical watch execution.
+The tool reference is based on offline `create_server(tool_profile="all").list_tools()` for 0.13.0. Refresh names/parameters when tools change. Never equate Garmin readback or queueing with physical watch execution.
