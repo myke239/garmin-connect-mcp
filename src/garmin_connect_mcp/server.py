@@ -75,7 +75,10 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
         def prepare_garmin_write(operation: WriteOperation, parameters: dict, idempotency_key: str) -> dict:
             """Preview a fixed account-write operation without changing Garmin. Requires local opt-in and garmin:write remotely.
-            Supply SDK-named parameters. Workouts use complete workout_json with sportType/workoutSegments;
+            Supply SDK-named parameters. Workouts use complete workout_json with sportType/workoutSegments.
+            Include numeric sportTypeId, stepTypeId, conditionTypeId and workoutTargetTypeId with their keys.
+            Time/distance values belong in step.endConditionValue (seconds/metres), not endCondition.conditionValue.
+            Validate nested repeat steps too; start from get_workout_template rather than guessing fields.
             create_training_calendar uses workouts:[{date:YYYY-MM-DD,workout:template}].
             Activity files accept format fit/tcx/gpx and content_base64 (max 2 MiB), never paths.
             Health entries require explicit timezone-aware timestamp; weight is kg/lbs, hydration ml,
