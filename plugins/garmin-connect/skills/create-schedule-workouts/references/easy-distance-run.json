@@ -1,0 +1,16 @@
+{
+  "workoutName": "Easy 5 km Run",
+  "sportType": {"sportTypeId": 1, "sportTypeKey": "running", "displayOrder": 1},
+  "workoutSegments": [{
+    "segmentOrder": 1,
+    "sportType": {"sportTypeId": 1, "sportTypeKey": "running", "displayOrder": 1},
+    "workoutSteps": [{
+      "type": "ExecutableStepDTO",
+      "stepOrder": 1,
+      "stepType": {"stepTypeId": 3, "stepTypeKey": "interval", "displayOrder": 3},
+      "endCondition": {"conditionTypeId": 3, "conditionTypeKey": "distance", "displayOrder": 3, "displayable": true},
+      "endConditionValue": 5000,
+      "targetType": {"workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target", "displayOrder": 1}
+    }]
+  }]
+}

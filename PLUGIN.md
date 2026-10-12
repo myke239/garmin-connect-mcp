@@ -1,7 +1,9 @@
 # Local plugin design and verification
 
 The compatibility package lives at `plugins/garmin-connect`: manifest, local
-stdio MCP configuration, and one narrowly scoped training-analysis skill.
+stdio MCP configuration, a training-analysis skill, and a workout creation and
+scheduling skill. The workout skill includes a validated running JSON example,
+SDK field conventions, preview/commit consent, and ambiguous-outcome handling.
 `.agents/plugins/marketplace.json` exposes it through the local `myke-garmin`
 catalog. There are no lifecycle hooks, new listening ports, or automated uploads.
 
@@ -14,6 +16,11 @@ another machine. Source stays in your checkout; Codex controls its normal cache.
 
 Authentication remains in the MCP server's encrypted session store. The package
 contains no tokens or account statistics. A new computer needs its own login.
+
+Local skills load in Codex. A ChatGPT HTTPS MCP connection does not receive
+these local files. For a ChatGPT conversation, supply the workout skill body
+and its schema reference as instructions/context when needed; server validation
+and MCP tool descriptions apply to every client regardless of skill loading.
 
 Verification gates performed on this machine:
 
