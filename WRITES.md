@@ -50,6 +50,20 @@ like the Garmin session store. Do not delete the journal to retry ambiguous writ
 
 ## Operations and parameters
 
+Scheduling an existing workout uses this exact preparation shape:
+
+```json
+{"operation":"schedule_workout","parameters":{"workout_id":"123456789","date_str":"2026-10-12"},"idempotency_key":"schedule-existing-workout-2026-10-12"}
+```
+
+Replace the ID and date with the user's verified template and requested date.
+`workout_id` accepts a positive integer or digit string; `date_str` must be a
+real YYYY-MM-DD date. `workoutId` and `date` are Garmin JSON fields, not SDK
+argument names. Invalid scheduling inputs return `INVALID_WRITE_INPUT`,
+`stage: validation` and `garmin_request_sent: false` with specific guidance.
+Preparation does not call Garmin. Upstream errors belong to the commit stage
+and retain their separate safe categories and unknown-outcome precautions.
+
 Parameters use the pinned SDK's names. Unknown names are rejected; there is no
 arbitrary endpoint or method tool. The table lists required fields; optional
 SDK fields are described below. Numeric IDs must be explicit and positive.

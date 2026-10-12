@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Scheduling preparation now returns specific local-validation errors for names,
+  ID types and date formats, distinct from upstream write failures. Added exact
+  SDK scheduling arguments to MCP tool guidance.
 - Added a discoverable workout creation/scheduling skill to Garmin Connect,
   with SDK schema guidance, a validated example, and safe verification workflow.
 - Reject malformed workout enums and duration/distance fields, including nested

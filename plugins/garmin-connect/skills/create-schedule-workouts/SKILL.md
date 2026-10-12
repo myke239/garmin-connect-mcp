@@ -18,6 +18,7 @@ Before constructing or modifying workout JSON, read [references/workout-schema.m
 - New template: `prepare_garmin_write(operation="create_workout", parameters={"workout_json": template}, idempotency_key=stable_intent_key)`.
 - Replace existing template: `update_workout`, parameters `workout_id` and the complete replacement `workout_json`. Explain that this changes the existing template, including schedules referring to it.
 - Schedule existing template: `schedule_workout`, parameters `workout_id` and `date_str` in YYYY-MM-DD format.
+  Example: `{"operation":"schedule_workout","parameters":{"workout_id":"123456789","date_str":"2026-10-12"},"idempotency_key":"schedule-existing-2026-10-12"}`. Replace the example ID with the verified saved template ID. Do not use `date` or `workoutId` as parameter names. A local `INVALID_WRITE_INPUT` means no Garmin request was sent; correct only the named validation issue and prepare again.
 - Create and schedule new templates together: `create_training_calendar`, parameters `{"workouts": [{"date": "YYYY-MM-DD", "workout": template}]}`. Up to 20 entries; each creates a template, including when the same content is used on multiple dates. To reuse one existing template on multiple dates, schedule its ID separately.
 - Remove a scheduled entry: `unschedule_workout` needs its calendar entry ID, not its template ID. If that ID is unavailable, stop and ask for it; the current read tools do not expose a calendar listing.
 
