@@ -35,10 +35,10 @@ migration are described in [permissions and storage](../guides/permissions-and-s
 
 | Route | Choose it when | Prerequisites |
 | --- | --- | --- |
-| Executable bundle | You want desktop setup or a CLI without installing Python for core tools. | Windows x64 or Linux x86-64/glibc 2.35+; keep the entire extracted bundle together. |
-| Managed source installer | You prefer a reviewed Git checkout and automatic Python/dependency setup. | Git (or an extracted source checkout), outbound HTTPS; Linux also needs curl/CA certificates. |
+| [Executable bundle](#executables-and-desktop-setup) | You want desktop setup or a CLI without installing Python for core tools. | Windows x64 or Linux x86-64/glibc 2.35+; keep the entire extracted bundle together. |
+| Managed source installer ([Windows](#windows) / [Linux](#linux-and-wsl)) | You prefer a reviewed Git checkout and automatic Python/dependency setup. | Git (or an extracted source checkout), outbound HTTPS; Linux also needs curl/CA certificates. |
 | Development environment | You are changing or testing the server. | Python 3.12+; see [CONTRIBUTING](../../CONTRIBUTING). |
-| Local Docker build | You prefer an isolated Linux runtime. | Docker; separate Linux credentials and a private data volume. |
+| [Local Docker build](#build-executables-and-use-docker) | You prefer an isolated Linux runtime. | Docker; separate Linux credentials and a private data volume. |
 
 The install commands below start with a fresh public checkout. To work from another directory later, use the absolute installed launcher. You can choose a different source checkout path.
 
