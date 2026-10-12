@@ -44,6 +44,9 @@ def valid_callback(value):
             and parts.port in (None, 443) and not parts.username and not parts.password
             and not parts.query and not parts.fragment
             and (parts.path == "/connector_platform_oauth_redirect"
+                 or (parts.path.startswith("/connector/oauth/")
+                     and len(parts.path.removeprefix("/connector/oauth/")) > 0
+                     and "/" not in parts.path.removeprefix("/connector/oauth/"))
                  or parts.path.startswith("/oauth/callback/")
                  or parts.path == "/oauth/callback"
                  or (parts.path.startswith("/aip/") and parts.path.endswith("/oauth/callback"))))

@@ -12,7 +12,7 @@ from garmin_connect_mcp.remote import create_http_app, key, public_origin
 
 ORIGIN = "https://garmin.example.com"
 RESOURCE = ORIGIN + "/mcp"
-CALLBACK = "https://chatgpt.com/connector_platform_oauth_redirect"
+CALLBACK = "https://chatgpt.com/connector/oauth/test-callback-id"
 VERIFIER = "a" * 64
 CHALLENGE = base64.urlsafe_b64encode(hashlib.sha256(VERIFIER.encode()).digest()).decode().rstrip("=")
 
