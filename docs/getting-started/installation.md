@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Version 0.12.0 includes managed installers, a desktop setup/tray application,
+Version 0.13.0 includes managed installers, a desktop setup/tray application,
 optional per-user background startup and downloadable frozen builds. Every
 launcher works from any directory with no environment activation.
 
@@ -116,8 +116,7 @@ source checkout's `.mcp.json`.
 
 For phone access, run the installer with remote extras, then `tunnel-setup` and
 `tunnel`. Follow [personal HTTPS setup](chatgpt.md) for ChatGPT connection and consent.
-Keep the PC awake and service running. Writes remain disabled until explicitly
-enabled locally; installation never grants writes or approves OAuth.
+Keep the PC awake and service running. Writes are enabled by default when no local policy exists; installation preserves explicit disable/allowlist settings and never approves OAuth or upgrades remote grants. Use writes-disable or an operation allowlist to restrict local access.
 
 ## Update, remove and troubleshooting
 
@@ -185,7 +184,7 @@ Windows uses a per-user Startup entry; Linux uses a systemd user unit with resta
 limits. `background-uninstall` removes only the project's owned entry. Re-register
 startup after upgrading so it points to the new release. A Secret Service keyring
 must already be unlocked in the service's D-Bus session. Installation never
-silently enables startup or write permissions. PCs must remain awake for phone
+silently enables startup or overwrites an existing write policy. New installations allow writes by default. PCs must remain awake for phone
 access; close the setup window to the tray or exit without stopping the service.
 
 ## Build executables and use Docker

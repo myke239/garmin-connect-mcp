@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Account writes remain locally disabled by default and require remote
+Account writes are locally enabled by default when no policy exists. Existing explicit disable settings and operation allowlists remain in force. Remote commits require
 `garmin:write` scope. The installed launcher supports:
 
 ```

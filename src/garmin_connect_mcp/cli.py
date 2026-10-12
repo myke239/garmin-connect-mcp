@@ -7,7 +7,7 @@ from .auth import TokenStore, interactive_login, restore_session
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Garmin Connect MCP with opt-in guarded writes")
+    parser = argparse.ArgumentParser(description="Garmin Connect MCP with default-enabled reviewed writes")
     parser.add_argument("command", nargs="?", choices=["serve", "login", "verify", "logout"], default="serve")
     args = parser.parse_args()
     if args.command == "serve":

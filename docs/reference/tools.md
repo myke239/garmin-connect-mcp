@@ -2,9 +2,9 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **44 tools** in version **0.12.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **44 tools** in version **0.13.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
-Annotations describe tool intent, not authorization: local opt-in, operation allowlists and remote scopes still apply. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
+Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
 
@@ -534,7 +534,7 @@ List up to 50 workout template IDs/names, for creation, edits and scheduling.
 
 ## prepare_garmin_write
 
-Preview a fixed account-write operation without changing Garmin. Requires local opt-in and garmin:write remotely. First call get_garmin_write_schema(operation) for exact names/types/units and verification guidance. Supply SDK-named parameters. Workouts use complete workout_json with sportType/workoutSegments. Include numeric sportTypeId, stepTypeId, conditionTypeId and workoutTargetTypeId with their keys. Time/distance values belong in step.endConditionValue (seconds/metres), not endCondition.conditionValue. Validate nested repeat steps too; start from get_workout_template rather than guessing fields. create_training_calendar uses workouts:[{date:YYYY-MM-DD,workout:template}]. schedule_workout requires parameters:{workout_id:positive integer or digit string,date_str:YYYY-MM-DD}. Use SDK names workout_id/date_str, not Garmin JSON names workoutId/date. Activity files accept format fit/tcx/gpx and content_base64 (max 2 MiB), never paths. Health entries require explicit timezone-aware timestamp; weight is kg/lbs, hydration ml, body-composition weight kg, blood pressure mmHg and pulse bpm. Reuse idempotency_key for the same intent. Show the returned preview to the user; use its commit_tool and unchanged commit_arguments after approval. Other operations use commit_garmin_write.
+Preview a fixed account-write operation without changing Garmin. Enabled by default; owner policy and garmin:write remotely still apply. First call get_garmin_write_schema(operation) for exact names/types/units and verification guidance. Supply SDK-named parameters. Workouts use complete workout_json with sportType/workoutSegments. Include numeric sportTypeId, stepTypeId, conditionTypeId and workoutTargetTypeId with their keys. Time/distance values belong in step.endConditionValue (seconds/metres), not endCondition.conditionValue. Validate nested repeat steps too; start from get_workout_template rather than guessing fields. create_training_calendar uses workouts:[{date:YYYY-MM-DD,workout:template}]. schedule_workout requires parameters:{workout_id:positive integer or digit string,date_str:YYYY-MM-DD}. Use SDK names workout_id/date_str, not Garmin JSON names workoutId/date. Activity files accept format fit/tcx/gpx and content_base64 (max 2 MiB), never paths. Health entries require explicit timezone-aware timestamp; weight is kg/lbs, hydration ml, body-composition weight kg, blood pressure mmHg and pulse bpm. Reuse idempotency_key for the same intent. Show the returned preview to the user; use its commit_tool and unchanged commit_arguments after approval. Other operations use commit_garmin_write.
 
 **Annotations:** read-only `false`; destructive `false`.
 

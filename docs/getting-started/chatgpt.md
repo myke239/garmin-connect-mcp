@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-The optional remote service exposes the read tools and opt-in previewed writes through
+The optional remote service exposes the read tools and previewed account writes through
 Streamable HTTP at `/mcp`. It requires OAuth with PKCE and explicit approval in
 the owner's local terminal. Garmin credentials never go to ChatGPT or ngrok.
 Ngrok carries the HTTPS traffic, including tool responses, so it is a trusted
@@ -32,7 +32,7 @@ Ctrl+C closes the foreground server and tunnel. No startup task is installed.
 In the web app, open the custom MCP connection setup (the tested interface was at https://chatgpt.com/plugins), then Add custom MCP server. UI names and availability can change;
 and enter the printed HTTPS URL. Select OAuth, then Dynamic Client Registration
 (DCR); leave static client ID and secret blank, and keep `garmin:read` selected.
-Use the name **Garmin Connect**. For opt-in writes, also select `garmin:write`.
+Use the name **Garmin Connect**. For writes (locally enabled by default), also select `garmin:write`.
 New DCR registrations that omit scope support both scopes, but tokens receive
 only the scopes approved through local consent. Explicit read-only registrations
 remain read-only. If authorization reports that the client was not registered
@@ -85,7 +85,7 @@ Keep antivirus protection and TLS certificate validation enabled.
 
 ## Account writes
 
-See [account writes](../guides/account-writes.md). Enable writes locally, refresh the ChatGPT tool list,
+See [account writes](../guides/account-writes.md). If an existing local policy disabled writes, re-enable them locally; refresh the ChatGPT tool list,
 and reconnect with both garmin:read and garmin:write. Existing read-only tokens
 are not upgraded. Review every draft before commit.
 

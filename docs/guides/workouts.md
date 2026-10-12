@@ -26,7 +26,7 @@ Builders return validated drafts and do not mutate Garmin. Reps, seconds, metres
 
 ## 3. Prepare and review
 
-Query `get_garmin_write_schema(operation="create_workout")`. Prepare the returned `workout_json` with `prepare_garmin_write`, using one stable idempotency key for this intent. Show the full preview: name, sport, exercises, repetitions/timing, loads, rests and any targets. Local writes must be enabled, and remote commits also require `garmin:write`.
+Query `get_garmin_write_schema(operation="create_workout")`. Prepare the returned `workout_json` with `prepare_garmin_write`, using one stable idempotency key for this intent. Show the full preview: name, sport, exercises, repetitions/timing, loads, rests and any targets. Writes are enabled by default; explicit local disable/allowlist settings still apply, and remote commits also require `garmin:write`.
 
 After approval of this exact preview, invoke the returned `commit_tool` with its unchanged `commit_arguments`. Do not simplify away review fields. Inspect the durable outcome with `get_garmin_write_status`.
 

@@ -46,9 +46,10 @@ def test_read_grant_cannot_escalate_on_refresh(remote):
         asyncio.run(provider.exchange_refresh_token(registered,refresh,[READ_SCOPE,WRITE_SCOPE]))
 
 
-def test_local_write_opt_in_and_tool_annotations(tmp_path):
+def test_local_write_disable_and_tool_annotations(tmp_path):
     store=TokenStore(tmp_path)
     writes=WriteService(tmp_path)
+    writes.settings.save(json.dumps({"enabled":False}))
     backend=GarminService(store,runner=lambda *args: {})
     server=create_server(backend)
     async def exercise():
