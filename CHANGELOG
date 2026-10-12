@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Consent pages provide a fully quoted command using the running installation's
+  absolute Python path, with no environment activation or directory change.
 - Registrations that omit scope now support requesting read and write. Tokens
   still carry only locally approved authorization scopes; existing clients and
   explicitly read-only registrations remain unchanged.

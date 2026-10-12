@@ -35,8 +35,9 @@ both scopes selected; reconnecting the old client does not change its registrati
 The CIMD-unavailable notice is informational; this server supports DCR.
 Create the plugin and install it. Availability
 depends on your account and workspace. When the connection opens its consent
-page, activate the project's virtual environment and run the approval command
-shown there in your local PowerShell,
+page, paste the entire approval command shown there into PowerShell on the PC
+running the server. It uses that installation's absolute Python path and works
+from any folder, without activating a virtual environment. Then
 review the callback and type `APPROVE`. Return to the page and select Continue.
 Only ChatGPT callback URLs are permitted. Connection requests expire after five
 minutes; restart authorization if needed.
