@@ -1,6 +1,6 @@
 ---
 name: manage-garmin-account
-description: Edit Garmin activities or strength sets, import activity files, record actual health measurements, or send saved workouts to a device using guarded Garmin Connect MCP writes.
+description: Create manual Garmin activity logs for completed sports sessions, edit activities or strength sets, import activity files, record actual health measurements, or send saved workouts to a device using guarded Garmin Connect MCP writes.
 ---
 
 Use the Garmin Connect MCP server for account changes. Before preparing an operation, call `get_garmin_write_schema(operation)` and follow its current names, types, units, bounds and verification guidance. The server owns SDK calls; do not bypass it with direct HTTP, SDK scripts or journal edits. For workout construction/calendar workflows, use the plugin's `create-schedule-workouts` skill.
@@ -13,7 +13,20 @@ Read `get_activity_edit_template(activity_id)` before name, description, type or
 
 Strength replacement takes the complete original `exercise_sets_payload`, with a matching activity ID. Preserve untouched sets, timestamps, UUIDs and metadata. Use `find_garmin_exercises` for valid category/exercise names; a known category with null exercise name is allowed. Foreign set IDs are rejected. Do not convert `weight` without verified units: recorded set weights are Garmin raw units. An empty array clears every set and needs explicit authorization for that effect.
 
-Manual activities use a local timestamp with an IANA timezone, km and whole minutes. The server normalizes milliseconds and rejects ambiguous/nonexistent daylight-saving times. It creates a private activity. SDK acceptance varies: a live historical strength/zero-distance variant failed upstream, while current-date walking with positive distance succeeded. Do not promise every valid input will be accepted.
+For a requested completed-session log, call `list_garmin_activity_types`, choose
+its exact typeKey, and read `get_garmin_activity_schema(type_key)`. This returns
+that type's creation contract and parameter template; type keys can differ from
+workout keys (for example activity `indoor_cardio` versus workout `cardio_training`).
+Do not copy placeholder values or invent measurements. Pass actual parameters to
+`build_garmin_manual_activity`; prepare its returned parameters with
+`create_manual_activity`, review/authorize, commit, then read the returned activity
+ID. Schema membership is not proof of upstream acceptance for every variant.
+Restricted/hidden catalog types, aggregates, safety events and transitions are
+blocked. Do not create a future activity log to simulate a scheduled workout.
+If the desired sport has no workout schema, explain the planning limit rather
+than silently changing its sport. Manual logs cannot be scheduled on the calendar.
+
+Manual activities use a local timestamp with an IANA timezone, km and whole minutes. The server normalizes milliseconds and rejects ambiguous/nonexistent daylight-saving times. It creates a private activity. The live audit accepted basic logs for all eligible types and current-date zero-distance yoga/Pilates/strength/mobility. An older historical strength/zero-distance variant failed upstream; do not promise every data or timestamp variant will be accepted.
 
 Import only a user-provided recording (or an explicitly authorized synthetic test). Supply base64 bytes and fit/tcx/gpx, never a host file path. FIT checks CRC and uses the pinned official Garmin FIT decoder to require activity/session/lap messages; health and course files are rejected. XML needs timestamped tracks with positive elapsed time and rejects entities. Format validation cannot guarantee Garmin import success; GPS may enter the conversation/service.
 

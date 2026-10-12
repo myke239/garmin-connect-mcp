@@ -1,11 +1,38 @@
 ---
 name: create-schedule-workouts
-description: Create, edit, and schedule Garmin workout templates or dated workout batches using Garmin Connect MCP preview and commit tools.
+description: Create, edit, and schedule Garmin workouts across supported sports, including cardio, Pilates, HIIT, mobility, rucking and multisport, using complete schemas and guarded MCP writes.
 ---
 
 Use the Garmin Connect MCP tools for account operations. The server owns Garmin SDK calls and credentials; do not bypass it with direct SDK, HTTP, or local journal edits.
 
 Clarify missing sport, duration/distance, target, dates, and timezone only when they affect the requested workout. Resolve relative dates in the user's timezone and show absolute dates in the preview. Do not turn training suggestions into writes without a request to save or schedule them. Native Garmin Coach/adaptive plans and new exercise catalog definitions are unsupported; calendar plans are dated workout templates.
+
+## Choose the correct creation path
+
+For a future planned session, call `list_garmin_workout_sports`, then
+`get_garmin_workout_schema(sport)` using the exact workout sport key. Workout
+sports differ from the many recorded activity types. Do not change an unsupported
+requested sport to `other`, running or a related sport without user selection.
+
+For a simple timed session, `build_garmin_workout` accepts sport, workout_name and
+whole duration_seconds, and returns complete validated `workout_json` without a
+mutation. Example: `{"sport":"pilates","workout_name":"Requested Pilates","duration_seconds":1200}`.
+Use the user's requested duration; examples do not imply authorization to save.
+For explicit exercises/targets, pass complete `workout_segments` instead of
+`duration_seconds`. Preserve verified sport-specific fields; the builder validates
+structure but does not establish an unverified swimming stroke, pose, equipment,
+ruck pack-load unit or intensity. A timed session encodes none of those details.
+
+Multisport requires explicit segments for the user's selected constituent sports;
+never copy the schema's illustrative run-bike selection as an implicit choice.
+Multisport stepOrder values must be globally unique across every segment and nested step; do not restart at 1 for each leg. Single-sport segments must match the header. `estimatedDurationInSecs: 0` from an
+explicit-segment build means unknown, not a measured or prescribed duration.
+All supported templates use the same create/update/calendar/device workflows
+below. Device queue acceptance does not prove that a watch supports the sport.
+
+For logging an already completed session, use the manual-activity workflow in
+`manage-garmin-account`: exact live activity type, actual start/timezone/distance/
+duration. Recorded activity logs cannot be scheduled as future workouts.
 
 ## Build a valid template
 

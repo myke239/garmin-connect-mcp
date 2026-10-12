@@ -31,7 +31,8 @@ WriteOperation = Literal["create_workout", "update_workout", "schedule_workout",
     "send_workout_to_device", "create_manual_activity", "upload_activity_file", "set_activity_name",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
     "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar"]
-SPORTS = {"running", "cycling", "swimming", "walking", "hiking", "strength_training", "yoga"}
+from .sport_schemas import SPORT_IDS,manual_type_supported
+SPORTS = set(SPORT_IDS)
 
 
 class WriteInputError(ValueError):
@@ -63,7 +64,7 @@ def validate_workout(payload):
                 or isinstance(value.get(id_name), bool) or value[id_name] < 1
                 or not isinstance(value.get(key_name), str) or not value[key_name]):
             raise ValueError(f"Workout {key_name} requires its numeric {id_name} and string key")
-        mappings={"sportTypeKey":{"running":1,"cycling":2,"swimming":4,"strength_training":5,"yoga":7,"walking":17,"hiking":18},
+        mappings={"sportTypeKey":SPORT_IDS,
             "stepTypeKey":{"warmup":1,"cooldown":2,"interval":3,"recovery":4,"rest":5,"repeat":6,"other":7,"main":8},
             "conditionTypeKey":{"lap.button":1,"time":2,"distance":3,"calories":4,"power":5,"heart.rate":6,"iterations":7,"fixed.rest":8,"fixed.repetition":9,"reps":10},
             "workoutTargetTypeKey":{"no.target":1,"power.zone":2,"cadence":3,"heart.rate.zone":4,"speed.zone":5,"pace.zone":6,"grade":7,"heart.rate.lap":8,"power.lap":9,"resistance":15}}
@@ -73,6 +74,7 @@ def validate_workout(payload):
 
     enum(payload.get("sportType"), "sportTypeId", "sportTypeKey")
     total = 0
+    seen_orders=set()
 
     def steps(items, depth=0):
         nonlocal total
@@ -84,6 +86,9 @@ def validate_workout(payload):
                 raise ValueError("Workout requires at most 100 total steps")
             if not isinstance(step.get("stepOrder"), int) or isinstance(step["stepOrder"], bool) or step["stepOrder"] < 1:
                 raise ValueError("Each workout step requires positive stepOrder")
+            if payload["sportType"]["sportTypeKey"]=="multi_sport":
+                if step["stepOrder"] in seen_orders:raise WriteInputError("create_workout","Multisport stepOrder values must be unique across every segment and nested step")
+                seen_orders.add(step["stepOrder"])
             enum(step.get("stepType"), "stepTypeId", "stepTypeKey")
             for field in ("targetValueOne","targetValueTwo","secondaryTargetValueOne","secondaryTargetValueTwo","weightValue"):
                 value=step.get(field)
@@ -125,8 +130,12 @@ def validate_workout(payload):
         if not isinstance(segment, dict):
             raise ValueError("Workout segments must be objects")
         enum(segment.get("sportType"), "sportTypeId", "sportTypeKey")
-        if payload["sportType"]["sportTypeKey"]=="yoga" and segment["sportType"]["sportTypeKey"]!="yoga":
-            raise ValueError("Yoga segments must use the yoga sport enum")
+        if segment["sportType"]["sportTypeKey"] not in SPORTS:
+            raise WriteInputError("create_workout","Each segment must use a supported Garmin workout sport; legacy walking/hiking workout enums lose their sport identity.")
+        if payload["sportType"]["sportTypeKey"]!="multi_sport" and segment["sportType"]["sportTypeKey"]!=payload["sportType"]["sportTypeKey"]:
+            raise ValueError("Single-sport segments must match the workout sport")
+        if payload["sportType"]["sportTypeKey"]=="multi_sport" and segment["sportType"]["sportTypeKey"]=="multi_sport":
+            raise ValueError("Multisport segments require explicit constituent sports")
         steps(segment.get("workoutSteps"))
 
 
@@ -220,7 +229,7 @@ def _validate(operation, parameters):
         if not isinstance(payload, dict) or not isinstance(payload.get("workoutName"), str) or not payload["workoutName"].strip():
             raise ValueError("A named complete Garmin workout JSON template is required")
         if payload.get("sportType", {}).get("sportTypeKey") not in SPORTS:
-            raise ValueError("Unsupported workout sport")
+            raise WriteInputError(operation,"Unsupported workout sport. Read list_garmin_workout_sports/get_garmin_workout_schema; legacy walking/hiking workout IDs lose their sport identity. Completed manual activity logs remain supported.")
         segments = payload.get("workoutSegments")
         if not isinstance(segments, list) or not 1 <= len(segments) <= 20:
             raise ValueError("Provide 1–20 workout segments")
@@ -296,7 +305,8 @@ def validate(operation, parameters):
     check(operation,parameters)
     try:
         result = _validate(operation,parameters)
-    except WriteInputError:
+    except WriteInputError as error:
+        if error.operation != operation:raise WriteInputError(operation,str(error)) from None
         raise
     except (ValueError,TypeError,KeyError,IndexError,AttributeError):
         raise WriteInputError(operation,"Invalid operation-specific content. Query get_garmin_write_schema and use a complete original template where required.") from None
@@ -383,7 +393,7 @@ def preflight(client,operation,p):
             if not any(all(v.get(k)==p[field] for k,field in (
                     ("typeId","type_id"),("typeKey","type_key"),("parentTypeId","parent_type_id"))) for v in rows):
                 raise RequestError("ACTIVITY_TYPE_MISMATCH")
-        elif not any(v.get("typeKey")==p["type_key"] for v in rows):
+        elif not any(v.get("typeKey")==p["type_key"] and manual_type_supported(v) for v in rows):
             raise RequestError("ACTIVITY_TYPE_MISMATCH")
 
 

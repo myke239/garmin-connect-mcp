@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0 — 2026-10-12
+
+- Complete JSON schemas/examples for all 12 currently advertised Garmin workout
+  sports, including cardio, Pilates, HIIT, multisport, mobility and rucking.
+- Live workout-sport discovery and read-only complete workout/manual-activity builders.
+- Per-type activity creation contracts from the live catalog; system/restricted
+  types are blocked. Updated skills distinguish planned workouts from actual logs.
+- Multisport global step-order guard; single-sport segment identity checks.
+- Live audit verified all 12 workout sports and all 139 eligible activity types,
+  plus four zero-distance variants; fixtures removed and cleanup checked.
+- Block legacy walking/hiking workout enums that Garmin reads back without sport
+  identity; completed walking/hiking activity logs remain supported.
+
 ## 0.5.0 — 2026-10-12
 
 - Yoga sport 7 support for guarded workout creation and calendar scheduling.

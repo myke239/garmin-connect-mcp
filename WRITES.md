@@ -122,7 +122,7 @@ field bounds. Null optional fields are allowed; required weight cannot be null.
 
 Workout objects require `workoutName`, the sport enum ID/key pair and
 `workoutSegments[].workoutSteps`. Supported sports: running, cycling, swimming,
-walking, hiking, strength_training. There are at most 20 segments, 100 total steps,
+strength_training, cardio_training, yoga, pilates, hiit, multi_sport, mobility, rucking and other. Walking/hiking workout enums are blocked; see SPORTS.md. There are at most 20 segments, 100 total steps,
 five nested repeat levels and 100 iterations per group. Start with `get_workout_template` for correct Garmin step/target
 enums; `list_workout_templates` lists IDs and names. Update and strength-set
 operations replace existing content: read the original first and preserve fields
@@ -195,3 +195,12 @@ consistent. Create with `create_workout`, then schedule its verified ID using
 verified creation and calendar scheduling; its template and entry were removed.
 Pose sequences need a verified yoga template; descriptions do not encode poses
 and the strength catalog does not prove yoga pose enum compatibility.
+
+## Other workout sports and recorded activities
+
+Use [SPORTS.md](SPORTS.md) for live sport discovery, complete schemas and readonly
+builders. All 12 advertised workout sports use the same guarded create/update/
+schedule/device workflows. Recorded activity type IDs/keys form a separate
+catalog; manual logs use actual completed-session data and cannot be scheduled
+as future workouts. Walking/hiking legacy workout IDs are blocked after live
+readback lost their sport identity. Multisport stepOrder must be globally unique.

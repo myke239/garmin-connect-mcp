@@ -50,3 +50,7 @@ The `browse-garmin-exercises` skill handles standalone catalog browsing, exact
 movement lookup and pagination. ChatGPT remote connections receive equivalent
 quick-start instructions in the MCP tool description; local skill files are
 loaded by Codex. Refresh the client tool list after a server update.
+
+Workout and account-management skills use complete per-sport/per-activity schemas
+and readonly builders. The same workflow guidance is exposed through remote MCP
+tool descriptions and queryable contracts. See [SPORTS.md](SPORTS.md).

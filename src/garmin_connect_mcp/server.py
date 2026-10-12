@@ -10,6 +10,7 @@ from .runtime import RequestError
 from .writes import WriteInputError
 from typing import Literal
 from pydantic import StrictInt,StrictFloat
+from .sport_schemas import SportKey
 
 
 def safe_call(function, *args):
@@ -109,12 +110,37 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             return safe_call(exercises,term,limit,start,category)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
-        def get_garmin_workout_schema(sport: Literal["running","cycling","swimming","walking","hiking","strength_training","yoga"] = "strength_training") -> dict:
-            """Get SDK sport enum IDs, reps condition and example step fields. Strength is 5/strength_training; reps is 10/reps. Yoga is 7/yoga and returns a complete timed example_workout.
+        def get_garmin_workout_schema(sport: SportKey = "strength_training") -> dict:
+            """Get a complete example_workout schema for any supported workout sport: running, cycling, swimming, strength_training, cardio_training, yoga, pilates, hiit, multi_sport, mobility, rucking or other. Walking/hiking return an unsupported-workout explanation and manual-log alternative. Use list_garmin_workout_sports for the live catalog.
             Includes strength categories and verified SDK load-unit conventions; examples do not create a workout.
             """
             from .workout_discovery import workout_schema
             return safe_call(workout_schema,sport)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def list_garmin_workout_sports() -> dict:
+            """List live Garmin workout sports, schema availability and unsupported legacy SDK sports. These differ from recorded activity types."""
+            from .sport_schemas import workout_sports,WORKOUT_TYPES_ENDPOINT
+            return safe_call(lambda: workout_sports(backend.fresh_call("connectapi",WORKOUT_TYPES_ENDPOINT)))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_workout(sport: SportKey, workout_name: str, duration_seconds: StrictInt | None = None,
+                                workout_segments: list[dict] | None = None, description: str | None = None) -> dict:
+            """Build complete validated workout_json without account mutation. Supply exactly one of whole duration_seconds or explicit workout_segments. Multisport requires explicit selected sports/segments. Timed sessions encode no poses, strokes, loads or intensity. Prepare the returned JSON and authorize before committing."""
+            from .sport_schemas import build_workout
+            return safe_call(build_workout,sport,workout_name,duration_seconds,workout_segments,description)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_activity_schema(type_key: str) -> dict:
+            """Get manual-creation contract and parameter template for an exact live activity type. Recorded completed activities cannot be scheduled as future workouts. Restricted/system event types are unsupported."""
+            from .sport_schemas import activity_schema
+            return safe_call(lambda: activity_schema(backend.fresh_call("get_activity_types"),type_key))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_manual_activity(parameters: dict) -> dict:
+            """Validate complete create_manual_activity parameters against the live type catalog without mutation. Actual completed session only; explicit km, whole minutes, local start_datetime and IANA time_zone. Never use future logs to simulate plans."""
+            from .sport_schemas import build_manual_activity
+            return safe_call(lambda: build_manual_activity(backend.fresh_call("get_activity_types"),parameters))
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def build_garmin_strength_step(category: str, exercise: str, reps: StrictInt, step_order: StrictInt, weight_kg: StrictFloat | None = None) -> dict:
