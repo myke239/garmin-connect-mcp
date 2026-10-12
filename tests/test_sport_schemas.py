@@ -104,3 +104,11 @@ def test_update_multisport_order_error_identifies_actual_operation():
     p['workoutSegments'][1]['workoutSteps'][0]['stepOrder']=1
     with pytest.raises(ValueError) as exc:validate('update_workout',{'workout_id':123,'workout_json':p})
     assert exc.value.operation=='update_workout'
+
+
+@pytest.mark.parametrize('sport,id_value',[('walking',17),('hiking',18),('invented',999)])
+def test_multisport_cannot_hide_unsupported_segment_sport(sport,id_value):
+    p=workout_schema('multi_sport')['example_workout']
+    p['workoutSegments'][0]['sportType']={'sportTypeId':id_value,'sportTypeKey':sport}
+    with pytest.raises(ValueError,match='supported Garmin workout sport'):
+        validate('create_workout',{'workout_json':p})

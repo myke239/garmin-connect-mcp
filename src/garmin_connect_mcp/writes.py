@@ -130,6 +130,8 @@ def validate_workout(payload):
         if not isinstance(segment, dict):
             raise ValueError("Workout segments must be objects")
         enum(segment.get("sportType"), "sportTypeId", "sportTypeKey")
+        if segment["sportType"]["sportTypeKey"] not in SPORTS:
+            raise WriteInputError("create_workout","Each segment must use a supported Garmin workout sport; legacy walking/hiking workout enums lose their sport identity.")
         if payload["sportType"]["sportTypeKey"]!="multi_sport" and segment["sportType"]["sportTypeKey"]!=payload["sportType"]["sportTypeKey"]:
             raise ValueError("Single-sport segments must match the workout sport")
         if payload["sportType"]["sportTypeKey"]=="multi_sport" and segment["sportType"]["sportTypeKey"]=="multi_sport":
