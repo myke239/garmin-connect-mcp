@@ -1,6 +1,6 @@
 # Personal HTTPS access
 
-The optional remote service exposes the same seven read-only tools through
+The optional remote service exposes the read tools and opt-in previewed writes through
 Streamable HTTP at `/mcp`. It requires OAuth with PKCE and explicit approval in
 the owner's local terminal. Garmin credentials never go to ChatGPT or ngrok.
 Ngrok carries the HTTPS traffic, including tool responses, so it is a trusted
@@ -67,3 +67,9 @@ response framing, use narrowly scoped Web Shield exceptions for the ngrok
 agent hostname, your assigned public hostname and your loopback port.
 Keep antivirus protection and TLS certificate validation enabled.
 
+
+## Account writes
+
+See [WRITES.md](WRITES.md). Enable writes locally, refresh the ChatGPT tool list,
+and reconnect with both garmin:read and garmin:write. Existing read-only tokens
+are not upgraded. Review every draft before commit.

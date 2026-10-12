@@ -24,10 +24,10 @@ def remote(tmp_path):
         yield client, provider
 
 
-def register(client, callback=CALLBACK):
+def register(client, callback=CALLBACK, scope="garmin:read"):
     return client.post("/register", json={"redirect_uris": [callback],
         "token_endpoint_auth_method": "none", "grant_types": ["authorization_code", "refresh_token"],
-        "response_types": ["code"], "scope": "garmin:read"})
+        "response_types": ["code"], "scope": scope})
 
 
 def pending(client):
@@ -95,8 +95,13 @@ def test_pkce_replay_refresh_revocation_and_restart(remote):
     assert initialized.status_code == 200, initialized.text
     listing = client.post("/mcp", headers=headers, json={"jsonrpc": "2.0", "id": 2,
         "method": "tools/list", "params": {}}).json()
-    assert len(listing["result"]["tools"]) == 7
-    assert all(tool["annotations"]["readOnlyHint"] for tool in listing["result"]["tools"])
+    assert len(listing["result"]["tools"]) == 11
+    assert {tool["name"] for tool in listing["result"]["tools"] if not tool["annotations"]["readOnlyHint"]} == {"prepare_garmin_write", "commit_garmin_write"}
+    denied = client.post("/mcp", headers=headers, json={"jsonrpc":"2.0", "id":3,
+        "method":"tools/call", "params":{"name":"prepare_garmin_write", "arguments":{
+            "operation":"add_weight", "parameters":{"weight":70,"timestamp":"2026-10-11T12:00:00+00:00"},
+            "idempotency_key":"scope-test"}}}).json()
+    assert "WRITE_SCOPE_REQUIRED" in json.dumps(denied)
     # Encrypted state survives a new provider process/object.
     from garmin_connect_mcp.remote import OwnerProvider
     reloaded = OwnerProvider(ORIGIN, provider.store.directory)
