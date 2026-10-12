@@ -59,8 +59,9 @@ The server rejects origin changes instead of moving existing grants silently.
 
 Unauthorized `/mcp` requests return 401. Public health and OAuth metadata reveal
 no Garmin data. Access tokens expire after an hour; rotated refresh tokens have
-a 30-day lifetime. Requests have a 16 KiB body limit, bounded concurrency and a
-shared 120-per-minute limit. Access logging is disabled. This is a single-owner
+a 30-day lifetime. MCP requests have a 3 MiB HTTP body limit (activity-file payloads are limited to
+2 MiB decoded); OAuth requests have a 16 KiB limit. Bounded concurrency and a
+shared 120-per-minute limit apply. Access logging is disabled. This is a single-owner
 service, not a multi-user public Garmin integration.
 
 Offline tests cover discovery, local consent, PKCE, code replay, resource binding,
@@ -80,3 +81,19 @@ Keep antivirus protection and TLS certificate validation enabled.
 See [WRITES.md](WRITES.md). Enable writes locally, refresh the ChatGPT tool list,
 and reconnect with both garmin:read and garmin:write. Existing read-only tokens
 are not upgraded. Review every draft before commit.
+
+## Server updates and safety-block diagnosis
+
+Restart the HTTPS service after server-code updates and verify the printed origin
+matches the registered ChatGPT URL. Keep existing encrypted sessions/grants; an
+ordinary update does not require resetting OAuth. Refresh/review the plugin's
+saved tool definitions when they change. Existing read-only clients still need
+explicit write authorization; refreshing tools alone does not expand scopes.
+
+Version 0.8.0 returns copy-ready operation-specific commit arguments from workout
+preparation. Approve the full preview and pass those arguments unchanged. If
+ChatGPT says a call was blocked by OpenAI safety checks without a server response,
+preserve the exact message and inspect durable draft status. A working direct
+MCP diagnostic does not establish that ChatGPT's classifier will permit a call.
+Do not switch execution paths to evade a platform block. The owner reported
+success after the 0.8.0 update; this is one case, not a guaranteed remedy.

@@ -1,5 +1,17 @@
 # Verification record
 
+## Current release — 0.8.0 (2026-10-12)
+
+357 offline tests passed locally; independent Windows/Linux CI passed on PR #16.
+Installed plugin skills matched merged source, and live MCP discovery exposed
+30 tools. Authenticated public reads and read/write scope separation passed.
+All four operation-specific workout commits passed isolated live tests; temporary
+templates and calendar entries were removed and verified. The owner subsequently
+reported the blocked ChatGPT workflow working. This report is limited to one
+case and does not establish a universal OpenAI safety-block resolution.
+
+The phase records below describe historical verification, not current tool counts.
+
 ## Version 0.3 — account-write audit
 
 All 16 exposed write operations were exercised through the real SDK with an
@@ -45,6 +57,6 @@ that UI reload cannot be proved from the current conversation's old tool list.
 
 ## Final local checks
 Offline test suite and installable wheel build pass. See GitHub CI for independent
-Windows/Linux checks once publishing is authorized. Default tests and CI never
+Windows/Linux checks for each reviewed pull request. Default tests and CI never
 use Garmin credentials. Personal profiles, tokens and activity values are not
 included in these records.

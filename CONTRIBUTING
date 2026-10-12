@@ -22,3 +22,14 @@ CI and default tests must remain offline. Live checks are opt-in:
 Verify unauthenticated remote calls return 401. Never disable TLS verification.
 For vulnerabilities, use GitHub private reporting if available or contact the
 maintainer privately before publishing details. Contributions use the MIT license.
+
+Documentation-only maintenance can retain the existing VERSION when runtime/API
+behavior is unchanged. Preserve dated historical audit results and distinguish
+owner-reported behavior from independently verified protocol/account tests.
+
+After merging a PR, remove its local branch only after verifying the branch head
+matches the merged PR's final head (squash merges need this check because Git
+ancestry alone may report the branch unmerged). Keep main tracking origin/main.
+Discard only known disposable caches/build artifacts. Preserve encrypted live
+write journals, audit records, credentials, active runtime environments and logs
+needed for unresolved outcomes. Never publish private audit artifacts.

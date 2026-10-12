@@ -99,3 +99,20 @@ only reconciles/removes recorded test resources. Do not reuse a completed run to
 recreate deleted resources, reset unknown journal entries, or guess cleanup IDs.
 Imports may require later reconciliation and another cleanup check. Preserve
 private run evidence until reconciliation is complete.
+
+## Operation-specific commits — 0.8.0 (2026-10-12)
+
+The four new commit tools route to the same 16 allowlisted write operations and
+journal; they introduce no new Garmin endpoints. Creation, replacement,
+scheduling and calendar-batch commits passed live FastMCP-to-Garmin tests on
+isolated synthetic templates. Both templates returned NOT_FOUND after deletion;
+both scheduled entries were removed and a fresh calendar read confirmed absence.
+Public HTTPS discovery exposed 30 tools. A temporary read grant rejected every
+commit tool; a temporary read/write grant passed authorization and rejected
+nonexistent drafts without mutation. Both temporary grants were removed.
+
+Tests cover review-field/hash mismatch, cross-operation misuse, scope, opt-in,
+expiry, replay and unknown-outcome protection. Existing generic commits and old
+journal drafts remain compatible. The owner reported the previously blocked
+ChatGPT workflow working after installation. This is a user-reported outcome;
+our server tests do not reproduce OpenAI's safety-classifier decision.
