@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 — 2026-10-11
+
+- Opt-in preview/commit tools with 16 fixed write operations: workouts,
+  scheduling/removal, device push, manual activities, bounded FIT/TCX/GPX uploads,
+  activity edits, strength sets and health measurements.
+- Dated workout batches for calendars (not native Garmin Coach plans).
+- Encrypted intent journals, expiry, duplicate protection and partial progress;
+  no application-level mutation retries or read-cache reuse.
+- Separate garmin:write grants; existing grants remain read-only.
+- Workout template reads, validation tests and branch/PR/merge contribution flow.
+
 ## 0.1.0 — 2026-10-11
 
 Initial public release:

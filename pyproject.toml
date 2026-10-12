@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "garmin-connect-mcp"
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT"
 license-files = ["LICENSE", "NOTICE"]
-description = "Local read-only Garmin Connect tools for MCP clients"
+description = "Garmin Connect MCP tools with opt-in previewed account writes"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["mcp==1.30.0", "garminconnect==0.3.17", "curl_cffi==0.16.3", "truststore==0.10.4", "pywin32>=310; sys_platform == 'win32'"]
+dependencies = ["mcp==1.30.0", "garminconnect==0.3.17", "curl_cffi==0.16.3", "truststore==0.10.4", "defusedxml==0.7.1", "tzdata==2026.5", "pywin32>=310; sys_platform == 'win32'"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9"]

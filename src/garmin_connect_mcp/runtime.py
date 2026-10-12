@@ -11,6 +11,7 @@ from pathlib import Path
 from .auth import TokenStore, restore_session, restrict
 
 ALLOWED = {"get_activity", "get_activity_splits", "get_activity_details", "get_activity_exercise_sets", "connectapi"}
+ALLOWED |= {"mcp_commit_write", "get_workouts", "get_workout_by_id"}
 
 
 class RequestError(Exception):
@@ -92,7 +93,11 @@ def worker(connection, directory, method, args, kwargs):
             stage("locked")
             client = restore_session(store)
             stage("restored")
-            raw = getattr(client, method)(*args, **kwargs)
+            if method == "mcp_commit_write":
+                from .writes import execute
+                raw = execute(client, directory, *args, **kwargs)
+            else:
+                raw = getattr(client, method)(*args, **kwargs)
             stage("read complete")
             store.save(client.client.dumps())
             if len(json.dumps(raw)) > 2_000_000:

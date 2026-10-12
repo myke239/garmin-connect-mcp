@@ -24,6 +24,7 @@ from .runtime import session_lock
 from .server import create_server
 
 READ_SCOPE = "garmin:read"
+WRITE_SCOPE = "garmin:write"
 ACCESS_SECONDS = 3600
 REFRESH_SECONDS = 30 * 86400
 CALLBACK_HOSTS = {"chatgpt.com", "chat.openai.com"}
@@ -97,7 +98,8 @@ class OwnerProvider:
             state["clients"][client_info.client_id] = client_info.model_dump(mode="json")
 
     async def authorize(self, client, params):
-        if (params.resource != self.resource or params.scopes != [READ_SCOPE]
+        if (params.resource != self.resource or READ_SCOPE not in params.scopes
+                or not set(params.scopes) <= {READ_SCOPE, WRITE_SCOPE}
                 or not params.state or len(params.state) > 2048
                 or not valid_callback(params.redirect_uri)):
             raise AuthorizeError("invalid_request", "Invalid resource, scope, state or callback")
@@ -118,7 +120,8 @@ class OwnerProvider:
             if not pending["approved"]:
                 # No login cookie, secret, password or browser approval can grant access.
                 return HTMLResponse("<h1>Approve your Garmin connection on your PC</h1>"
-                    "<p>This gives ChatGPT read access to your Garmin workout statistics. "
+                    "<p>This gives ChatGPT access to your Garmin account with scopes: "
+                    + html.escape(" ".join(pending["params"]["scopes"])) + ". "
                     "Only approve a connection you just started.</p>"
                     "<p>On your PC, activate this project's Python environment, then run:</p>"
                     "<pre>python -m garmin_connect_mcp.remote approve "
@@ -128,7 +131,7 @@ class OwnerProvider:
             params = AuthorizationParams.model_validate(pending["params"])
             code = secrets.token_urlsafe(32)
             state["codes"][key(code)] = AuthorizationCode(code=code,
-                client_id=pending["client_id"], scopes=[READ_SCOPE], expires_at=time.time() + 60,
+                client_id=pending["client_id"], scopes=params.scopes, expires_at=time.time() + 60,
                 code_challenge=params.code_challenge, redirect_uri=params.redirect_uri,
                 redirect_uri_provided_explicitly=params.redirect_uri_provided_explicitly,
                 resource=self.resource, subject="local-owner").model_dump(mode="json")
@@ -159,25 +162,25 @@ class OwnerProvider:
             value = state["codes"].get(key(authorization_code))
             return AuthorizationCode.model_validate(value) if value and value["client_id"] == client.client_id else None
 
-    def issue(self, state, client_id, family):
+    def issue(self, state, client_id, family, scopes):
         if len(state["access"]) >= 256 or len(state["refresh"]) >= 128:
             raise TokenError("invalid_grant", "Token capacity reached; reset remote connections")
         access, refresh = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         state["access"][key(access)] = AccessToken(token=access, client_id=client_id,
-            scopes=[READ_SCOPE], expires_at=int(time.time()) + ACCESS_SECONDS,
+            scopes=scopes, expires_at=int(time.time()) + ACCESS_SECONDS,
             resource=self.resource, subject="local-owner", claims={"family": family}).model_dump(mode="json")
         state["refresh"][key(refresh)] = OwnerRefresh(token=refresh, client_id=client_id,
-            scopes=[READ_SCOPE], expires_at=int(time.time()) + REFRESH_SECONDS,
+            scopes=scopes, expires_at=int(time.time()) + REFRESH_SECONDS,
             resource=self.resource, subject="local-owner", family=family).model_dump(mode="json")
         return OAuthToken(access_token=access, refresh_token=refresh, token_type="Bearer",
-                          expires_in=ACCESS_SECONDS, scope=READ_SCOPE)
+                          expires_in=ACCESS_SECONDS, scope=" ".join(scopes))
 
     async def exchange_authorization_code(self, client, authorization_code):
         with self.state() as state:
             value = state["codes"].pop(key(authorization_code.code), None)
             if not value or value["client_id"] != client.client_id or value["resource"] != self.resource:
                 raise TokenError("invalid_grant", "Code expired, invalid or already consumed")
-            return self.issue(state, client.client_id, secrets.token_urlsafe(24))
+            return self.issue(state, client.client_id, secrets.token_urlsafe(24), value["scopes"])
 
     async def load_refresh_token(self, client, refresh_token):
         with self.state() as state:
@@ -185,8 +188,9 @@ class OwnerProvider:
             return OwnerRefresh.model_validate(value) if value and value["client_id"] == client.client_id else None
 
     async def exchange_refresh_token(self, client, refresh_token, scopes):
-        if scopes != [READ_SCOPE] or refresh_token.resource != self.resource:
-            raise TokenError("invalid_scope", "Only garmin:read is allowed")
+        if (READ_SCOPE not in scopes or not set(scopes) <= set(refresh_token.scopes)
+                or refresh_token.resource != self.resource):
+            raise TokenError("invalid_scope", "Refresh cannot escalate account permissions")
         with self.state() as state:
             value = state["refresh"].pop(key(refresh_token.token), None)
             if not value or value["client_id"] != client.client_id:
@@ -194,7 +198,7 @@ class OwnerProvider:
             # Replace the family's previous access token, bounding storage during rotation.
             state["access"] = {k: v for k, v in state["access"].items()
                 if v["claims"]["family"] != refresh_token.family}
-            return self.issue(state, client.client_id, refresh_token.family)
+            return self.issue(state, client.client_id, refresh_token.family, scopes)
 
     async def load_access_token(self, token):
         with self.state() as state:
@@ -232,7 +236,7 @@ class Boundary:
             if message["type"] == "http.disconnect":
                 return
             body.extend(message.get("body", b""))
-            if len(body) > 16384:
+            if len(body) > (3 * 1024 * 1024 if scope["path"] == "/mcp" else 16384):
                 return await JSONResponse({"error": "Request too large"}, status_code=413)(scope, receive, send)
             if not message.get("more_body", False):
                 break
@@ -289,19 +293,20 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
         resource_server_url=AnyHttpUrl(provider.resource), validate_token_resource=True,
         required_scopes=[READ_SCOPE],
         client_registration_options=ClientRegistrationOptions(enabled=True,
-            valid_scopes=[READ_SCOPE], default_scopes=[READ_SCOPE]),
+            valid_scopes=[READ_SCOPE,WRITE_SCOPE], default_scopes=[READ_SCOPE]),
         revocation_options=RevocationOptions(enabled=True))
     security = TransportSecuritySettings(allowed_hosts=[urlsplit(provider.origin).netloc,
         f"127.0.0.1:{port}", f"localhost:{port}"], allowed_origins=[provider.origin])
-    server = create_server(adapter, host="127.0.0.1", port=port,
+    server = create_server(adapter, remote_access=True, host="127.0.0.1", port=port,
         auth=auth, auth_server_provider=provider, transport_security=security,
-        json_response=True, stateless_http=True, max_request_body_size=16384)
+        json_response=True, stateless_http=True, max_request_body_size=3 * 1024 * 1024)
     @server.custom_route("/consent", methods=["GET"])
     async def consent(request):
         return provider.consent(request.query_params.get("ticket", ""))
     @server.custom_route("/health", methods=["GET"])
     async def health(request):
-        return JSONResponse({"status": "ready", "authentication": "oauth", "read_only": True})
+        from .writes import WriteService
+        return JSONResponse({"status": "ready", "authentication": "oauth", "read_only": not WriteService().enabled()})
     return Boundary(server.streamable_http_app(), provider.origin, port), provider
 
 

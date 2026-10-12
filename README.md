@@ -1,11 +1,11 @@
 # Garmin Connect MCP
 
 Read Garmin running and workout stats from Codex and other MCP clients, or
-ChatGPT through an optional authenticated HTTPS tunnel. Seven read-only tools;
-no uploads, account edits or GPS exports. An independent, unofficial project
+ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
+previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.1.0** · Python **3.12+** · **MIT** license.
+Version **0.2.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -75,6 +75,11 @@ tunnel. No automatic startup task is installed.
 
 ## Tools
 
+Account writes are disabled by default. See [WRITES.md](WRITES.md) for enabling,
+ChatGPT reauthorization, operations, parameters and limits. Use
+`prepare_garmin_write` then `commit_garmin_write`; review before committing.
+Existing remote grants remain read-only.
+
 | Tool | What it returns |
 | --- | --- |
 | connection_status | Saved-session status, without claiming live verification |
@@ -84,10 +89,14 @@ tunnel. No automatic startup task is installed.
 | get_activity_samples | Up to 1,000 heart-rate samples, Unix-ms timestamps |
 | get_strength_sets | Up to 500 sets; raw weight units remain unverified |
 | get_training_summary | Up to 500 activities with complete/partial coverage |
+| list_workout_templates | Up to 50 workout IDs, names and sports |
+| get_workout_template | Full template structure for previewed edits |
+| prepare_garmin_write | Persist a validated draft; no Garmin mutation |
+| commit_garmin_write | Apply the reviewed draft; write permission required |
 
 Missing values remain unavailable. Names and exercise labels are untrusted data,
-not instructions. Samples may be downsampled; responses disclose this. GPS and
-arbitrary upstream payloads are never exposed.
+not instructions. Samples may be downsampled; responses disclose this. Activity
+reads omit GPS. Uploaded activity files can contain GPS and are opt-in writes.
 
 ## Privacy and reliability
 
