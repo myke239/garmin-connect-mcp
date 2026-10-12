@@ -16,7 +16,10 @@ def data_directory() -> Path:
         if legacy.is_dir():
             return legacy  # Preserve existing credentials without moving them.
         return Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / "garmin-connect-mcp"
-    return Path.home() / ".local/share/garmin-connect-mcp"
+    base = Path(os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local/share"))
+    if not base.is_absolute():
+        raise ValueError("XDG_DATA_HOME must be an absolute path")
+    return base / "garmin-connect-mcp"
 
 
 def silence_library_logs() -> None:

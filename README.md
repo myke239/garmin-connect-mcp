@@ -5,13 +5,18 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.8.0** · Python **3.12+** · **MIT** license.
+Version **0.8.1** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
 ChatGPT marketplace listing or a hosted multi-user service.
 
 ## Install
+
+For per-user installation with automatic Python setup and launchers that work
+from any directory, see [INSTALL.md](INSTALL.md). Windows defaults to
+`%LOCALAPPDATA%\Programs\GarminConnectMCP`; Linux uses the XDG data directory.
+The commands below remain available for development installs.
 
 Windows PowerShell:
 

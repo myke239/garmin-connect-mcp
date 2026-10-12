@@ -61,7 +61,13 @@ def key(value):
 
 def approval_command(ticket):
     """Use the running installation without requiring activation or a working directory."""
-    args = [str(Path(sys.executable).resolve()), "-m", "garmin_connect_mcp.remote", "approve", ticket]
+    from .manage import installation
+    installed = installation()
+    if installed and installed.get("launcher") and Path(installed["launcher"]).is_file():
+        args = [installed["launcher"], "approve", ticket]
+    else:
+        # Do not resolve venv symlinks: their target lacks this environment's packages.
+        args = [str(Path(sys.executable).absolute()), "-m", "garmin_connect_mcp.remote", "approve", ticket]
     if os.name == "nt":
         return "& " + " ".join("'" + arg.replace("'", "''") + "'" for arg in args)
     return shlex.join(args)

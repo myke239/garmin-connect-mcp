@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.1 — 2026-10-12
+
+- Per-user Windows/Linux installers with managed Python and standard application paths.
+- Directory-independent login, OAuth approval, tunnel, diagnostic and Codex plugin launch commands.
+- Install isolated release environments and plugin copies; preserve source manifests and existing credentials.
+- Honor Linux XDG data paths and accurately describe platform-specific credential protection.
+
 ## 0.8.0 — 2026-10-12
 
 - Add operation-specific workout commits with accurate creation/scheduling/replacement annotations.

@@ -97,3 +97,11 @@ preserve the exact message and inspect durable draft status. A working direct
 MCP diagnostic does not establish that ChatGPT's classifier will permit a call.
 Do not switch execution paths to evade a platform block. The owner reported
 success after the 0.8.0 update; this is one case, not a guaranteed remedy.
+
+## Installed launchers (0.8.1)
+
+[INSTALL.md](INSTALL.md) provides Windows/Linux per-user setup. Include remote
+extras, then use the full launcher path with `tunnel-setup`, `tunnel` and
+`approve <ticket>` instead of activating Python or changing directories.
+The current HTTPS process and credentials are not moved by installation.
+Linux session files use owner-only permissions rather than DPAPI encryption.
