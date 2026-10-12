@@ -83,7 +83,7 @@ verification tools read fresh schedules, devices, activity types, complete
 strength-edit payloads and measurements. The plugin includes workout and
 account-management skills. See [WRITE_AUDIT.md](WRITE_AUDIT.md) for tested paths,
 cleanup evidence and limitations; all 16 exposed operations were tested live.
-Existing remote grants remain read-only.
+Existing read-only remote grants remain read-only; granting writes requires explicit reauthorization.
 
 | Tool | What it returns |
 | --- | --- |
@@ -107,13 +107,14 @@ Existing remote grants remain read-only.
 | list_scheduled_workouts | Fresh calendar entries and IDs for one month |
 | list_garmin_devices | Explicit device IDs for queued workout delivery |
 | list_garmin_activity_types | Valid type ID/key/parent tuples |
-| find_garmin_exercises | Paginated SDK search, exact matches and variants |
+| find_garmin_exercises | Paginated SDK strength and verified yoga POSE catalogs |
 | get_garmin_workout_schema | SDK sport IDs, examples and unit conventions |
 | list_garmin_workout_sports | Live workout sports and schema availability |
 | build_garmin_workout | Complete validated workout JSON without mutation |
 | get_garmin_activity_schema | Per-type manual creation contract from live catalog |
 | build_garmin_manual_activity | Validated manual-log parameters from actual session data |
-| build_garmin_strength_step | Validated strength step from an exact catalog pair |
+| build_garmin_strength_step | Validated rep-based strength step from an exact catalog pair |
+| build_garmin_yoga_step | Verified POSE identifier, timed hold and step order |
 | get_activity_edit_template | Complete strength payload and editable activity fields |
 | get_garmin_measurements | Fresh measurements for one calendar day |
 
@@ -181,6 +182,8 @@ replace existing records. Refresh/review the ChatGPT plugin tool definitions
 after installing an update, and use a fresh chat to load local Codex skills.
 
 These changes improve transparent tool review. They do not disable OpenAI safety
-checks or establish that a platform block is resolved. Report a platform block
+checks. After updating to 0.8.0 the owner reported the previously blocked workflow
+working in ChatGPT on 2026-10-12; this is a reported success for one case, not an
+independently observed classifier test or a universal resolution. Report a platform block
 with its exact error, timestamp, conversation/request ID and server evidence;
 do not use another execution path to bypass it.

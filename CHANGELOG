@@ -5,7 +5,7 @@
 - Add operation-specific workout commits with accurate creation/scheduling/replacement annotations.
 - Prepared previews include exact commit arguments with immutable-payload hashes and review fields. Mismatches are rejected before Garmin access.
 - Preserve generic commit compatibility, OAuth, approval, expiry and at-most-once execution.
-- These changes improve reviewability; resolution of ChatGPT safety blocks is not established.
+- These changes improve reviewability. The owner reported the previously blocked ChatGPT workflow working after the update; no universal safety-block resolution is claimed.
 
 ## 0.7.0 — 2026-10-12
 

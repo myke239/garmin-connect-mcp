@@ -25,20 +25,23 @@ and MCP tool descriptions apply to every client regardless of skill loading.
 Version 0.3 also exposes operation contracts and verification through MCP tools,
 so ChatGPT agents can obtain exact field/SDK guidance without local skill files.
 
-Verification gates performed on this machine:
+## Current verification (0.8.0)
 
-1. Codex accepted the marketplace and installed/enabled `garmin-connect@myke-garmin`.
-2. After removing the old standalone registration, `codex mcp list --json`
-   resolved the plugin's server with its 30-second startup and 240-second tool timeout.
-3. An MCP client launched the configuration from the installed plugin copy and
-   passed discovery of seven read-only tools, live run/detail/splits/heart-rate
-   samples/training summary reads, and cache verification. No private data was printed.
-4. All 35 offline server tests passed. The training skill was separately validated.
+- The marketplace installs `garmin-connect@myke-garmin`; the installed skills
+  were compared with the merged source.
+- MCP discovery exposes 30 tools, including four operation-specific workout
+  commits, yoga pose discovery and timed pose construction.
+- 357 offline tests passed locally and CI passed on Windows/Linux.
+- Live stdio reads/cache and authenticated HTTPS discovery passed. Read-only
+  grants reject all commit tools. Live synthetic creation, replacement,
+  scheduling and calendar-batch commits passed; fixtures were removed.
+- The owner reported that 0.8.0 resolved the previously blocked ChatGPT workflow
+  in their case. This does not establish a universal safety-classifier fix.
 
-The current conversation may retain the previous tool instance. A fresh chat or
-application restart loads the installed plugin's tools and skill; that desktop
-reload still needs to happen. It is separate from the verified installed package
-and live protocol checks.
+See [PHASES.md](PHASES.md) for historical gates and [WRITE_AUDIT.md](WRITE_AUDIT.md),
+[SPORTS.md](SPORTS.md) and [YOGA_POSES.md](YOGA_POSES.md) for coverage and limits.
+A fresh Codex chat loads updated tools/skills. ChatGPT may require reviewing and
+refreshing its saved tool definitions; local skill files are not transferred.
 
 To repeat the installed-package live check (explicit, account-reading operation):
 
@@ -54,3 +57,16 @@ loaded by Codex. Refresh the client tool list after a server update.
 Workout and account-management skills use complete per-sport/per-activity schemas
 and readonly builders. The same workflow guidance is exposed through remote MCP
 tool descriptions and queryable contracts. See [SPORTS.md](SPORTS.md).
+
+## Update and remove
+
+Update the checkout through a reviewed PR, install the updated package into the
+same interpreter (`python -m pip install -e '.[dev,remote]'` using that interpreter),
+and run `scripts/install_plugin.ps1` again. A running HTTPS process must be
+restarted to load changed server code; preserve its encrypted OAuth state.
+Open a fresh Codex chat and refresh ChatGPT's plugin definitions when tools change.
+
+Remove the local plugin with `codex plugin remove garmin-connect@myke-garmin`.
+This removes the Codex plugin registration, not the encrypted Garmin session,
+OAuth grants or an independently running HTTPS tunnel. For remote revocation,
+see [REMOTE.md](REMOTE.md).
