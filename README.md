@@ -5,7 +5,7 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.7.0** · Python **3.12+** · **MIT** license.
+Version **0.8.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -77,7 +77,7 @@ tunnel. No automatic startup task is installed.
 
 Account writes are disabled by default. See [WRITES.md](WRITES.md) for enabling,
 ChatGPT reauthorization, operations, parameters and limits. Use
-`prepare_garmin_write` then `commit_garmin_write`; review before committing.
+`prepare_garmin_write` then its returned `commit_tool`/`commit_arguments`; review before committing. The generic commit remains compatible.
 First query `get_garmin_write_schema` for exact names, types and units. New
 verification tools read fresh schedules, devices, activity types, complete
 strength-edit payloads and measurements. The plugin includes workout and
@@ -97,7 +97,11 @@ Existing remote grants remain read-only.
 | list_workout_templates | Up to 50 workout IDs, names and sports |
 | get_workout_template | Full template structure for previewed edits |
 | prepare_garmin_write | Persist a validated draft; no Garmin mutation |
-| commit_garmin_write | Apply the reviewed draft; write permission required |
+| commit_garmin_write | Compatible general commit of an approved draft; write permission required |
+| commit_garmin_workout_creation | Save one approved new template with checked review context |
+| commit_garmin_workout_schedule | Add the approved existing template/date to the calendar |
+| commit_garmin_training_calendar | Create and schedule an approved batch; partial outcomes possible |
+| commit_garmin_workout_update | Replace an approved existing template; destructive |
 | get_garmin_write_schema | Exact operation contract, bounds, units and guidance |
 | get_garmin_write_status | Durable outcome without committing or retrying |
 | list_scheduled_workouts | Fresh calendar entries and IDs for one month |
@@ -163,3 +167,20 @@ See [YOGA_POSES.md](YOGA_POSES.md) for 85 catalog poses individually verified
 through SDK/Garmin upload and readback, with connector support for timed pose sequences.
 
 Yoga pose sequences: discover `find_garmin_exercises(category="POSE")`, build each selected hold with `build_garmin_yoga_step`, then assemble yoga segments using `build_garmin_workout` and the existing prepare/commit/calendar workflow.
+
+### Reviewable workout commits (0.8.0)
+
+Preparation returns `commit_tool` and `commit_arguments` for creation, update,
+scheduling and calendar batches. Review and approve the full preview, then call
+that tool with the unchanged arguments. Review fields and a SHA-256 of the full
+stored operation/payload are checked before execution; they cannot change the
+approved draft. The legacy generic commit, existing drafts, OAuth scopes, local
+opt-in, expiry and durable at-most-once journal remain supported. Replacements
+retain their destructive annotation; creation and calendar additions do not
+replace existing records. Refresh/review the ChatGPT plugin tool definitions
+after installing an update, and use a fresh chat to load local Codex skills.
+
+These changes improve transparent tool review. They do not disable OpenAI safety
+checks or establish that a platform block is resolved. Report a platform block
+with its exact error, timestamp, conversation/request ID and server evidence;
+do not use another execution path to bypass it.

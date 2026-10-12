@@ -1,6 +1,6 @@
 # Opt-in account writes
 
-Version 0.3 provides two mutation tools, queryable operation contracts/status,
+Version 0.8 provides guarded prepare/commit tools, queryable operation contracts/status,
 and bounded verification tools. Writes
 are disabled on new installations. Enable them locally in your virtual environment:
 
@@ -24,7 +24,7 @@ Call `prepare_garmin_write(operation, parameters, idempotency_key)` with a stabl
 key of 8–128 characters for that user intent. It validates arguments and saves a
 private draft without changing Garmin. Show its complete preview to the user,
 including affected IDs, dates and overwrite warnings. After user approval,
-call `commit_garmin_write(draft_id)`. Both tools are annotated as writes so clients
+call the returned `commit_tool` with unchanged `commit_arguments` for workout operations, or `commit_garmin_write(draft_id)` for other/legacy operations. Prepare/commit tools are annotated as writes so clients
 can require confirmation; commit is also marked potentially destructive.
 Before preparing, call `get_garmin_write_schema(operation)` for the maintained
 contract, including required/optional names, types, bounds, units and guidance.
@@ -204,3 +204,5 @@ schedule/device workflows. Recorded activity type IDs/keys form a separate
 catalog; manual logs use actual completed-session data and cannot be scheduled
 as future workouts. Walking/hiking legacy workout IDs are blocked after live
 readback lost their sport identity. Multisport stepOrder must be globally unique.
+
+Workout previews include operation-specific commit_tool/commit_arguments. Pass these unchanged after full-preview approval; content_sha256 and contextual fields must match the immutable stored intent. Generic commit remains supported. These tools retain scope, expiry, journal and preflight protections; do not use them to circumvent a platform rejection.

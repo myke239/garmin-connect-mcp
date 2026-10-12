@@ -96,7 +96,7 @@ def contract(operation):
     if operation not in SCHEMAS:
         raise ValueError("Unsupported write operation")
     return {"operation":operation,"parameter_schema":copy.deepcopy(SCHEMAS[operation]),
-        "guidance":GUIDANCE[operation],"workflow":"Read evidence; prepare; review exact preview; commit only with authorization; verify. Never retry unknown/in_progress with a new key.",
+        "guidance":GUIDANCE[operation],"workflow":"Read evidence; prepare; review exact preview; use returned commit_tool/commit_arguments unchanged for workout operations (generic commit for other operations), only with authorization; verify. Never retry unknown/in_progress with a new key.",
         "validation_only":True,"garmin_request_sent":False}
 
 

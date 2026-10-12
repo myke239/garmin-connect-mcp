@@ -81,7 +81,7 @@ First query `get_garmin_write_schema(operation)` for the current contract. Read 
 - Create and schedule new templates together: `create_training_calendar`, parameters `{"workouts": [{"date": "YYYY-MM-DD", "workout": template}]}`. Up to 20 entries; each creates a template, including when the same content is used on multiple dates. To reuse one existing template on multiple dates, schedule its ID separately.
 - Remove a scheduled entry: `unschedule_workout` needs its calendar entry ID from `list_scheduled_workouts`, not its template ID. Verify the entry's date and identity first.
 
-Keep one stable intent key for each exact operation and payload. Show the returned preview with name, sport, units, encoded targets, dates, and replacement/partial-batch warnings. Ask the user to approve that exact preview unless they already approved identical content. Commit only the returned `draft_id`, using `commit_garmin_write`. Preparation is not creation and approval of a general plan is not approval of an unseen payload.
+Keep one stable intent key for each exact operation and payload. Show the returned preview with name, sport, units, encoded targets, dates, and replacement/partial-batch warnings. Ask the user to approve that exact preview unless they already approved identical content. Commit using the returned `commit_tool` and unchanged `commit_arguments` described below; the generic tool remains available for legacy drafts. Preparation is not creation and approval of a general plan is not approval of an unseen payload.
 
 Writes require local opt-in; remote calls also require `garmin:write`. On authentication or scope failure, explain the server's guidance and stop dependent operations. Never ask for Garmin passwords or tokens in chat.
 
@@ -92,3 +92,19 @@ Writes require local opt-in; remote calls also require `garmin:write`. On authen
 On `unknown` or `in_progress`, stop dependent scheduling and do not recommit through a new key or edit the journal. Preserve the draft ID, returned error category, and partial steps. An empty steps list for standalone creation does not prove that no request was sent. Upstream error categories do not prove whether a mutation occurred.
 
 For an ambiguous creation, search the library with successive `list_workout_templates` pages (limit at most 50, advance start by the number returned). An unchanged first page does not establish absence. Match candidates by ID and full content, not name alone; describe any search limit or cache limitation. If uncertainty remains, ask the user to inspect Garmin before authorizing a corrected attempt. Do not schedule an uncertain candidate or recreate an unknown batch automatically.
+
+## Reviewable workout commits
+
+Workout preparation returns `commit_tool` and `commit_arguments`. After approval
+of the full preview, call that tool with the returned arguments unchanged:
+creation uses `commit_garmin_workout_creation`, scheduling uses
+`commit_garmin_workout_schedule`, calendar batches use
+`commit_garmin_training_calendar`, and replacement uses
+`commit_garmin_workout_update`. Name/sport/ID/date fields communicate the action;
+content_sha256 binds the full stored payload. Do not invent or recompute these
+fields to change an approved draft. Replacement remains destructive.
+
+`commit_garmin_write` remains compatible for old drafts and other operations.
+A platform safety block is distinct from a connector error. Preserve the exact
+error and draft status; do not switch tools, SDK, or HTTP paths to evade a block.
+The new tools improve reviewability but are not a proven safety-block fix.

@@ -18,8 +18,8 @@ def test_stdio_lifecycle():
             async with ClientSession(read, write) as client:
                 await client.initialize()
                 listing = await client.list_tools()
-                assert len(listing.tools) == 26
-                assert {tool.name for tool in listing.tools if not tool.annotations.readOnlyHint} == {"prepare_garmin_write", "commit_garmin_write"}
+                assert len(listing.tools) == 30
+                assert {tool.name for tool in listing.tools if not tool.annotations.readOnlyHint} == {"prepare_garmin_write", "commit_garmin_write", "commit_garmin_workout_creation", "commit_garmin_workout_update", "commit_garmin_workout_schedule", "commit_garmin_training_calendar"}
                 assert listing.tools[0].annotations.readOnlyHint is True
                 response = await client.call_tool("connection_status", {})
                 assert not response.isError
