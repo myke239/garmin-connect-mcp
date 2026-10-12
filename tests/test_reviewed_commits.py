@@ -7,7 +7,16 @@ from garmin_connect_mcp.auth import TokenStore
 from garmin_connect_mcp.runtime import RequestError
 from garmin_connect_mcp.server import create_server
 from garmin_connect_mcp.service import GarminService
-from test_writes import CASES, FakeClient
+from test_writes import CASES as ORIGINAL_CASES, FakeClient as OriginalClient
+from garmin_connect_mcp.lifecycle import fingerprint
+TARGET_TEMPLATE={"workoutId":123,"workoutName":"Synthetic","workoutSegments":[]}
+TARGET={"workout_id":"123","expected_name":"Synthetic","expected_content_sha256":fingerprint(TARGET_TEMPLATE)}
+CASES={**ORIGINAL_CASES,"rename_workout":{**TARGET,"workout_name":"Renamed"},
+    "delete_workout":{**TARGET,"confirm_calendar_removal":True},
+    "schedule_existing_workouts":{"workouts":[{"workout_id":"123","date_str":"2026-10-12"}]}}
+class FakeClient(OriginalClient):
+    def get_workout_by_id(self,workout_id): return copy.deepcopy(TARGET_TEMPLATE)
+
 
 
 @pytest.mark.parametrize("operation",list(writes.COMMIT_TOOLS))
@@ -58,7 +67,7 @@ def test_specialized_mcp_tools_keep_scope_annotations_and_workflow(tmp_path,monk
     async def run():
         tool=next(t for t in await server.list_tools() if t.name==writes.COMMIT_TOOLS[operation])
         assert not tool.annotations.readOnlyHint
-        assert tool.annotations.destructiveHint==(operation=="update_workout")
+        assert tool.annotations.destructiveHint==(operation in {"update_workout","rename_workout","delete_workout"})
         assert "garmin:write" in tool.meta["securitySchemes"][0]["scopes"]
         prepared=await call("prepare_garmin_write",{"operation":operation,"parameters":CASES[operation],"idempotency_key":"reviewed-mcp-test"})
         result=await call(prepared["commit_tool"],prepared["commit_arguments"])

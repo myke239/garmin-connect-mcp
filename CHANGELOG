@@ -1,3 +1,13 @@
+0.10.0 - 2026-10-12
+- Opt-in bounded original FIT archive and full-resolution power/drift analysis, richer sample channels and explicit interval comparison.
+- Pure template cloning; hash-protected rename/delete and durable batches scheduling existing workouts with explicit commit tools.
+- Live synthetic lifecycle/readback/cleanup and real-recording archive verification.
+
+0.10.0 - 2026-10-12
+- Opt-in bounded original FIT archive and full-resolution power/drift analysis, richer sample channels and explicit interval comparison.
+- Pure template cloning; hash-protected rename/delete and durable batches scheduling existing workouts with explicit commit tools.
+- Live synthetic lifecycle/readback/cleanup and real-recording archive verification.
+
 # Changelog
 
 ## 0.9.0 — 2026-10-12

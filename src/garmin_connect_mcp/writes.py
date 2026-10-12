@@ -26,11 +26,12 @@ METHODS = {
     "add_weight": "add_weigh_in", "add_body_composition": "add_body_composition",
     "add_hydration": "add_hydration_data", "add_blood_pressure": "set_blood_pressure",
 }
-OPERATIONS = tuple(METHODS) + ("create_training_calendar",)
+OPERATIONS = tuple(METHODS) + ("create_training_calendar", "rename_workout", "delete_workout", "schedule_existing_workouts")
 WriteOperation = Literal["create_workout", "update_workout", "schedule_workout", "unschedule_workout",
     "send_workout_to_device", "create_manual_activity", "upload_activity_file", "set_activity_name",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
-    "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar"]
+    "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar",
+    "rename_workout", "delete_workout", "schedule_existing_workouts"]
 from .sport_schemas import SPORT_IDS,manual_type_supported
 SPORTS = set(SPORT_IDS)
 
@@ -169,6 +170,20 @@ def _validate(operation, parameters):
     parameters = json.loads(json.dumps(parameters, allow_nan=False))
     if operation != "upload_activity_file" and len(json.dumps(parameters)) > 12000:
         raise ValueError("Preview payload exceeds 12 KiB")
+    if operation in {"rename_workout", "delete_workout"}:
+        from .data import validate_id
+        validate_id(str(parameters["workout_id"]))
+        if operation == "delete_workout" and parameters["confirm_calendar_removal"] is not True:
+            raise WriteInputError(operation,"Explicit calendar-removal confirmation is required")
+        return parameters
+    if operation == "schedule_existing_workouts":
+        keys=[]
+        for item in parameters["workouts"]:
+            validate_schedule(item)
+            keys.append((str(item["workout_id"]),item["date_str"]))
+        if len(keys)!=len(set(keys)):
+            raise WriteInputError(operation,"Duplicate workout/date entries are forbidden")
+        return parameters
     if operation == "schedule_workout":
         validate_schedule(parameters)
     if operation == "create_training_calendar":
@@ -378,6 +393,14 @@ def invoke_write(client,method,*args,**kwargs):
 
 def preflight(client,operation,p):
     """Fixed reads establish existing targets and catalog tuples before mutation."""
+    if operation in {"rename_workout","delete_workout"}:
+        from .lifecycle import fingerprint
+        original=client.get_workout_by_id(p["workout_id"])
+        if not isinstance(original,dict) or original.get("workoutName")!=p["expected_name"] or fingerprint(original)!=p["expected_content_sha256"]:
+            raise RequestError("WORKOUT_TARGET_CHANGED")
+    if operation=="schedule_existing_workouts":
+        for item in p["workouts"]:
+            preflight(client,"schedule_workout",item)
     if operation in {"update_workout","schedule_workout","send_workout_to_device"}:
         if not isinstance(client.get_workout_by_id(p["workout_id"]),dict):
             raise RequestError("INVALID_PREFLIGHT_RESPONSE")
@@ -420,6 +443,8 @@ def preflight(client,operation,p):
 
 
 COMMIT_TOOLS = {
+    "rename_workout":"commit_garmin_workout_rename", "delete_workout":"commit_garmin_workout_delete",
+    "schedule_existing_workouts":"commit_garmin_existing_workout_calendar",
     "create_workout": "commit_garmin_workout_creation",
     "update_workout": "commit_garmin_workout_update",
     "schedule_workout": "commit_garmin_workout_schedule",
@@ -439,6 +464,12 @@ def review_context(operation, parameters, digest):
     elif operation == "create_training_calendar":
         context["workouts"] = [{"date": item["date"], "workout_name": item["workout"]["workoutName"],
             "sport": item["workout"]["sportType"]["sportTypeKey"]} for item in parameters["workouts"]]
+    if operation in {"rename_workout","delete_workout"}:
+        context.update(workout_id=str(parameters["workout_id"]),expected_name=parameters["expected_name"])
+        if operation=="rename_workout": context["workout_name"]=parameters["workout_name"]
+        else: context["confirm_calendar_removal"]=parameters["confirm_calendar_removal"]
+    elif operation=="schedule_existing_workouts":
+        context["workouts"]=[{"workout_id":str(v["workout_id"]),"date_str":v["date_str"]} for v in parameters["workouts"]]
     return context
 
 
@@ -549,7 +580,26 @@ def execute(client, directory, draft_id):
         draft["status"] = "in_progress"
         service.store.save(json.dumps(state))  # Persist before the first network mutation.
         try:
-            if operation == "create_training_calendar":
+            if operation == "rename_workout":
+                original=client.get_workout_by_id(parameters["workout_id"])
+                from .lifecycle import fingerprint
+                if fingerprint(original)!=parameters["expected_content_sha256"]:
+                    raise RequestError("WORKOUT_TARGET_CHANGED")
+                original["workoutName"]=parameters["workout_name"]
+                raw=invoke_write(client,"update_workout",parameters["workout_id"],original)
+                result={"workout_id":str(parameters["workout_id"]),"workout_name":parameters["workout_name"]}
+            elif operation == "delete_workout":
+                raw=invoke_write(client,"delete_workout",parameters["workout_id"])
+                result={"workout_id":str(parameters["workout_id"]),"deleted":True}
+            elif operation == "schedule_existing_workouts":
+                for index,item in enumerate(parameters["workouts"]):
+                    # Recheck duplicates immediately before each write. Any failure stops the batch.
+                    preflight(client,"schedule_workout",item)
+                    raw=invoke_write(client,"schedule_workout",item["workout_id"],item["date_str"])
+                    draft["steps"].append({"index":index,"workout_id":str(item["workout_id"]),"scheduled_date":item["date_str"]})
+                    service.store.save(json.dumps(state))
+                result={"kind":"existing_scheduled_workouts","count":len(draft["steps"])}
+            elif operation == "create_training_calendar":
                 for index,item in enumerate(parameters["workouts"]):
                     raw = invoke_write(client,"upload_workout",item["workout"])
                     workout_id = raw["workoutId"]

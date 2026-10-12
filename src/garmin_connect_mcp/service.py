@@ -73,7 +73,7 @@ class GarminService:
     def list_activities(self, start_date, end_date, activity_type=None, limit=20, cursor=0):
         validate_range(start_date, end_date)
         if not 1 <= limit <= 50 or not 0 <= cursor <= 10000:
-            raise ValueError("Limit must be 1–50 and cursor 0–10000")
+            raise ValueError("Limit must be 1â€“50 and cursor 0â€“10000")
         if activity_type not in (None, "running", "cycling", "swimming", "walking", "strength_training"):
             raise ValueError("Unsupported activity type filter")
         params = {"startDate": start_date, "endDate": end_date, "start": cursor, "limit": limit + 1}
@@ -97,10 +97,11 @@ class GarminService:
         return {**splits(self.call("get_activity_splits", validate_id(activity_id))), **self.meta()}
 
     def get_activity_samples(self, activity_id, metric="heart_rate", max_points=200):
+        from .analytics import samples, CHANNELS
         validate_id(activity_id)
-        if metric != "heart_rate" or not 1 <= max_points <= 1000:
-            raise ValueError("Only heart_rate with 1–1000 points is supported")
-        return {**heart_rate_samples(self.call("get_activity_details", activity_id, maxchart=max_points, maxpoly=0), max_points), **self.meta()}
+        if metric not in CHANNELS or isinstance(max_points,bool) or not 1 <= max_points <= 1000:
+            raise ValueError("Choose a supported metric and 1–1000 points")
+        return {**samples(self.call("get_activity_details", activity_id, maxchart=max_points, maxpoly=0),metric,max_points), **self.meta()}
 
     def get_strength_sets(self, activity_id):
         return {**strength_sets(self.call("get_activity_exercise_sets", validate_id(activity_id))), **self.meta()}
