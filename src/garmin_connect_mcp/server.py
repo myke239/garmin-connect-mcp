@@ -294,7 +294,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def get_activity_samples(activity_id: str, metric: str = "heart_rate", max_points: int = 200) -> dict:
-            """Read at most 1000 heart-rate samples; timestamps are Unix milliseconds."""
+            """Read at most 1000 heart_rate/power/cadence/speed/elevation samples; explicit field units, no GPS."""
             return safe_call(backend.get_activity_samples, activity_id, metric, max_points)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
@@ -347,6 +347,74 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             fly, free; equipment fins/kickboard/paddles/pull_buoy/snorkel; drill kick/pull/drill.
             Calendar/readback success does not verify physical watch behavior."""
             return safe_call(swim_workout, workout_name, pool_length_m, intervals)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_workout_rename(draft_id: str, workout_id: str, expected_name: str, workout_name: str, content_sha256: str) -> dict:
+            """Rename the exact approved template while preserving content. Use returned preview commit_arguments unchanged; fresh target hash protects against edits."""
+            return reviewed_commit(draft_id,"rename_workout",dict(workout_id=workout_id,expected_name=expected_name,workout_name=workout_name,content_sha256=content_sha256))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_workout_delete(draft_id: str, workout_id: str, expected_name: str, confirm_calendar_removal: bool, content_sha256: str) -> dict:
+            """Irreversibly delete the exact approved template, potentially removing its calendar entries. Requires explicit review of deletion and calendar removal. Use immutable preview arguments unchanged; no automatic restoration."""
+            return reviewed_commit(draft_id,"delete_workout",dict(workout_id=workout_id,expected_name=expected_name,confirm_calendar_removal=confirm_calendar_removal,content_sha256=content_sha256))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
+            meta={"securitySchemes":[{"type":"oauth2","scopes":["garmin:read","garmin:write"]}]})
+        def commit_garmin_existing_workout_calendar(draft_id: str, workouts: list[dict], content_sha256: str) -> dict:
+            """Schedule up to 20 approved existing workout/date pairs. Creates no templates. Use returned commit_arguments unchanged; duplicates rejected, partial progress retained, unknown outcomes never retried blindly."""
+            return reviewed_commit(draft_id,"schedule_existing_workouts",dict(workouts=workouts,content_sha256=content_sha256))
+
+        from .archive import Archive
+        from .lifecycle import clone, target
+        archive = Archive(backend.store.directory)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def list_archived_activities(limit: StrictInt = 20, cursor: StrictInt = 0) -> dict:
+            """Browse opted-in local archive, at most 50 metadata rows; no raw records/GPS or Garmin requests."""
+            return safe_call(archive.list,limit,cursor)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def compare_garmin_intervals(activity_ids: list[str], lap_indices: list[StrictInt]) -> dict:
+            """Compare explicitly selected lap indices across 2-5 completed sessions, at most 20 laps each.
+            Select like-for-like work intervals; never assumes every lap is an interval. Reports missing laps."""
+            def compare():
+                if not 2<=len(activity_ids)<=5 or not 1<=len(lap_indices)<=20 or len(set(lap_indices))!=len(lap_indices):
+                    raise ValueError("Choose 2-5 sessions and 1-20 distinct lap indices")
+                rows=[]
+                for activity_id in activity_ids:
+                    value=backend.get_activity_splits(activity_id)
+                    selected=[v for v in value['splits'] if v.get('lap_index') in lap_indices]
+                    rows.append({'activity_id':activity_id,'splits':selected,'missing_lap_indices':[v for v in lap_indices if not any(s.get('lap_index')==v for s in selected)],'truncated':value.get('truncated',False)})
+                return {'sessions':rows,'selection':'caller-selected laps; no automatic equivalence claim'}
+            return safe_call(compare)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
+        def archive_garmin_activity(activity_id: str, retain_raw_fit: bool = False) -> dict:
+            """Download one original recording to the opt-in local archive. Enable locally first.
+            Default stores sanitized metrics only; raw FIT retention explicitly opts into GPS storage.
+            Does not modify Garmin. At most 16 MiB / 50000 records; no raw file returned."""
+            return safe_call(lambda: backend.runner(backend.store.directory,"mcp_archive_activity",(activity_id,),{"retain_raw_fit":retain_raw_fit}))
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def get_archived_activity_analysis(activity_id: str) -> dict:
+            """Local full-resolution analysis. Power curves require contiguous 1 Hz samples;
+            HR/speed drift requires >=600 fully paired seconds. Missing is not zero.
+            No coordinates or raw recording returned; does not contact Garmin."""
+            return safe_call(archive.analysis,activity_id)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def clone_garmin_workout(workout_id: str, workout_name: str) -> dict:
+            """Read an existing template and build a new named draft without server-owned IDs.
+            Preserves executable content. Does not save; prepare create_workout afterward."""
+            return safe_call(clone,backend,workout_id,workout_name)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_workout_mutation_target(workout_id: str) -> dict:
+            """Fresh name/content hash required for rename/delete preflight. Does not mutate.
+            Deletion can remove associated calendar entries. Review exact target first."""
+            return safe_call(target,backend,workout_id)
 
     return server
 

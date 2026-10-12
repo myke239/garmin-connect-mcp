@@ -72,6 +72,14 @@ SCHEMAS = {
         "timestamp":STAMP,"notes":TEXT},["systolic","diastolic","timestamp"]),
 }
 
+TARGET = {"workout_id":ID,"expected_name":NAME,"expected_content_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}
+SCHEMAS.update({
+    "rename_workout":obj({**TARGET,"workout_name":NAME}),
+    "delete_workout":obj({**TARGET,"confirm_calendar_removal":{"const":True,"type":"boolean"}}),
+    "schedule_existing_workouts":obj({"workouts":{"type":"array","minItems":1,"maxItems":20,
+        "items":obj({"workout_id":ID,"date_str":DATE})}}),
+})
+
 GUIDANCE = {
     "create_workout":"Read list_garmin_workout_sports and get_garmin_workout_schema for exact sport enums/complete examples; build_garmin_workout validates JSON without writing. Use find_garmin_exercises and build_garmin_strength_step for strength; resolve equipment variants explicitly and never substitute missing exercises. For yoga poses discover find_garmin_exercises(category=POSE), build_garmin_yoga_step for exact timed steps, then build_garmin_workout with explicit yoga segments. Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
     "update_workout":"Read original template first. Complete replacement preserves all untouched fields and matching workoutId.",
@@ -90,6 +98,12 @@ GUIDANCE = {
     "add_hydration":"Actual positive ml consumed; timestamp local date must match cdate. No subtract/overwrite through this operation.",
     "add_blood_pressure":"Actual measured systolic/diastolic mmHg; optional pulse bpm. No invented defaults, timestamps mandatory.",
 }
+
+GUIDANCE.update({
+    "rename_workout":"Read get_garmin_workout_mutation_target first. Fresh hash/name protect against a changed template. Renames complete existing content only; re-read after commit.",
+    "delete_workout":"Destructive, irreversible template deletion can remove associated calendar entries. Get fresh mutation target and explicitly authorize calendar removal. Never infer approval from generic workout creation permission.",
+    "schedule_existing_workouts":"At most 20 existing workout_id/date_str pairs. Read calendar first; no new templates. Preflight all targets and stop on partial/unknown results. Journal preserves completed rows; never retry a whole batch blindly.",
+})
 
 
 def contract(operation):

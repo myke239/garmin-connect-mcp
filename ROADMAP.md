@@ -22,4 +22,8 @@ prerequisites, not features an unofficial SDK can provide.
 Phase 1 verification complete: 384 offline tests on WSL, 382 on Windows with
 two platform skips, installed WSL protocol checks and live recovery/builder
 readback plus synthetic cleanup. Publication is tracked by the phase PR.
-Phases 2–4 remain in progress; this is not a claim that the roadmap is complete.
+Phases 2â€“4 remain in progress; this is not a claim that the roadmap is complete.
+
+Phase 1 merged as PR #21. Phase 2 implemented: local FIT archive, richer samples,
+interval comparison, power/drift analysis, clone/rename/delete and existing-workout
+calendar batches. Live lifecycle and original-recording checks passed with cleanup.
