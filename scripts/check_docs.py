@@ -32,7 +32,8 @@ def anchors(text):
 
 async def inventory():
     from garmin_connect_mcp.server import create_server
-    return {tool.name for tool in await create_server(tool_profile="all").list_tools()}
+    return {tool.name: set(tool.inputSchema.get("properties", {}))
+            for tool in await create_server(tool_profile="all").list_tools()}
 
 
 def main():
@@ -62,8 +63,14 @@ def main():
     reference = (ROOT / "docs/reference/tools.md").read_text(encoding="utf-8")
     documented = set(re.findall(r"^## ([a-z][a-z0-9_]+)$", reference, re.M))
     actual = asyncio.run(inventory())
-    if actual != documented:
-        errors.append(f"Tool inventory mismatch: missing={sorted(actual-documented)}, extra={sorted(documented-actual)}")
+    if set(actual) != documented:
+        errors.append(f"Tool inventory mismatch: missing={sorted(set(actual)-documented)}, extra={sorted(documented-set(actual))}")
+    for name, properties in actual.items():
+        section = re.search(r"^## " + re.escape(name) + r"$([\s\S]*?)(?=^## |\Z)", reference, re.M)
+        if section:
+            rows = set(re.findall(r"^\| `([^`]+)` \|", section.group(1), re.M))
+            if properties != rows:
+                errors.append(f"Tool parameters mismatch: {name}")
     if errors:
         raise SystemExit("\n".join(errors))
     print(f"PASS: {len(pages)} documents, local links/headings, fences, root layout and {len(actual)} MCP tools.")

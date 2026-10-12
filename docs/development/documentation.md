@@ -28,7 +28,7 @@ python scripts/check_docs.py
 python scripts/check_secrets.py
 ```
 
-The documentation checker verifies local Markdown targets and heading fragments, code-fence balance, core-root layout and the live offline default tool inventory against the reference. It performs no network or account calls. Remote URLs require a separate manual source review; this check does not prove an external page is available.
+The documentation checker verifies local Markdown targets and heading fragments, code-fence balance, core-root layout and the live offline default tool inventory and parameter names against the reference. It performs no network or account calls. Remote URLs require a separate manual source review; this check does not prove an external page is available.
 
 For a changed install command or schema example, verify against the launcher/parser or offline MCP contract. Runtime changes still need appropriate tests. Documentation-only changes retain VERSION; update CHANGELOG under Unreleased. Preserve encrypted journals, private audits and active installed runtimes.
 

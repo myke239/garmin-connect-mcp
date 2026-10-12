@@ -111,4 +111,4 @@ success after the 0.8.0 update; this is one case, not a guaranteed remedy.
 extras, then use the full launcher path with `tunnel-setup`, `tunnel` and
 `approve <ticket>` instead of activating Python or changing directories.
 The current HTTPS process and credentials are not moved by installation.
-Linux session files use owner-only permissions rather than DPAPI encryption.
+Linux session files use owner-only permissions by default, with optional Secret Service encryption; see [permissions and storage](../guides/permissions-and-storage.md).
