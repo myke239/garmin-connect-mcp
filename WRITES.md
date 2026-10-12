@@ -176,3 +176,11 @@ then pass the returned draft ID to commit. Dates and IDs must come from the user
 and their actual account. Default tests use synthetic clients and do not change
 health records or existing workouts. Write methods use unofficial Garmin
 endpoints and can change upstream; only claim live verification for tested paths.
+
+## Strength discovery
+
+Use get_garmin_workout_schema and build_garmin_strength_step for SDK sport/step
+conventions. find_garmin_exercises exposes exact matches, variants and pagination
+from the pinned picker snapshot, not a live complete Garmin catalog. Never
+substitute a missing movement. Planned weight_kg is encoded as grams by the SDK;
+recorded exerciseSets units remain unverified. See the plugin [strength reference](plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md).

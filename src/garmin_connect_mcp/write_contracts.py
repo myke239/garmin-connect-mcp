@@ -73,7 +73,7 @@ SCHEMAS = {
 }
 
 GUIDANCE = {
-    "create_workout":"Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
+    "create_workout":"Read get_garmin_workout_schema for sport enums. Use find_garmin_exercises and build_garmin_strength_step for strength; resolve equipment variants explicitly and never substitute missing exercises. Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
     "update_workout":"Read original template first. Complete replacement preserves all untouched fields and matching workoutId.",
     "schedule_workout":"Use workout_id/date_str, not workoutId/date. Read calendar first to avoid duplicate schedules; verify after commit.",
     "unschedule_workout":"Use calendar entry ID from list_scheduled_workouts, not workout template ID. This removes one scheduled entry.",

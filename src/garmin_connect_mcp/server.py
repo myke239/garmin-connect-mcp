@@ -9,6 +9,7 @@ from .service import GarminService
 from .runtime import RequestError
 from .writes import WriteInputError
 from typing import Literal
+from pydantic import StrictInt,StrictFloat
 
 
 def safe_call(function, *args):
@@ -95,15 +96,31 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, **s
             return safe_call(lambda: activity_types(backend.fresh_call("get_activity_types")))
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
-        def find_garmin_exercises(term: str, limit: int = 20) -> dict:
-            """Search the pinned SDK exercise catalog for valid category/exercise enum pairs. No account access."""
-            def read():
-                if not isinstance(term,str) or not 1<=len(term)<=100 or isinstance(limit,bool) or not 1<=limit<=50:
-                    raise ValueError("Invalid exercise search")
-                from garminconnect.exercises import find
-                rows=find(term)
-                return {"exercises":rows[:limit],"truncated":len(rows)>limit,"source":"pinned Garmin SDK catalog"}
-            return safe_call(read)
+        def find_garmin_exercises(term: str = "", limit: int = 20, start: int = 0, category: str | None = None) -> dict:
+            """Search/browse the SDK exercise picker snapshot by display name or exact enum, tolerating hyphens/underscores.
+            Returns exact matches separately from equipment variants, total count and next_start pagination.
+            category filters SDK categories. Empty term browses. No account access; not_found is not a live Garmin absence proof.
+            Preserve requested movements; never select related exercises or variants implicitly.
+            """
+            from .workout_discovery import exercises
+            return safe_call(exercises,term,limit,start,category)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_workout_schema(sport: Literal["running","cycling","swimming","walking","hiking","strength_training"] = "strength_training") -> dict:
+            """Get SDK sport enum IDs, reps condition and example step fields. Strength is 5/strength_training; reps is 10/reps.
+            Includes strength categories and verified SDK load-unit conventions; examples do not create a workout.
+            """
+            from .workout_discovery import workout_schema
+            return safe_call(workout_schema,sport)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def build_garmin_strength_step(category: str, exercise: str, reps: StrictInt, step_order: StrictInt, weight_kg: StrictFloat | None = None) -> dict:
+            """Build an SDK ExecutableStepDTO from an EXACT catalog category/exercise pair, explicit reps and step order.
+            No Garmin request or write. Optional weight_kg becomes grams in weightValue with the SDK unit.
+            Do not use a guessed enum, substitute movement or parent-only fallback for an unresolved exercise.
+            """
+            from .workout_discovery import strength_step
+            return safe_call(strength_step,category,exercise,reps,step_order,weight_kg)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def get_activity_edit_template(activity_id: str) -> dict:

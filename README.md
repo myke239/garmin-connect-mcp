@@ -5,7 +5,7 @@ ChatGPT through an optional authenticated HTTPS tunnel. Read tools plus optional
 previewed account writes; no arbitrary endpoints. An independent, unofficial project
 built on [python-garminconnect](https://github.com/cyberjunky/python-garminconnect).
 
-Version **0.3.1** · Python **3.12+** · **MIT** license.
+Version **0.4.0** · Python **3.12+** · **MIT** license.
 The owner verified local Codex access and ChatGPT access on a phone. Your
 ChatGPT account must support custom MCP plugins; account, workspace and mobile
 availability can vary. This is installable source, not an approved public
@@ -103,7 +103,9 @@ Existing remote grants remain read-only.
 | list_scheduled_workouts | Fresh calendar entries and IDs for one month |
 | list_garmin_devices | Explicit device IDs for queued workout delivery |
 | list_garmin_activity_types | Valid type ID/key/parent tuples |
-| find_garmin_exercises | Pinned SDK exercise category/name catalog |
+| find_garmin_exercises | Paginated SDK search, exact matches and variants |
+| get_garmin_workout_schema | SDK sport IDs, examples and unit conventions |
+| build_garmin_strength_step | Validated strength step from an exact catalog pair |
 | get_activity_edit_template | Complete strength payload and editable activity fields |
 | get_garmin_measurements | Fresh measurements for one calendar day |
 
