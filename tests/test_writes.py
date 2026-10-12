@@ -92,3 +92,43 @@ def test_xml_entities_and_non_activity_formats_rejected():
     for xml in (b'<!DOCTYPE gpx [<!ENTITY x SYSTEM "file:///secret">]><gpx>&x;</gpx>',b'<html/>'):
         with pytest.raises(Exception):
             validate("upload_activity_file",{"format":"gpx","content_base64":base64.b64encode(xml).decode()})
+
+
+@pytest.mark.parametrize("operation", ["create_workout", "create_training_calendar"])
+@pytest.mark.parametrize("defect", ["missing_ids", "nested_condition_value", "missing_distance", "invalid_repeat"])
+def test_invalid_workouts_rejected_before_preparation(tmp_path, operation, defect):
+    workout = json.loads(json.dumps(WORKOUT))
+    step = workout["workoutSegments"][0]["workoutSteps"][0]
+    if defect == "missing_ids":
+        workout["sportType"].pop("sportTypeId")
+    elif defect == "nested_condition_value":
+        step["endCondition"]["conditionValue"] = step.pop("endConditionValue")
+    elif defect == "missing_distance":
+        step.pop("endConditionValue")
+    else:
+        workout["workoutSegments"][0]["workoutSteps"] = [{"type":"RepeatGroupDTO",
+            "stepOrder":1,"stepType":{"stepTypeId":6,"stepTypeKey":"repeat"},
+            "numberOfIterations":3,"workoutSteps":[{"type":"ExecutableStepDTO"}]}]
+    params = {"workout_json":workout} if operation == "create_workout" else {
+        "workouts":[{"date":"2026-10-12","workout":workout}]}
+    service = WriteService(tmp_path)
+    service.settings.save(json.dumps({"enabled":True}))
+    with pytest.raises(ValueError): service.prepare(operation,params,"invalid-workout-test")
+    assert not service.store.exists()
+
+
+def test_write_failure_reports_safe_category_and_is_not_retried(tmp_path):
+    class Rejected(FakeClient):
+        def upload_workout(self, **kwargs):
+            self.calls.append("upload_workout")
+            raise RuntimeError("HTTP 400: secret-token private-payload https://private.example")
+    service = WriteService(tmp_path)
+    service.settings.save(json.dumps({"enabled":True}))
+    draft = service.prepare("create_workout",CASES["create_workout"],"rejected-workout")
+    client = Rejected()
+    result = execute(client,tmp_path,draft["draft_id"])
+    assert result["status"] == "unknown"
+    assert result["error"]["code"] == "INVALID_REQUEST"
+    assert not any(value in json.dumps(result) for value in ("secret-token","private-payload","private.example"))
+    assert execute(client,tmp_path,draft["draft_id"]) == result
+    assert len(client.calls) == 1

@@ -34,6 +34,14 @@ and no read-cache reuse. A timeout/crash or upstream failure can leave an
 retry under a new key to bypass this safeguard. Calendar batches are not atomic:
 created workout IDs and successful scheduled dates are reported as progress.
 There is no automatic rollback or automatic resume of a partial batch.
+Unknown results now include an `error.code` category when an exception was caught.
+The category does not prove whether a mutation reached Garmin. Older journal
+entries cannot recover errors discarded by earlier versions.
+
+Workout templates require numeric IDs alongside sport/step/condition/target
+keys. Use an existing template as the starting point. Duration and distance
+belong in `endConditionValue` on the executable step, in seconds and metres;
+`endCondition.conditionValue` is invalid. Nested repeat steps are validated too.
 
 The journal retains up to 1,000 intents within 16 MiB; it refuses new intents
 when full instead of forgetting duplicate protection. It contains private

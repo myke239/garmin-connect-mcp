@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-10-11
 
+- Reject malformed workout enums and duration/distance fields, including nested
+  repeat steps, before preparing standalone or calendar writes. Unknown write
+  results now include a safe error category without upstream messages or secrets.
 - Consent pages provide a fully quoted command using the running installation's
   absolute Python path, with no environment activation or directory change.
 - Registrations that omit scope now support requesting read and write. Tokens

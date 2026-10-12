@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Literal
 
 from .auth import TokenStore, data_directory
-from .runtime import RequestError, session_lock, bounded_request
+from .runtime import RequestError, session_lock, bounded_request, error_code
 
 METHODS = {
     "create_workout": "upload_workout", "update_workout": "update_workout",
@@ -31,6 +31,51 @@ WriteOperation = Literal["create_workout", "update_workout", "schedule_workout",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
     "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar"]
 SPORTS = {"running", "cycling", "swimming", "walking", "hiking", "strength_training"}
+
+
+def validate_workout(payload):
+    def enum(value, id_name, key_name):
+        if (not isinstance(value, dict) or not isinstance(value.get(id_name), int)
+                or isinstance(value.get(id_name), bool) or value[id_name] < 1
+                or not isinstance(value.get(key_name), str) or not value[key_name]):
+            raise ValueError(f"Workout {key_name} requires its numeric {id_name} and string key")
+
+    enum(payload.get("sportType"), "sportTypeId", "sportTypeKey")
+    total = 0
+
+    def steps(items, depth=0):
+        nonlocal total
+        if not isinstance(items, list) or not 1 <= len(items) <= 100 or depth > 5:
+            raise ValueError("Provide 1–100 steps per group, with at most five nested repeat groups")
+        for step in items:
+            total += 1
+            if total > 100 or not isinstance(step, dict):
+                raise ValueError("Workout requires at most 100 total steps")
+            if not isinstance(step.get("stepOrder"), int) or isinstance(step["stepOrder"], bool) or step["stepOrder"] < 1:
+                raise ValueError("Each workout step requires positive stepOrder")
+            enum(step.get("stepType"), "stepTypeId", "stepTypeKey")
+            if step.get("type") == "RepeatGroupDTO":
+                count = step.get("numberOfIterations")
+                if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 100:
+                    raise ValueError("Repeat groups require 1–100 iterations")
+                steps(step.get("workoutSteps"), depth + 1)
+            elif step.get("type") == "ExecutableStepDTO":
+                enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
+                enum(step.get("targetType"), "workoutTargetTypeId", "workoutTargetTypeKey")
+                if "conditionValue" in step["endCondition"]:
+                    raise ValueError("Put duration/distance in step.endConditionValue, not endCondition.conditionValue")
+                if step["endCondition"]["conditionTypeKey"] in {"distance", "time"}:
+                    value = step.get("endConditionValue")
+                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                        raise ValueError("Time/distance steps require positive endConditionValue (seconds/metres)")
+            else:
+                raise ValueError("Use ExecutableStepDTO or RepeatGroupDTO")
+
+    for segment in payload["workoutSegments"]:
+        if not isinstance(segment, dict):
+            raise ValueError("Workout segments must be objects")
+        enum(segment.get("sportType"), "sportTypeId", "sportTypeKey")
+        steps(segment.get("workoutSteps"))
 
 
 def validate(operation, parameters):
@@ -76,10 +121,7 @@ def validate(operation, parameters):
         segments = payload.get("workoutSegments")
         if not isinstance(segments, list) or not 1 <= len(segments) <= 20:
             raise ValueError("Provide 1–20 workout segments")
-        for segment in segments:
-            steps = segment.get("workoutSteps")
-            if not isinstance(steps, list) or not 1 <= len(steps) <= 100:
-                raise ValueError("Provide 1–100 steps per segment")
+        validate_workout(payload)
     for name, value in parameters.items():
         if name.endswith("_id"):
             if isinstance(value, bool) or not str(value).isdigit() or int(value) <= 0:
@@ -219,7 +261,8 @@ def execute(client, directory, draft_id):
         draft = next((value for value in state.values() if value["draft_id"] == draft_id),None)
         if not draft: raise RequestError("DRAFT_NOT_FOUND")
         if draft["status"] != "prepared":
-            return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"]}
+            return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],
+                    "error":draft.get("error")}
         if draft["expires_at"] <= time.time(): raise RequestError("DRAFT_EXPIRED")
         operation, parameters = draft["operation"], validate(draft["operation"],draft["parameters"])
         draft["status"] = "in_progress"
@@ -245,10 +288,13 @@ def execute(client, directory, draft_id):
                 raw = getattr(client,METHODS[operation])(**parameters)
                 result = identifiers(raw)
             draft["result"], draft["status"] = result,"completed"
-        except Exception:
+        except Exception as error:
             draft["status"] = "unknown"
+            draft["error"] = {"code": error_code(error),
+                "guidance": "The write outcome is unconfirmed. Inspect Garmin before proceeding; do not retry with a new key."}
         service.store.save(json.dumps(state))
-        return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"]}
+        return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],
+                "error":draft.get("error")}
 
 
 def main():
