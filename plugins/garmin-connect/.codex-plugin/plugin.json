@@ -1,9 +1,9 @@
 {
   "name": "garmin-connect",
   "version": "0.13.0",
-  "description": "Garmin activity analysis and opt-in previewed account writes.",
+  "description": "Garmin activity analysis and default-enabled reviewed account writes.",
   "author": {
-    "name": "myke239"
+    "name": "Das Kreb"
   },
   "repository": "https://github.com/myke239/garmin-connect-mcp",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "displayName": "Garmin Connect",
     "shortDescription": "Analyze, create and manage workouts",
     "longDescription": "Analyze Garmin training and use SDK-aware skills, queryable operation contracts and guarded writes to manage workouts, schedules, activities and actual measurements.",
-    "developerName": "myke239",
+    "developerName": "Das Kreb",
     "category": "Productivity",
     "capabilities": [
       "Read",

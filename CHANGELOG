@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Adopt the approved Das Kreb vendor logo in the README and set the plugin developer identity to Das Kreb.
+
 - Remove the fit/tradeoffs/alternatives page and direct project comparisons; describe connector capabilities on their own.
 
 ## 0.13.0 — 2026-10-12
