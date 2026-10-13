@@ -1,5 +1,9 @@
 # Garmin Connect MCP
 
+<img src="assets/branding/das-kreb-logo.png" alt="Das Kreb vendor logo: a six-line crab above cursive lettering" width="260">
+
+By **Das Kreb**.
+
 **Turn your Garmin history into useful training conversations—and reviewed workouts you can save to Garmin Connect.**
 
 Bring your runs, recovery metrics, strength sessions and workout library into Codex or another MCP assistant. Ask what changed in your training, build a structured session with real Garmin exercise identifiers, then review it before saving or scheduling it. An optional personal HTTPS connection brings the same server tools to a supported ChatGPT account, including phone access where available.
