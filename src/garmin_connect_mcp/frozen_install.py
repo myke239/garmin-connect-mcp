@@ -46,4 +46,44 @@ def install():
     print('Installed Garmin Connect '+__version__+'. Run this absolute path with desktop, login, install-plugin or serve: '+str(executable))
 
 
-if __name__=='__main__':install()
+
+
+def register_bundle(remove=False):
+    """Register only an installer-owned versioned bundle; never delete private data."""
+    if not getattr(sys,'frozen',False):raise ValueError('Installer registration requires the frozen executable')
+    root=default_root().resolve()
+    source=Path(sys.executable).resolve().parent
+    if source.parent != root/'releases' or source.name != __version__+'-installer':
+        raise ValueError('Installer bundle must use the standard versioned installation path')
+    receipt=root/'installation.json'
+    if remove:
+        if receipt.is_file():
+            current=json.loads(receipt.read_text(encoding='utf-8'))
+            if current.get('launcher')==str(source/'garmin-connect.exe'):receipt.unlink()
+        return
+    resources=Path(getattr(sys,'_MEIPASS'))
+    marketplace=source/'marketplace'
+    if marketplace.is_symlink() or marketplace.is_junction():raise ValueError('Marketplace cannot be a link')
+    if marketplace.exists():
+        # Preserve the installed manifest on a repair; only republish its receipt.
+        manifest=marketplace/'plugins/garmin-connect/.mcp.json'
+    else:
+        shutil.copytree(resources/'plugins',marketplace/'plugins')
+        shutil.copytree(resources/'marketplace-index',marketplace/'.agents/plugins')
+    manifest=marketplace/'plugins/garmin-connect/.mcp.json'
+    value=json.loads(manifest.read_text(encoding='utf-8'))
+    executable=source/'garmin-connect.exe'
+    value['mcpServers']['garmin-connect'].update(command=str(executable),args=['serve'])
+    manifest.write_text(json.dumps(value,indent=2),encoding='utf-8')
+    import subprocess
+    subprocess.run([str(executable),'doctor'],check=True,stdout=subprocess.DEVNULL)
+    metadata={'version':__version__,'python':str(executable),'kind':'frozen','marketplace':str(marketplace),'remote':True,'launcher':str(executable)}
+    text=json.dumps(metadata,indent=2)
+    (source/'installation.json').write_text(text,encoding='utf-8')
+    temporary=root/'installation.json.new';temporary.write_text(text,encoding='utf-8');temporary.replace(receipt)
+
+if __name__=='__main__':
+    if sys.argv[1:]==['--register-bundle']:register_bundle()
+    elif sys.argv[1:]==['--unregister-bundle']:register_bundle(remove=True)
+    elif not sys.argv[1:]:install()
+    else:raise SystemExit('Unsupported installer action')

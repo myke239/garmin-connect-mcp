@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 from PyInstaller.utils.hooks import collect_all,copy_metadata
 root=Path(SPECPATH).parent
 all_data=[];all_binaries=[];all_imports=[]
@@ -7,9 +8,12 @@ for package in ('garmin_connect_mcp','garminconnect','mcp','curl_cffi','ngrok','
     all_data+=data;all_binaries+=binaries;all_imports+=imports
 for name in ('garminconnect','mcp','ngrok','curl_cffi','keyring','cryptography','pystray','pillow','truststore','jsonschema','defusedxml','tzdata','requests','urllib3','certifi','pydantic','pydantic-core','starlette','uvicorn','sse-starlette','anyio','httpx','httpcore'):
     all_data+=copy_metadata(name)
-all_data += [(str(root/'plugins'),'plugins'),(str(root/'.agents/plugins'),'marketplace-index'),(str(root/'LICENSE'),'.'),(str(root/'NOTICE'),'.')]
+all_data += [(str(root/'plugins'),'plugins'),(str(root/'.agents/plugins'),'marketplace-index'),(str(root/'LICENSE'),'.'),(str(root/'NOTICE'),'.'),(str(root/'assets/branding'),'branding')]
+branding = {'icon':str(root/'assets/branding/das-kreb-logo.ico'), 'version':str(root/'scripts/windows-version.txt')} if sys.platform=='win32' else {}
+
 a=Analysis([str(root/'scripts/frozen_entry.py')],pathex=[str(root/'src')],binaries=all_binaries,datas=all_data,hiddenimports=all_imports,excludes=["garmin_fit_sdk"])
 pyz=PYZ(a.pure)
-exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='garmin-connect',console=True)
-gui=EXE(pyz,a.scripts,[],exclude_binaries=True,name='garmin-connect-desktop',console=False)
+exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='garmin-connect',console=True,upx=False,**branding)
+gui_branding={**branding,'version':str(root/'scripts/windows-version-gui.txt')} if sys.platform=='win32' else {}
+gui=EXE(pyz,a.scripts,[],exclude_binaries=True,name='garmin-connect-desktop',console=False,upx=False,**gui_branding)
 coll=COLLECT(exe,gui,a.binaries,a.datas,name='garmin-connect')

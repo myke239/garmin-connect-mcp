@@ -12,4 +12,4 @@ The approved PNG is [assets/branding/das-kreb-logo.png](../../assets/branding/da
 
 The crab uses six separate continuous symmetrical strokes: four left/right leg pairs, one connected claw pair and one connected eye pair. Keep white gaps between strokes, fine monochrome linework and downward-facing feet. The wordmark is separate from the six-stroke count. Do not add fills, extra appendages or change the lettering without approval.
 
-Vendor branding is distinct from an authenticated Windows publisher identity. The current executables remain unsigned; using this logo or developer name does not establish verified-publisher status. Trusted signing still requires a separately validated signing identity.
+Vendor branding is distinct from an authenticated Windows publisher identity. The 0.13.0 release executables remain unsigned; the [trusted distribution workflow](distribution.md) adds separately gated signing. using this logo or developer name does not establish verified-publisher status. Trusted signing still requires a separately validated signing identity.

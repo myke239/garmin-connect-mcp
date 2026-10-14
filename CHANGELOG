@@ -1,6 +1,9 @@
 0.12.0 - 2026-10-12
 
-## Unreleased
+## Unreleased — 0.14.0
+
+- Add Das Kreb Windows icon/version metadata, a versioned per-user installer, explicit unsigned test mode and a fail-closed signed release workflow.
+- Add signature/timestamp/publisher checks, integrity manifests and antivirus review guidance; signing enrollment remains owner-dependent.
 
 - Adopt the approved Das Kreb vendor logo in the README and set the plugin developer identity to Das Kreb.
 

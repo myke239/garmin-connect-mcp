@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Version 0.13.0 includes managed installers, a desktop setup/tray application,
+Version 0.14.0 includes managed installers, a desktop setup/tray application,
 optional per-user background startup and downloadable frozen builds. Every
 launcher works from any directory with no environment activation.
 
@@ -203,3 +203,7 @@ Windows DPAPI credentials cannot be reused in Linux containers. The image is bui
 locally; no prebuilt image embedding Garmin's FIT SDK is published. Container
 phone access uses the normal OAuth/ngrok flow and private tunnel token. The CLI
 and Docker docs do not grant Garmin write scope automatically.
+
+## Publisher identity and Windows installer
+
+Current 0.13.0 release executables are unsigned. The new Das Kreb installer/signing work is described in [trusted distribution](../development/distribution.md); signed publisher status requires completed identity validation and a verified signed release. Do not treat the vendor name/icon as a signature.

@@ -84,6 +84,14 @@ jobs:
           subprocess.run([sys.executable, 'scripts/verify_frozen.py', str(executable.absolute())], check=True, timeout=90)
           command = [str(executable.absolute()), 'desktop', '--smoke-test']
           subprocess.run(command if os.name == 'nt' else ['xvfb-run', '-a', *command], check=True, timeout=30)
+      - name: Compile and verify unsigned test installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./scripts/setup_inno.ps1
+          ./scripts/build_windows_installer.ps1 -Bundle dist/frozen/garmin-connect -Compiler $env:DAS_KREB_INNO -UnsignedTest
+          $v = (Get-Content VERSION -Raw).Trim()
+          ./scripts/verify_windows_installer.ps1 -Installer "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: garmin-connect-${{ runner.os }}-x64
