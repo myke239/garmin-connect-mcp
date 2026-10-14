@@ -1,0 +1,87 @@
+name: Signed Windows release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2022
+    environment: signed-release
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      PYINSTALLER_CONFIG_DIR: ${{ github.workspace }}/work/pyinstaller-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Require owner signing configuration
+        shell: pwsh
+        env:
+          PUBLISHER: ${{ vars.SIGNING_PUBLISHER }}
+          ACCOUNT: ${{ vars.SIGNING_ACCOUNT }}
+          PROFILE: ${{ vars.SIGNING_PROFILE }}
+          ENDPOINT: ${{ vars.SIGNING_ENDPOINT }}
+        run: |
+          foreach ($v in @($env:PUBLISHER,$env:ACCOUNT,$env:PROFILE,$env:ENDPOINT)) { if (-not $v) { throw 'Validated owner signing configuration required. No unsigned fallback.' } }
+      - run: python -m pip install --upgrade 'pip>=26.2.1'
+      - run: python -m pip install -e '.[dev,remote,secure,desktop,package]'
+      - run: python -m pytest -q
+      - run: python scripts/check_docs.py
+      - run: python scripts/check_secrets.py
+      - run: python -m pip_audit
+      - run: python -m PyInstaller --noconfirm --distpath dist/signed --workpath work/signed scripts/garmin-connect.spec
+      - run: python scripts/verify_frozen.py dist/signed/garmin-connect/garmin-connect.exe
+      - uses: azure/login@935127ca5bb3c4b02c9c2c10060028383878f33f # v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/artifact-signing-action@c0ae2c1d0c1847ab81ac0ab8521bee597cfedd30 # v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist\signed\garmin-connect
+          files-folder-filter: exe,dll,pyd
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+      - name: Verify signed bundle
+        shell: pwsh
+        env:
+          SIGNING_PUBLISHER: ${{ vars.SIGNING_PUBLISHER }}
+        run: ./scripts/verify_signatures.ps1 -Path dist/signed/garmin-connect -ExpectedPublisher $env:SIGNING_PUBLISHER -Recursive
+      - name: Build signed installer
+        shell: pwsh
+        env:
+          SIGNING_ACCOUNT: ${{ vars.SIGNING_ACCOUNT }}
+          SIGNING_PROFILE: ${{ vars.SIGNING_PROFILE }}
+          SIGNING_ENDPOINT: ${{ vars.SIGNING_ENDPOINT }}
+          SIGNING_PUBLISHER: ${{ vars.SIGNING_PUBLISHER }}
+        run: |
+          # Owner supplies the verified client tools location on this runner via setup below.
+          ./scripts/setup_inno.ps1
+          ./scripts/setup_signing_tools.ps1
+          ./scripts/build_windows_installer.ps1 -Bundle dist/signed/garmin-connect -Compiler $env:DAS_KREB_INNO -SignTool $env:DAS_KREB_SIGNTOOL -SigningDll $env:DAS_KREB_SIGNING_DLL -SigningMetadata $env:DAS_KREB_SIGNING_METADATA -ExpectedPublisher $env:SIGNING_PUBLISHER
+      - name: Verify signed installer and uninstaller lifecycle
+        shell: pwsh
+        env:
+          SIGNING_PUBLISHER: ${{ vars.SIGNING_PUBLISHER }}
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim()
+          ./scripts/verify_windows_installer.ps1 -Installer "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe" -ExpectedPublisher $env:SIGNING_PUBLISHER
+      - run: python scripts/release_manifest.py dist/signed/garmin-connect dist/installer/release-integrity.json
+      - name: Publish only verified artifacts
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim()
+          Compress-Archive -Path dist/signed/garmin-connect/* -DestinationPath "dist/installer/garmin-connect-mcp-$v-windows-x64.zip"
+          Get-ChildItem dist/installer -File | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(),$_.Name } | Set-Content dist/SHA256SUMS -Encoding ascii
+          gh release create "v$v" dist/installer/* dist/SHA256SUMS --target $env:GITHUB_SHA --title "Garmin Connect MCP $v - signed Windows release" --notes-file docs/development/signed-release-notes.md

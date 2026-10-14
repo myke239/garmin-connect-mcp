@@ -35,6 +35,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 - [Verification history](development/verification-history.md): dated release gates and platform/account evidence.
 - [Write audit](development/write-audit.md): historical live operation coverage and cleanup evidence.
 - [Roadmap and current status](development/roadmap.md): shipped phases and remaining limits.
+- [Trusted distribution](development/distribution.md): signing, installer verification and antivirus review.
 - [Das Kreb branding](development/branding.md): approved vendor logo and usage rules.
 - [Documentation maintenance](development/documentation.md): structure, reviewed examples and link checks.
 - [Deferred partner API experiment](../gpt-actions/README.md): separate from the working personal MCP connection.

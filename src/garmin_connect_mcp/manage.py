@@ -47,7 +47,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Garmin Connect setup and launch commands")
     parser.add_argument("command", choices=["login", "verify", "logout", "serve", "approve",
         "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
-        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check", "install-local", "fit-setup", "desktop", "diagnostics", "background-start", "background-stop", "background-status", "background-install", "background-uninstall"])
+        "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check", "install-local", "installer-register", "installer-unregister", "fit-setup", "desktop", "diagnostics", "background-start", "background-stop", "background-status", "background-install", "background-uninstall"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     if args.command == "serve":
@@ -72,7 +72,7 @@ def main() -> None:
         register_plugin(codex, metadata["marketplace"])
         print("Plugin installed. Open a new Codex chat.")
         return
-    mapping = {"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
+    mapping = {"installer-register":("frozen_install",["--register-bundle"]),"installer-unregister":("frozen_install",["--unregister-bundle"]),"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
         "writes-status": ("writes", ["status"]), "approve": ("remote", ["approve"]), "tunnel-setup": ("tunnel", ["setup"]),
         "tunnel": ("tunnel", ["run"]), "tunnel-status": ("tunnel", ["status"])}
     module, prefix = mapping.get(args.command, ("cli", [args.command]))
