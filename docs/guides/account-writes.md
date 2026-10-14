@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Version 0.14.0 exposes 19 allowlisted operations through guarded prepare/commit tools and queryable contracts. Writes are enabled by default when no local policy exists. Existing explicit disable settings and operation allowlists are preserved; installation does not overwrite them. You do not need to run writes-enable on a new installation.
+Version 0.15.0 exposes 19 allowlisted operations through guarded prepare/commit tools and queryable contracts. Writes are enabled by default when no local policy exists. Existing explicit disable settings and operation allowlists are preserved; installation does not overwrite them. You do not need to run writes-enable on a new installation.
 
 To restrict operations (or re-enable a previously disabled installation), use the installed absolute launcher:
 

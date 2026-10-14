@@ -18,6 +18,7 @@ ALLOWED |= {"get_activity", "get_activity_splits", "get_activity_details", "get_
 ALLOWED |= {"mcp_archive_activity", "mcp_commit_write", "get_workouts", "get_workout_by_id"}
 ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_devices", "get_activity_types",
             "get_body_composition", "get_hydration_data", "get_blood_pressure"}
+ALLOWED.add("get_lifestyle_logging_data")
 
 
 class RequestError(Exception):
