@@ -228,7 +228,14 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
             """
             def prepare():
                 write_permission()
-                return writes.prepare(operation, parameters, idempotency_key)
+                strength_original = None
+                if operation == "replace_strength_sets":
+                    writes.require_enabled(operation)
+                    # Validate the outer shape before using the fixed read target.
+                    from .write_contracts import STRICT, SCHEMAS
+                    if not list(STRICT(SCHEMAS[operation]).iter_errors(parameters)):
+                        strength_original = backend.fresh_call("get_activity_exercise_sets", parameters["activity_id"])
+                return writes.prepare(operation, parameters, idempotency_key, strength_original=strength_original)
             return safe_call(prepare)
 
         def reviewed_commit(draft_id, operation, context):

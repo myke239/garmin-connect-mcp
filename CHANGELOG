@@ -1,3 +1,9 @@
+Strength replacement fix (unreleased)
+- Preserve native UNKNOWN/null and exact historical exercise entries using fresh target reads.
+- Allow complete metadata-rich strength bodies up to 2 MiB; retain the 500-set bound.
+- Report indexed validation paths and bounded rejected enum/numeric values.
+- Keep SDK activity weight values and full body metadata unchanged.
+
 0.12.0 - 2026-10-12
 
 ## Unreleased — 0.14.0

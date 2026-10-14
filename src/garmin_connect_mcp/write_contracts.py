@@ -1,6 +1,7 @@
 """Account-write contracts shared by validation, tools and agent discovery."""
 import copy
 import json
+import re
 from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -92,7 +93,7 @@ GUIDANCE = {
     "set_activity_name":"Verify activity ID and old name before edit. Changes name only; re-read after commit.",
     "set_activity_description":"Verify activity ID before edit. Empty description explicitly clears it.",
     "set_activity_type":"Read list_garmin_activity_types; supply a matching typeId/typeKey/parentTypeId tuple, never guess IDs.",
-    "replace_strength_sets":"Read get_activity_edit_template first; pass complete exerciseSets body, preserving IDs and timestamps. Raw Garmin weight units are unverified; do not convert or invent. Empty list clears all sets.",
+    "replace_strength_sets":"Read get_activity_edit_template first; pass complete exerciseSets body, preserving IDs and timestamps. Pass the full exercise_sets_payload including matching activityId when present, IDs, timestamps, rest/empty/UNKNOWN-null entries and metadata. Up to 500 sets and 2 MiB. SDK sends the body unchanged without weight conversion; raw activity units remain unverified (distinct from workout weightValue). Changed exercise labels must match the catalog; exact historical entries may be preserved after a fresh target read. Empty list clears all sets.",
     "add_weight":"Record actual user-provided measurement, explicit time and kg/lbs. Never infer weight from activities.",
     "add_body_composition":"Actual measurements only. Weight/mass kg, percentages 0–100, energy kcal/day. Omit unmeasured fields; FIT representability limits are not medical limits.",
     "add_hydration":"Actual positive ml consumed; timestamp local date must match cdate. No subtract/overwrite through this operation.",
@@ -114,7 +115,16 @@ def contract(operation):
         "validation_only":True,"garmin_request_sent":False}
 
 
-def check(operation, parameters):
+def rejected_strength_value(value):
+    """Describe bounded enum/numeric fields without echoing arbitrary free text."""
+    if value is None or isinstance(value, (bool, int, float)):
+        return repr(value)
+    if isinstance(value, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", value):
+        return repr(value)
+    return f"<{type(value).__name__}>"
+
+
+def check(operation, parameters, strength_original=None):
     """Return fixed guidance rather than jsonschema errors that echo private values."""
     from .writes import WriteInputError
     if operation not in SCHEMAS or not isinstance(parameters, dict):
@@ -128,7 +138,7 @@ def check(operation, parameters):
         # Paths contain only known schema property names or integer indices.
         path = ".".join(str(v) for v in errors[0].absolute_path)
         safe_path = path if all(str(v).isdigit() or str(v) in SCHEMAS[operation]["properties"]
-                                or str(v) in {"date","workout","weight"} for v in errors[0].absolute_path) else "parameters"
+                                or str(v) in {"date","workout","weight","exerciseSets"} for v in errors[0].absolute_path) else "parameters"
         raise WriteInputError(operation,"Invalid " + (safe_path or "parameters") + "; check required names, types and bounds in get_garmin_write_schema.")
     for field in ("timestamp","start_datetime"):
         if field in parameters:
@@ -168,21 +178,35 @@ def check(operation, parameters):
             raise WriteInputError(operation,"activityId in the complete exercise payload must match activity_id.")
         from garminconnect.exercises import CATEGORIES,EXERCISES
         known={(v["category"],v["exercise"]) for v in EXERCISES}
-        for row in parameters["payload"]["exerciseSets"]:
+        for index, row in enumerate(parameters["payload"]["exerciseSets"]):
+            path = f"parameters.payload.exerciseSets[{index}]"
             for field in ("duration","weight","repetitionCount"):
                 value=row.get(field)
                 if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or value<0):
-                    raise WriteInputError(operation,"Strength duration/weight/repetitions require nonnegative numeric raw values.")
+                    raise WriteInputError(operation,f"{path}.{field}: requires a nonnegative numeric raw value; rejected {rejected_strength_value(value)}.")
             if row.get("repetitionCount") is not None and (not isinstance(row["repetitionCount"],int) or isinstance(row["repetitionCount"],bool)):
-                raise WriteInputError(operation,"Strength repetitionCount must be an integer.")
+                raise WriteInputError(operation,f"{path}.repetitionCount: must be an integer; rejected {rejected_strength_value(row["repetitionCount"])}.")
             exercises=row.get("exercises",[])
             if not isinstance(exercises,list) or len(exercises)>10:
-                raise WriteInputError(operation,"Each set supports at most 10 exercise objects.")
-            for exercise in exercises:
-                if not isinstance(exercise,dict) or exercise.get("category") not in CATEGORIES:
-                    raise WriteInputError(operation,"Use valid categories from find_garmin_exercises; do not invent exercise labels.")
-                if exercise.get("name") and (exercise["category"],exercise["name"]) not in known:
-                    raise WriteInputError(operation,"Exercise name must match its Garmin category; use null for a known parent-only exercise.")
+                raise WriteInputError(operation,f"{path}.exercises: requires an array of at most 10 objects.")
+            for exercise_index, exercise in enumerate(exercises):
+                exercise_path = f"{path}.exercises[{exercise_index}]"
+                original_rows = strength_original.get("exerciseSets", []) if isinstance(strength_original, dict) else []
+                if index < len(original_rows):
+                    original_row = original_rows[index]
+                    original_exercises = original_row.get("exercises", [])
+                    identity_fields = ("exerciseSetId", "exerciseSetUUID", "messageIndex", "startTime")
+                    if (any(field in original_row for field in identity_fields)
+                            and all(row.get(field) == original_row.get(field) for field in identity_fields)
+                            and exercise_index < len(original_exercises)
+                            and exercise == original_exercises[exercise_index]):
+                        continue  # Preserve an exact historical exercise, including catalog drift.
+                if isinstance(exercise, dict) and exercise.get("category") == "UNKNOWN" and exercise.get("name") is None:
+                    continue  # Native Garmin unclassified set; preserve metadata verbatim.
+                if not isinstance(exercise,dict) or not isinstance(exercise.get("category"), str) or exercise.get("category") not in CATEGORIES:
+                    raise WriteInputError(operation,f"{exercise_path}.category: use a valid category from find_garmin_exercises; rejected {rejected_strength_value(exercise.get("category") if isinstance(exercise, dict) else exercise)}.")
+                if exercise.get("name") is not None and (not isinstance(exercise["name"], str) or (exercise["category"],exercise["name"]) not in known):
+                    raise WriteInputError(operation,f"{exercise_path}.name: must match its Garmin category; null is allowed for a parent-only exercise; rejected {rejected_strength_value(exercise.get("name"))}.")
     if operation == "add_blood_pressure" and parameters["systolic"] <= parameters["diastolic"]:
         raise WriteInputError(operation,"Systolic must exceed diastolic; confirm the actual measurement.")
     if operation == "create_manual_activity":
