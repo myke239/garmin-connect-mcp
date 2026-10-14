@@ -54,7 +54,7 @@ For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/ch
 
 - [Getting started](docs/README.md#getting-started): installation, Codex and personal ChatGPT access.
 - [Task guides](docs/README.md#task-guides): creating workouts, recovery, analysis, permissions and troubleshooting.
-- [Reference](docs/README.md#reference): all 44 default tools, sport coverage, poses, units and limits.
+- [Reference](docs/README.md#reference): all 46 default tools, sport coverage, poses, units and limits.
 - [Development](docs/README.md#development-and-evidence): contribution workflow, verification evidence and roadmap.
 
 ## Compatibility and honest limits
