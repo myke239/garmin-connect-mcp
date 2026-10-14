@@ -84,4 +84,7 @@ jobs:
           $v = (Get-Content VERSION -Raw).Trim()
           Compress-Archive -Path dist/signed/garmin-connect/* -DestinationPath "dist/installer/garmin-connect-mcp-$v-windows-x64.zip"
           Get-ChildItem dist/installer -File | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(),$_.Name } | Set-Content dist/SHA256SUMS -Encoding ascii
-          gh release create "v$v" dist/installer/* dist/SHA256SUMS --target $env:GITHUB_SHA --title "Garmin Connect MCP $v - signed Windows release" --notes-file docs/development/signed-release-notes.md
+          $assets = @(Get-ChildItem dist/installer -File | Select-Object -ExpandProperty FullName)
+          $assets += (Resolve-Path dist/SHA256SUMS).Path
+          gh release create "v$v" @assets --target $env:GITHUB_SHA --title "Garmin Connect MCP $v - signed Windows release" --notes-file docs/development/signed-release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw "Release publication failed" }
