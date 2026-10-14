@@ -37,7 +37,7 @@ SPORTS = set(SPORT_IDS)
 
 
 class WriteInputError(ValueError):
-    """Locally generated guidance; never contains input values or upstream errors."""
+    """Locally generated guidance; excludes free text, secrets and upstream errors."""
     def __init__(self, operation, message):
         self.operation = operation
         super().__init__(message)
@@ -168,8 +168,9 @@ def _validate(operation, parameters):
     if operation not in OPERATIONS or not isinstance(parameters, dict):
         raise ValueError("Unsupported operation")
     parameters = json.loads(json.dumps(parameters, allow_nan=False))
-    if operation != "upload_activity_file" and len(json.dumps(parameters)) > 12000:
-        raise ValueError("Preview payload exceeds 12 KiB")
+    limit = 2 * 1024 * 1024 if operation == "replace_strength_sets" else 12000
+    if operation != "upload_activity_file" and len(json.dumps(parameters).encode("utf-8")) > limit:
+        raise WriteInputError(operation, f"parameters: payload exceeds {limit} bytes")
     if operation in {"rename_workout", "delete_workout"}:
         from .data import validate_id
         validate_id(str(parameters["workout_id"]))
@@ -330,11 +331,11 @@ def _validate(operation, parameters):
     return parameters
 
 
-def validate(operation, parameters):
+def validate(operation, parameters, strength_original=None):
     from .write_contracts import check
     if operation == "schedule_workout" and isinstance(parameters, dict):
         validate_schedule(parameters)
-    check(operation,parameters)
+    check(operation,parameters,strength_original=strength_original)
     try:
         result = _validate(operation,parameters)
     except WriteInputError as error:
@@ -486,9 +487,9 @@ class WriteService:
             if not isinstance(allowed,list) or any(v not in OPERATIONS for v in allowed) or operation not in allowed:
                 raise RequestError("WRITE_OPERATION_DENIED")
 
-    def prepare(self, operation, parameters, idempotency_key):
+    def prepare(self, operation, parameters, idempotency_key, strength_original=None):
         self.require_enabled(operation)
-        parameters = validate(operation, parameters)
+        parameters = validate(operation, parameters, strength_original=strength_original)
         if not isinstance(idempotency_key,str) or not 8 <= len(idempotency_key) <= 128:
             raise ValueError("Use a stable 8–128 character idempotency key for this intent")
         digest = hashlib.sha256(json.dumps([operation,parameters],sort_keys=True).encode()).hexdigest()
@@ -568,7 +569,9 @@ def execute(client, directory, draft_id):
         operation=draft["operation"]
         service.require_enabled(operation)
         try:
-            parameters=validate(operation,draft["parameters"])
+            strength_original = (client.get_activity_exercise_sets(draft["parameters"]["activity_id"])
+                                 if operation == "replace_strength_sets" else None)
+            parameters=validate(operation,draft["parameters"],strength_original=strength_original)
             preflight(client,operation,parameters)
         except Exception as error:
             draft["status"]="rejected"
