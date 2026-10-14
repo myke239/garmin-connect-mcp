@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Version 0.14.0 includes managed installers, a desktop setup/tray application,
+Version 0.15.0 includes managed installers, a desktop setup/tray application,
 optional per-user background startup and downloadable frozen builds. Every
 launcher works from any directory with no environment activation.
 

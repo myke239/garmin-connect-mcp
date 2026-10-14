@@ -2,11 +2,14 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **44 tools** in version **0.14.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **46 tools** in version **0.15.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
+
+- [`list_garmin_lifestyle_fields`](#list_garmin_lifestyle_fields)
+- [`get_garmin_lifestyle_entries`](#get_garmin_lifestyle_entries)
 
 - [`archive_garmin_activity`](#archive_garmin_activity)
 - [`build_garmin_manual_activity`](#build_garmin_manual_activity)
@@ -543,3 +546,24 @@ Preview a fixed account-write operation without changing Garmin. Enabled by defa
 | `operation` | yes | string; `create_workout`, `update_workout`, `schedule_workout`, `unschedule_workout`, `send_workout_to_device`, `create_manual_activity`, `upload_activity_file`, `set_activity_name`, `set_activity_description`, `set_activity_type`, `replace_strength_sets`, `add_weight`, `add_body_composition`, `add_hydration`, `add_blood_pressure`, `create_training_calendar`, `rename_workout`, `delete_workout`, `schedule_existing_workouts` |
 | `parameters` | yes | object |
 | `idempotency_key` | yes | string |
+
+## list_garmin_lifestyle_fields
+
+Read-only partial discovery from one daily report. See [Lifestyle limits](../guides/lifestyle.md).
+
+| Parameter | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `calendar_date` | string | required | Garmin calendar day, YYYY-MM-DD |
+
+## get_garmin_lifestyle_entries
+
+Read-only daily reports; raw values and metadata, no inferred units or event IDs.
+Follow next_cursor with unchanged range and filter. See [Lifestyle limits](../guides/lifestyle.md).
+
+| Parameter | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `start_date` | string | required | Inclusive YYYY-MM-DD |
+| `end_date` | string | required | Inclusive YYYY-MM-DD; maximum 366 days |
+| `field_id` | integer or null | null | Garmin behaviourId |
+| `cursor` | integer | 0 | Day offset within the range |
+| `limit` | integer | 7 | Days per page, 1–7 |

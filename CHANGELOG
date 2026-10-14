@@ -1,3 +1,8 @@
+Lifestyle reads (unreleased) — 0.15.0
+- Add partial daily field discovery and bounded paginated Lifestyle history.
+- Preserve raw amounts, zero/missing distinctions, dates and metadata without inferred units.
+- Document unverified entry mutations, stable IDs and field management; no Lifestyle writes enabled.
+
 Strength replacement fix (unreleased)
 - Preserve native UNKNOWN/null and exact historical exercise entries using fresh target reads.
 - Allow complete metadata-rich strength bodies up to 2 MiB; retain the 500-set bound.

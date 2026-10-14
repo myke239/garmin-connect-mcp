@@ -2,6 +2,18 @@
 
 [Documentation home](../README.md)
 
+## Lifestyle reads — 0.15.0 (2026-10-14, local evidence)
+
+14 foundation/runtime tests passed before saved-session live Lifestyle reads.
+The complete Windows offline suite passed 457 tests with 3 skips; source lint,
+documentation inventory (46 tools), secret checks, wheel and source build passed.
+Live custom-field discovery and seven-day raw-amount agreement passed; the oldest
+date of a 90-day window was readable. Synthetic tests cover full 90-day pagination,
+zero versus missing, filtering, bounds, unsupported shapes and error propagation.
+No Lifestyle writes were performed. Complete catalog discovery, stable entry IDs,
+entry CRUD and custom definition management remain unverified. CI is separate
+evidence and must pass on the feature PR before merge.
+
 ## Current release — 0.12.0 (2026-10-12)
 
 All four software phases merged through PRs #21–#24. Windows and WSL installed-runtime MCP discovery exposed 44 default tools and unauthenticated HTTP returned 401. The Windows saved Garmin session verified; the public endpoint returned 401 and OAuth metadata advertised read/write scopes. The final WSL suite passed 419 tests. Windows/Linux Python, installation, executable, container and quality CI jobs passed.
