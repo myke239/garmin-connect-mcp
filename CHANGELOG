@@ -3,7 +3,8 @@ Lifestyle writes and custom behavior management - 0.17.0
 - Add a dated Lifestyle catalog/mutation target and global auto-logging read.
 - Add seven guarded operations for custom creation/rename/deletion, complete
   tracking replacement, daily summary set/clear and account auto-logging.
-- Preserve raw integer amounts and distinguish zero, No and clear; validate
+- Preserve read zeros; reject zero-quantity writes observed failing upstream.
+  Distinguish No and clear; validate
   catalog subtype IDs. Use fresh state hashes, durable at-most-once commits,
   operation policy, remote write scopes and readback verification.
 - Document possible historical loss on custom deletion, non-atomic remote edits,

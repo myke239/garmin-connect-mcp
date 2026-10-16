@@ -10,7 +10,7 @@ provided fixed endpoint, HTTP method, enum and DTO evidence. No APK or decompile
 source is committed. A saved-session GET verified 47 dated catalog definitions
 and the nullable global auto-logging preference without storing personal values.
 
-Windows offline suite: 545 passed, 3 skipped. The 50 new synthetic cases cover
+Windows offline suite: 546 passed, 3 skipped. The 51 new synthetic cases cover
 all seven operations, actual transport method/body interfaces, stale catalog and
 log evidence, native subtype IDs, integer zero/NO/clear distinctions, immutable
 built-ins, duplicates, local operation policy, terminal unknown outcomes,
@@ -25,6 +25,25 @@ offline schemas, HTTP 401 guard and saved-session catalog/preference reads.
 The initial pip install failed due to a broken package transfer; the standard uv
 installation completed successfully. Live account writes, active deployment and
 CI are separate gates; no pass is claimed before those checks run.
+
+### Authorized live Lifestyle acceptance (2026-10-16)
+
+Through real MCP prepare/commit and fresh reads: two explicitly approved synthetic
+custom definitions were created, added to tracking, logged, renamed and deleted.
+Positive quantities 1 and 2, quantity NO, yes/no YES/NO, daily clear, custom rename,
+tracking restoration and batch definition deletion passed readback. Repeated
+commits returned their journal results without repeating account mutations.
+Original tracked-ID membership was restored and both test IDs were absent from
+the final catalog. Medication and other existing logs were not edited.
+
+A zero-quantity request failed upstream; fresh readback retained the prior
+quantity 2. The uncertain journal result was preserved, inspected and not retried.
+Zero writes are now rejected locally (positive amounts only), with regression
+coverage. Read zeros remain unchanged; NO/clear are never substituted implicitly.
+Global auto-logging writes were not tested because the owner's unset preference
+could not be restored by a verified reset operation. Historical erasure and
+physical watch sync are not claimed. CI must pass on this corrected patch before
+merge and deployment.
 
 ## Coaching discovery acceptance — 0.16.1 (2026-10-16, local evidence)
 

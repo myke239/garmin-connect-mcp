@@ -101,7 +101,7 @@ def parameters(client, operation, behaviour_id=11, **changes):
         "delete_lifestyle_behaviours": {"behaviour_ids": [11, 12], "confirm_history_deletion": True},
         "set_tracked_lifestyle_behaviours": {"behaviour_ids": [1, 12], "confirm_replace_tracking": True},
         "set_lifestyle_log": {"behaviour_id": behaviour_id, "expected_log_sha256": target["daily_log_sha256"],
-                              "log_status": "YES", "details": [{"amount": 0}], "time_zone": "UTC"},
+                              "log_status": "YES", "details": [{"amount": 1}], "time_zone": "UTC"},
         "clear_lifestyle_log": {"behaviour_id": behaviour_id, "expected_log_sha256": target["daily_log_sha256"], "confirm_clear": True},
     }
     if operation == "set_lifestyle_auto_logging":
@@ -125,7 +125,7 @@ def test_each_android_contract_and_durable_commit_once(tmp_path, operation):
     assert "private upstream" not in json.dumps(result)
     if operation == "set_lifestyle_log":
         body = client.mutations[0][2]
-        assert body["details"] == [{"amount": 0}]
+        assert body["details"] == [{"amount": 1}]
         assert body["measurementType"] == "QUANTITY" and body["category"] == "CUSTOM"
         assert len(body["updateTimestamp"]) == 23
     if operation == "rename_lifestyle_behaviour":
@@ -159,9 +159,13 @@ def test_sent_failure_stays_unknown_without_replay(tmp_path, operation):
     assert len(client.mutations) == 1
 
 
-def test_zero_no_and_clear_are_different(tmp_path):
+def test_read_zero_no_and_clear_are_different(tmp_path):
     client = Client()
     service = WriteService(tmp_path)
+    client.logs[11] = {"logStatus": "YES", "details": [{"amount": 0}]}
+    assert lw.mutation_target(client, DAY, 11)["daily_log"]["details"] == [{"amount": 0}]
+    with pytest.raises(ValueError):
+        validate("set_lifestyle_log", parameters(client, "set_lifestyle_log", details=[{"amount": 0}]))
     for index, (op, extra) in enumerate([
         ("set_lifestyle_log", {}),
         ("set_lifestyle_log", {"log_status": "NO", "details": []}),
@@ -172,7 +176,7 @@ def test_zero_no_and_clear_are_different(tmp_path):
         assert result["status"] == "completed", result
         row = result["result"]["daily_log"]
         if index == 0:
-            assert row["details"] == [{"amount": 0}] and row["logStatus"] == "YES"
+            assert row["details"] == [{"amount": 1}] and row["logStatus"] == "YES"
         elif index == 1:
             assert row["details"] == [] and row["logStatus"] == "NO"
         else:
@@ -204,6 +208,7 @@ def test_measurement_types_and_subtypes(tmp_path, identifier, details, status, a
     ("set_lifestyle_log", {"time_zone": "not/a/zone"}),
     ("set_lifestyle_log", {"details": [{"amount": True}]}),
     ("set_lifestyle_log", {"details": [{"amount": -1}]}),
+    ("set_lifestyle_log", {"details": [{"amount": 0}]}),
     ("set_lifestyle_log", {"details": [{"amount": 0.5}]}),
     ("set_lifestyle_log", {"details": [{"amount": float("nan")}]}),
     ("set_lifestyle_log", {"log_status": "NO", "details": [{"amount": 0}]}),

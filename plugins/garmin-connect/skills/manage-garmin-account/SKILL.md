@@ -59,8 +59,9 @@ list for that date: retain every existing ID the user still wants. [] untracks
 all. Order is sent but only membership readback is verified. Do not silently
 fall back to today's date when a historical date is rejected.
 
-Daily set replaces a summary, not appends an event: zero, NO and clear are
-separate intents. A quantity with subtypes requires their exact catalog IDs.
+Daily set replaces a summary, not appends an event. Garmin rejects zero-quantity
+writes: use positive integer amounts only. Preserve zeros returned on reads;
+never substitute NO or clear for a requested zero. NO and clear are separate intents. A quantity with subtypes requires their exact catalog IDs.
 The IANA timezone is for current updateTimestamp, not a claimed consumption time.
 Copy fresh hashes into the expected fields and get new evidence after each
 write. Reject stale evidence instead of rebasing approved content automatically.
