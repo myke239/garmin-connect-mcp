@@ -2,13 +2,20 @@
 
 [Documentation home](../README.md) · [Research and metric inventory](../development/coaching-research.md)
 
-Version 0.16.0 adds five read-only analysis tools and two skills. These are an
+Version 0.16.1 provides six read-only coaching tools and two skills. These are an
 evidence foundation, not a validated strength-performance prediction model or a
 clinical assessment of physical health. Data is processed in memory, with no
 coaching archive or account writes. Original fetched dates, units, missingness
 and analytical limitations remain visible.
 
 ## Daily workflow
+
+Start with `get_garmin_coaching_guide()`. It returns installed nested schemas,
+metric units/bounds, source workflow and four runnable synthetic examples.
+Example arguments can be copied into the named offline tools; they never contact
+Garmin/MFP. Demonstration dates/values are not the person's evidence. The
+acceptance tests execute these contracts through MCP with independent numerical
+expectations for percentiles, nutrition, strength overlap and unknown data.
 
 Use `get_garmin_coaching_day(calendar_date, timezone)` for each required date.
 There are six fixed source reads per day: sleep, HRV, daily statistics,

@@ -9,7 +9,7 @@ async def verify(image):
     async with stdio_client(parameters) as (read,write):
         async with ClientSession(read,write) as client:
             await client.initialize()
-            assert len((await client.list_tools()).tools)==51
+            assert len((await client.list_tools()).tools)==52
             value=await client.call_tool('get_activity',{'activity_id':'1'})
             assert 'AUTH_REQUIRED' in value.content[0].text
     print('PASS: non-root read-only network-isolated Docker MCP and subprocess worker')

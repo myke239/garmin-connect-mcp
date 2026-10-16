@@ -8,6 +8,10 @@ description: Combine Garmin recovery evidence, MyFitnessPal nutrition and planne
 Establish the person's intended date, IANA timezone, planned workout sequence and
 whether this is a morning or pre-workout check. Preserve their training goal.
 
+Start with `get_garmin_coaching_guide` when discovering the installed contracts.
+It returns current nested schemas, units and runnable synthetic examples. Prefer
+those contracts over remembered inputs. Examples are not the person's data.
+
 Use `get_garmin_coaching_day` for dated physiology; pass its `day` objects as history
 to `analyze_garmin_daily_recovery`. Reuse available evidence and fetch additional
 dates in small batches, stopping on authentication or rate-limit errors. Aim for

@@ -2,11 +2,13 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **51 tools** in version **0.16.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **52 tools** in version **0.16.1**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
+
+- [`get_garmin_coaching_guide`](#get_garmin_coaching_guide)
 
 - [`analyze_garmin_lifestyle_association`](#analyze_garmin_lifestyle_association)
 
@@ -584,10 +586,10 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 
 | Parameter | Meaning |
 | --- | --- |
-| `as_of` | See tool schema and coaching guide; bounded typed input. |
-| `recent_sets` | See tool schema and coaching guide; bounded typed input. |
-| `planned_exercises` | See tool schema and coaching guide; bounded typed input. |
-| `regional_check_in` | See tool schema and coaching guide; bounded typed input. |
+| `as_of` | Assessment timestamp with UTC offset; recent sets must precede it. |
+| `recent_sets` | Up to 500 unique dated work/warmup sets in prior 90 days; confirmed exercise/equipment/regions, explicit kg or null, optional RIR. |
+| `planned_exercises` | 1–30 exercises in intended order, with exact IDs, equipment, regions, sets and reps. |
+| `regional_check_in` | Up to 11 unique muscle regions with soreness 0–10 and pain boolean; unknown stays null. |
 
 ## get_garmin_coaching_day
 
@@ -595,8 +597,8 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 
 | Parameter | Meaning |
 | --- | --- |
-| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
-| `timezone` | See tool schema and coaching guide; bounded typed input. |
+| `calendar_date` | Target YYYY-MM-DD in the person’s confirmed local date convention. |
+| `timezone` | Explicit IANA timezone matching Garmin/MFP local dates; no automatic date conversion. |
 
 ## analyze_garmin_daily_recovery
 
@@ -604,13 +606,13 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 
 | Parameter | Meaning |
 | --- | --- |
-| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
-| `timezone` | See tool schema and coaching guide; bounded typed input. |
-| `history` | See tool schema and coaching guide; bounded typed input. |
-| `nutrition` | See tool schema and coaching guide; bounded typed input. |
-| `check_in` | See tool schema and coaching guide; bounded typed input. |
-| `sessions` | See tool schema and coaching guide; bounded typed input. |
-| `baseline_days` | See tool schema and coaching guide; bounded typed input. |
+| `calendar_date` | Target YYYY-MM-DD in the person’s confirmed local date convention. |
+| `timezone` | Explicit IANA timezone matching Garmin/MFP local dates; no automatic date conversion. |
+| `history` | Up to 91 unique coaching day objects returned by get_garmin_coaching_day; target day excluded from baseline. |
+| `nutrition` | Up to 31 MFP projections: date, timezone, complete, totals and goals; kcal and macro grams; exclude names/notes/meals. |
+| `check_in` | Optional fatigue/soreness integers 0–10 and pain/illness_symptoms booleans. |
+| `sessions` | Up to 10 ordered session_id/sport/duration_min/intensity objects. |
+| `baseline_days` | Prior calendar-day window, 14–90, default 28; 14 matching observations required per metric. |
 
 ## compare_garmin_workout_outcomes
 
@@ -618,10 +620,10 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 
 | Parameter | Meaning |
 | --- | --- |
-| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
-| `session_type` | See tool schema and coaching guide; bounded typed input. |
-| `metric` | See tool schema and coaching guide; bounded typed input. |
-| `outcomes` | See tool schema and coaching guide; bounded typed input. |
+| `calendar_date` | Target YYYY-MM-DD in the person’s confirmed local date convention. |
+| `session_type` | Caller-confirmed comparable session label; match exercise/load/equipment/ROM/order/effort. |
+| `metric` | Exact outcome metric key from the installed schema/guide, not a display name. |
+| `outcomes` | 1–100 prior outcome records; unique dates within 366 days; retain incomplete-session records. |
 
 ## analyze_garmin_lifestyle_association
 
@@ -629,8 +631,12 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 
 | Parameter | Meaning |
 | --- | --- |
-| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
-| `history` | See tool schema and coaching guide; bounded typed input. |
-| `exposure` | See tool schema and coaching guide; bounded typed input. |
-| `metric` | See tool schema and coaching guide; bounded typed input. |
-| `lag_days` | See tool schema and coaching guide; bounded typed input. |
+| `calendar_date` | Target YYYY-MM-DD in the person’s confirmed local date convention. |
+| `history` | Up to 91 unique coaching day objects returned by get_garmin_coaching_day; target day excluded from baseline. |
+| `exposure` | 1–90 unique daily amounts for one field in consistent units: positive presence, explicit zero, null unknown. |
+| `metric` | Exact outcome metric key from the installed schema/guide, not a display name. |
+| `lag_days` | Integer 0–3, default 1; exposure day plus lag aligns to outcome day. |
+
+## get_garmin_coaching_guide
+
+No parameters. Read-only entry point returning current nested schemas, units, bounds, source workflow and executable synthetic examples for all five coaching calculations/collectors. Call before constructing unfamiliar inputs.

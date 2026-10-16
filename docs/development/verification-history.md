@@ -2,6 +2,16 @@
 
 [Documentation home](../README.md)
 
+## Coaching discovery acceptance — 0.16.1 (2026-10-16, local evidence)
+
+495 offline tests passed, 3 skipped. New acceptance scenarios execute the guide's
+four synthetic examples through MCP and independently verify nonconstant
+percentiles, lifestyle lag direction, strength-window boundaries, equipment
+separation, historical-reference ranges and malformed nested inputs. The guide
+provides current schemas, units and limits without account access. Documentation
+and skill updates address input discovery, not clinical or prospective model
+validation. Installed-runtime and live deployment checks are separate gates.
+
 ## Strength-first coaching foundation — 0.16.0 (2026-10-16, local evidence)
 
 14 MCP foundation/runtime tests passed before account reads. Windows offline

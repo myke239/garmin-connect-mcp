@@ -5,6 +5,9 @@ description: Review multiweek Garmin training and recovery with MyFitnessPal nut
 
 # Review Training Recovery
 
+Use `get_garmin_coaching_guide` to discover installed schemas, units, bounds and
+synthetic examples before constructing unfamiliar coaching inputs.
+
 Establish the review period, timezone, sports and training goals. Gather Garmin
 activities with bounded pagination, coaching-day evidence, relevant Lifestyle
 fields, and MyFitnessPal nutrition when available. Reuse available evidence and
