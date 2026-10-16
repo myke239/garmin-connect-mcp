@@ -26,7 +26,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 
 ## Reference
 
-- [MCP tool reference](reference/tools.md): all 52 default tools, parameters, annotations and descriptions.
+- [MCP tool reference](reference/tools.md): all 54 default tools, parameters, annotations and descriptions.
 - [Workout sports and completed activities](reference/sports.md): distinct schemas, verified sport IDs and unsupported fields.
 - [Yoga poses](reference/yoga-poses.md): 85 exact identifiers, verification scope and [CSV](reference/catalogs/verified-yoga-poses.csv)/[JSON](reference/catalogs/verified-yoga-poses.json) catalogs.
 - [Data, privacy, units and limits](reference/data-and-limits.md): storage, response boundaries and missing-data behavior.

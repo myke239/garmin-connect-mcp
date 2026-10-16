@@ -54,12 +54,12 @@ For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/ch
 
 - [Getting started](docs/README.md#getting-started): installation, Codex and personal ChatGPT access.
 - [Task guides](docs/README.md#task-guides): creating workouts, recovery, analysis, permissions and troubleshooting.
-- [Reference](docs/README.md#reference): all 52 default tools, sport coverage, poses, units and limits.
+- [Reference](docs/README.md#reference): all 54 default tools, sport coverage, poses, units and limits.
 - [Development](docs/README.md#development-and-evidence): contribution workflow, verification evidence and roadmap.
 
 ## Compatibility and honest limits
 
-Development version **0.16.1** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
+Development version **0.17.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
 
 Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The 0.12.0 Ubuntu 22.04 WSL suite passed **419 tests**; the default-write change adds explicit policy/revocation regression coverage. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
 

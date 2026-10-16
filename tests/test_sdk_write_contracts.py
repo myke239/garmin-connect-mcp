@@ -62,7 +62,8 @@ def test_real_sdk_write_reaches_expected_transport_once(tmp_path,operation):
 
 
 def test_schemas_match_sdk_signature_names_and_required_arguments():
-    assert set(SCHEMAS)==set(CASES)|{"rename_workout","delete_workout","schedule_existing_workouts"}
+    from garmin_connect_mcp.lifestyle_writes import OPERATIONS as lifestyle_operations
+    assert set(SCHEMAS)==set(CASES)|{"rename_workout","delete_workout","schedule_existing_workouts"}|set(lifestyle_operations)
     for operation,method in METHODS.items():
         if operation=="upload_activity_file": continue  # MCP translates base64 into an isolated temp path.
         signature=inspect.signature(getattr(Garmin,method))

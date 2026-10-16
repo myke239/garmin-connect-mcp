@@ -20,6 +20,7 @@ ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_device
             "get_body_composition", "get_hydration_data", "get_blood_pressure"}
 ALLOWED.add("get_lifestyle_logging_data")
 ALLOWED.add("get_respiration_data")
+ALLOWED |= {"mcp_lifestyle_target", "mcp_lifestyle_auto_logging"}
 
 
 class RequestError(Exception):
@@ -105,6 +106,16 @@ def worker(connection, directory, method, args, kwargs):
             if method == "mcp_archive_activity":
                 from .archive import download
                 raw = download(client, directory, *args, **kwargs)
+            elif method == "mcp_lifestyle_target":
+                from .lifestyle_writes import mutation_target
+                raw = mutation_target(client, *args, **kwargs)
+            elif method == "mcp_lifestyle_auto_logging":
+                if args or kwargs: raise RequestError("INVALID_REQUEST")
+                from .lifestyle_writes import preference
+                enabled = preference(client)
+                raw = {"enabled": enabled, "configured": enabled is not None,
+                       "effective_enabled": enabled is True,
+                       "default_semantics": "Garmin Android treats an unset/null preference as disabled."}
             elif method == "mcp_commit_write":
                 from .writes import execute
                 raw = execute(client, directory, *args, **kwargs)

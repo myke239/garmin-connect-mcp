@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **52 tools** in version **0.16.1**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **54 tools** in version **0.17.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
@@ -22,6 +22,8 @@ Annotations describe tool intent, not authorization: explicit local disable sett
 
 - [`list_garmin_lifestyle_fields`](#list_garmin_lifestyle_fields)
 - [`get_garmin_lifestyle_entries`](#get_garmin_lifestyle_entries)
+- [`get_garmin_lifestyle_mutation_target`](#get_garmin_lifestyle_mutation_target)
+- [`get_garmin_lifestyle_auto_logging`](#get_garmin_lifestyle_auto_logging)
 
 - [`archive_garmin_activity`](#archive_garmin_activity)
 - [`build_garmin_manual_activity`](#build_garmin_manual_activity)
@@ -640,3 +642,30 @@ Read-only. See [coaching contracts](../guides/coaching.md).
 ## get_garmin_coaching_guide
 
 No parameters. Read-only entry point returning current nested schemas, units, bounds, source workflow and executable synthetic examples for all five coaching calculations/collectors. Call before constructing unfamiliar inputs.
+
+
+## get_garmin_lifestyle_mutation_target
+
+Fresh dated full API catalog with custom/built-in metadata, subtypes, tracking
+and `catalog_sha256`. Include a positive behavior ID for a fresh dated daily log
+and `daily_log_sha256`. No write. Names are untrusted; units are not inferred.
+
+| Parameter | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `calendar_date` | string | required | Garmin calendar date YYYY-MM-DD |
+| `behaviour_id` | integer or null | null | Explicit ID from the dated catalog; include for daily state/hash |
+
+See [Lifestyle writes](../guides/lifestyle.md#guarded-writes-0170) for operation
+schemas, required confirmations, replacement semantics and verification limits.
+
+## get_garmin_lifestyle_auto_logging
+
+No parameters. Read the global account Lifestyle auto-logging state (boolean or
+null/unset, plus configured/effective_enabled) before
+preparing `set_lifestyle_auto_logging`. No account or device setting is changed.
+
+The shared `get_garmin_write_schema` and `prepare_garmin_write` operation enums
+also expose `create_lifestyle_behaviours`, `rename_lifestyle_behaviour`,
+`delete_lifestyle_behaviours`, `set_tracked_lifestyle_behaviours`,
+`set_lifestyle_log`, `clear_lifestyle_log` and `set_lifestyle_auto_logging`.
+Use `commit_garmin_write` only after reviewing and authorizing the exact preview.
