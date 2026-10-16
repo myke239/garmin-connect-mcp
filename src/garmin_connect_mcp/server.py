@@ -11,6 +11,8 @@ from .writes import WriteInputError
 from typing import Literal
 from pydantic import StrictInt,StrictFloat
 from .sport_schemas import SportKey
+from .coaching import CoachingDay, NutritionDay, CheckIn, PlannedSession, Outcome, LifestyleDay
+from .strength_coaching import WorkSet, PlannedExercise, RegionalCheck
 
 
 def safe_call(function, *args):
@@ -56,6 +58,73 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         from .writes import WriteService, WriteOperation
         from mcp.server.auth.middleware.auth_context import get_access_token
         writes = WriteService(backend.store.directory)
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def assess_garmin_strength_session(as_of: str, recent_sets: list[WorkSet],
+                planned_exercises: list[PlannedExercise], regional_check_in: list[RegionalCheck]) -> dict:
+            """Offline strength exposure and planned sequence; not recovery clearance or a reps forecast.
+            as_of requires timezone offset. recent_sets <=500 in prior 90 days:
+            {set_id,performed_at,exercise_id,equipment,regions,reps,external_load_kg?,rir?,warmup?}.
+            planned_exercises 1–30: {exercise_id,equipment,regions,planned_sets,planned_reps,external_load_kg?}.
+            regions: quads/hamstrings/glutes/calves/chest/back/shoulders/biceps/triceps/core/forearms.
+            regional_check_in <=11: {region,soreness?:0..10,pain?:boolean}.
+            Confirm exercise/equipment/region mappings. Do not convert unverified Garmin weight
+            into kg; leave null. Never sum cross-exercise tonnage as physiological load.
+            """
+            from .strength_coaching import assess_strength
+            return safe_call(assess_strength, as_of, recent_sets, planned_exercises, regional_check_in)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_coaching_day(calendar_date: str, timezone: str) -> dict:
+            """Read six fixed Garmin sources into dated coaching scalars; no health score.
+            Explicit IANA timezone must match Garmin calendar dates. Missing/unconfirmed dates
+            and non-morning readiness are excluded. Authentication/rate-limit failures stop.
+            Use returned day objects as history for analyze_garmin_daily_recovery.
+            """
+            from .coaching import collect_day
+            return safe_call(collect_day, backend, calendar_date, timezone)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def analyze_garmin_daily_recovery(calendar_date: str, timezone: str,
+                history: list[CoachingDay], nutrition: list[NutritionDay], check_in: CheckIn,
+                sessions: list[PlannedSession], baseline_days: StrictInt = 28) -> dict:
+            """Offline descriptive evidence, not medical clearance or a performance prediction.
+            history: up to 91 get_garmin_coaching_day.day objects, unique dates, same timezone.
+            Baseline excludes target day; requires 14 observations per metric/source field.
+            nutrition: up to 31 MFP diary projections {date,timezone,complete,totals,goals};
+            omit usernames/notes/meals. Same person's totals only; calories kcal, macros g.
+            check_in: optional fatigue/soreness 0–10, pain/illness_symptoms booleans.
+            sessions: up to 10 ordered {session_id,sport,duration_min,intensity}; sport is
+            running/cycling/swimming/strength/other; intensity easy/moderate/hard.
+            Does not add imported exercise calories or infer intake from empty logs.
+            """
+            from .coaching import analyze_day
+            return safe_call(analyze_day, calendar_date, timezone, history, nutrition, check_in, sessions, baseline_days)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def compare_garmin_workout_outcomes(calendar_date: str, session_type: str,
+                metric: Literal["pace_s_km", "power_w", "reps", "session_rpe"], outcomes: list[Outcome]) -> dict:
+            """Offline historical reference, never a validated forecast or completion probability.
+            outcomes: 1–100 {calendar_date,session_type,metric,value,completed}, prior 366 days,
+            at most one matched session/date. Match load, exercise, terrain, duration and order.
+            Requires five completed comparable sessions for descriptive median/p10/p90.
+            Units: pace seconds/km, power W, reps count, RPE 0–10.
+            """
+            from .coaching import compare_outcomes
+            return safe_call(compare_outcomes, calendar_date, session_type, metric, outcomes)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        def analyze_garmin_lifestyle_association(calendar_date: str, history: list[CoachingDay],
+                exposure: list[LifestyleDay], metric: str, lag_days: StrictInt = 1) -> dict:
+            """Offline unadjusted association, not causation or medication advice.
+            history: up to 91 coaching day objects. exposure: up to 90 unique
+            {calendar_date,amount} with explicitly recorded zero, positive presence, null unknown.
+            Caller must select one field with consistent units and aggregate details accurately.
+            lag_days 0–3 aligns exposure date to outcome date; same local timezone required.
+            Seven observations per group is only a display minimum, not validated significance.
+            """
+            from .coaching import lifestyle_association
+            return safe_call(lifestyle_association, calendar_date, history, exposure, metric, lag_days)
+
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def list_garmin_lifestyle_fields(calendar_date: str) -> dict:
             """Discover fields present in one Garmin daily Lifestyle report (YYYY-MM-DD).

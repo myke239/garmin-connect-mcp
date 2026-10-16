@@ -17,6 +17,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 | --- | --- |
 | Create, verify and schedule a workout | [Workout workflow](guides/workouts.md) |
 | Save account changes with the right contract and consent | [Account writes](guides/account-writes.md) |
+| Review strength preparedness, recovery and nutrition | [Coaching evidence](guides/coaching.md) |
 | Read Lifestyle fields and historical amounts | [Lifestyle reports](guides/lifestyle.md) |
 | Interpret recovery and use running/strength/swim builders | [Recovery and builders](guides/recovery.md) |
 | Archive recordings, analyze samples and manage existing workouts | [Archive and analysis](guides/archive-and-analysis.md) |
@@ -25,7 +26,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 
 ## Reference
 
-- [MCP tool reference](reference/tools.md): all 46 default tools, parameters, annotations and descriptions.
+- [MCP tool reference](reference/tools.md): all 51 default tools, parameters, annotations and descriptions.
 - [Workout sports and completed activities](reference/sports.md): distinct schemas, verified sport IDs and unsupported fields.
 - [Yoga poses](reference/yoga-poses.md): 85 exact identifiers, verification scope and [CSV](reference/catalogs/verified-yoga-poses.csv)/[JSON](reference/catalogs/verified-yoga-poses.json) catalogs.
 - [Data, privacy, units and limits](reference/data-and-limits.md): storage, response boundaries and missing-data behavior.
@@ -33,6 +34,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 ## Development and evidence
 
 - [Contributing](../CONTRIBUTING): issue/PR workflow and offline checks.
+- [Coaching research](development/coaching-research.md): metric families, evidence and prospective-validation gates.
 - [Verification history](development/verification-history.md): dated release gates and platform/account evidence.
 - [Write audit](development/write-audit.md): historical live operation coverage and cleanup evidence.
 - [Roadmap and current status](development/roadmap.md): shipped phases and remaining limits.

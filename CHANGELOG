@@ -1,3 +1,9 @@
+Strength-first coaching evidence (unreleased) — 0.16.0
+- Add dated physiology collection, personal descriptive baselines and MFP nutrition projections.
+- Add regional strength exposure, planned sequence overlap and matched historical outcome references.
+- Add exploratory lifestyle association, two coaching skills, research and pinned SDK inventory.
+- No validated prediction model, clinical health score, account writes or automation edits.
+
 Lifestyle reads (unreleased) — 0.15.0
 - Add partial daily field discovery and bounded paginated Lifestyle history.
 - Preserve raw amounts, zero/missing distinctions, dates and metadata without inferred units.

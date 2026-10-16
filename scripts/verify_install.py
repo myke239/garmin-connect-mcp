@@ -22,7 +22,7 @@ async def verify(receipt):
             async with ClientSession(*streams) as session:
                 await session.initialize()
                 tools = await session.list_tools()
-                assert len(tools.tools) == 46
+                assert len(tools.tools) == 51
                 status = await session.call_tool("connection_status", {})
                 value = json.loads(status.content[0].text)
                 assert value["server_version"] == metadata["version"]
@@ -44,7 +44,7 @@ async def verify(receipt):
                     os.environ.pop("GARMIN_MCP_DATA_DIR", None)
                 else:
                     os.environ["GARMIN_MCP_DATA_DIR"] = previous
-    print("PASS: installed MCP handshake, 46 tools, offline schema and optional HTTP authentication guard.")
+    print("PASS: installed MCP handshake, 51 tools, offline schema and optional HTTP authentication guard.")
 
 
 if __name__ == "__main__":

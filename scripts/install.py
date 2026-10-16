@@ -60,7 +60,7 @@ def install(source, root, python=None, uv=None, remote=False, secure=False, desk
         "import tempfile; from pathlib import Path; "
         "from garmin_connect_mcp.auth import TokenStore; from garmin_connect_mcp.service import GarminService; "
         "directory = tempfile.TemporaryDirectory(); "
-        "assert len(asyncio.run(create_server(GarminService(TokenStore(Path(directory.name))),tool_profile='all').list_tools())) == 46; "
+        "assert len(asyncio.run(create_server(GarminService(TokenStore(Path(directory.name))),tool_profile='all').list_tools())) == 51; "
         "directory.cleanup()"], check=True)
     marketplace = release / "marketplace"
     shutil.copytree(source / "plugins", marketplace / "plugins")

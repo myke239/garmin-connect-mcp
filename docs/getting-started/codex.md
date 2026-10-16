@@ -27,6 +27,8 @@ The installer copies manifests and skills into an isolated release and writes an
 | Skill | Purpose |
 | --- | --- |
 | `analyze-training` | Read sessions, recovery, intervals and optional archives with units/coverage respected. |
+| `daily-performance-coach` | Strength-first daily physiology, nutrition and exercise-exposure evidence. |
+| `review-training-recovery` | Multiweek recovery, matched outcomes and exploratory lifestyle patterns. |
 | `browse-garmin-exercises` | Search exact strength/pose identifiers and paginate without substitutions. |
 | `create-schedule-workouts` | Discover schemas, build, prepare, review, commit and verify templates/calendar entries. |
 | `manage-garmin-account` | Follow contracts for activities, measurements, imports and device delivery. |
@@ -60,7 +62,7 @@ Configure a 30-second startup timeout and a 240-second tool timeout if the clien
 
 ## Updates and removal
 
-Re-run the installer from reviewed source, then `install-plugin`. A running remote service needs an intentional restart; preserve private grants and journals. Refresh ChatGPT tool definitions separately where needed. Default discovery is 46 tools; smaller [profiles](../guides/permissions-and-storage.md) intentionally expose fewer.
+Re-run the installer from reviewed source, then `install-plugin`. A running remote service needs an intentional restart; preserve private grants and journals. Refresh ChatGPT tool definitions separately where needed. Default discovery is 51 tools; smaller [profiles](../guides/permissions-and-storage.md) intentionally expose fewer.
 
 Remove registration with `codex plugin remove garmin-connect@myke-garmin`. That does not erase your Garmin session or stop an HTTPS process. Stop the service separately and use local logout/remote reset if you intend to revoke access.
 
