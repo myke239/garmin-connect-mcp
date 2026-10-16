@@ -2,11 +2,21 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **46 tools** in version **0.15.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **51 tools** in version **0.16.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
+
+- [`analyze_garmin_lifestyle_association`](#analyze_garmin_lifestyle_association)
+
+- [`compare_garmin_workout_outcomes`](#compare_garmin_workout_outcomes)
+
+- [`analyze_garmin_daily_recovery`](#analyze_garmin_daily_recovery)
+
+- [`get_garmin_coaching_day`](#get_garmin_coaching_day)
+
+- [`assess_garmin_strength_session`](#assess_garmin_strength_session)
 
 - [`list_garmin_lifestyle_fields`](#list_garmin_lifestyle_fields)
 - [`get_garmin_lifestyle_entries`](#get_garmin_lifestyle_entries)
@@ -567,3 +577,60 @@ Follow next_cursor with unchanged range and filter. See [Lifestyle limits](../gu
 | `field_id` | integer or null | null | Garmin behaviourId |
 | `cursor` | integer | 0 | Day offset within the range |
 | `limit` | integer | 7 | Days per page, 1–7 |
+
+## assess_garmin_strength_session
+
+Read-only. See [coaching contracts](../guides/coaching.md).
+
+| Parameter | Meaning |
+| --- | --- |
+| `as_of` | See tool schema and coaching guide; bounded typed input. |
+| `recent_sets` | See tool schema and coaching guide; bounded typed input. |
+| `planned_exercises` | See tool schema and coaching guide; bounded typed input. |
+| `regional_check_in` | See tool schema and coaching guide; bounded typed input. |
+
+## get_garmin_coaching_day
+
+Read-only. See [coaching contracts](../guides/coaching.md).
+
+| Parameter | Meaning |
+| --- | --- |
+| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
+| `timezone` | See tool schema and coaching guide; bounded typed input. |
+
+## analyze_garmin_daily_recovery
+
+Read-only. See [coaching contracts](../guides/coaching.md).
+
+| Parameter | Meaning |
+| --- | --- |
+| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
+| `timezone` | See tool schema and coaching guide; bounded typed input. |
+| `history` | See tool schema and coaching guide; bounded typed input. |
+| `nutrition` | See tool schema and coaching guide; bounded typed input. |
+| `check_in` | See tool schema and coaching guide; bounded typed input. |
+| `sessions` | See tool schema and coaching guide; bounded typed input. |
+| `baseline_days` | See tool schema and coaching guide; bounded typed input. |
+
+## compare_garmin_workout_outcomes
+
+Read-only. See [coaching contracts](../guides/coaching.md).
+
+| Parameter | Meaning |
+| --- | --- |
+| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
+| `session_type` | See tool schema and coaching guide; bounded typed input. |
+| `metric` | See tool schema and coaching guide; bounded typed input. |
+| `outcomes` | See tool schema and coaching guide; bounded typed input. |
+
+## analyze_garmin_lifestyle_association
+
+Read-only. See [coaching contracts](../guides/coaching.md).
+
+| Parameter | Meaning |
+| --- | --- |
+| `calendar_date` | See tool schema and coaching guide; bounded typed input. |
+| `history` | See tool schema and coaching guide; bounded typed input. |
+| `exposure` | See tool schema and coaching guide; bounded typed input. |
+| `metric` | See tool schema and coaching guide; bounded typed input. |
+| `lag_days` | See tool schema and coaching guide; bounded typed input. |

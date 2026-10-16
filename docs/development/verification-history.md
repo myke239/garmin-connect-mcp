@@ -2,6 +2,24 @@
 
 [Documentation home](../README.md)
 
+## Strength-first coaching foundation — 0.16.0 (2026-10-16, local evidence)
+
+14 MCP foundation/runtime tests passed before account reads. Windows offline
+suite: 489 passed, 3 skipped. New synthetic tests cover baseline exclusion,
+missing/zero, source/date/timezone alignment, finite values and units, typed MCP
+transport, nutrition projection, future-outcome rejection, exploratory lag
+matching, strength region overlap, warmups, unknown load/RIR and exercise order.
+Documentation inventory (51 tools), secret checks, source lint, selected strict
+typing checks, both skill validators and wheel/source builds passed.
+
+Read-only live checks verified two dated Garmin coaching days and MFP diary
+keys/completion type. A combined in-memory projection passed without printing or
+storing personal quantities in artifacts. Readiness without confirmed morning
+context was excluded. These are source/contract checks, not prediction accuracy.
+No account writes, coaching archive, automation changes or deployment were made.
+Strength prediction, clinical validity and prospective evaluation remain open;
+see [research gates](coaching-research.md). CI must pass on the feature PR before merge.
+
 ## Lifestyle reads — 0.15.0 (2026-10-14, local evidence)
 
 14 foundation/runtime tests passed before saved-session live Lifestyle reads.

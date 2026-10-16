@@ -13,7 +13,7 @@ async def verify(executable):
             async with ClientSession(read,write) as client:
                 await client.initialize()
                 tools=await client.list_tools()
-                assert len(tools.tools)==46
+                assert len(tools.tools)==51
                 value=await client.call_tool('connection_status',{})
                 assert 'auth_required' in value.content[0].text
                 schema=await client.call_tool('get_garmin_write_schema',{'operation':'delete_workout'})
@@ -27,6 +27,6 @@ async def verify(executable):
                 value=json.loads(result.content[0].text)
                 assert value.get('status')=='prepared' or value.get('error',{}).get('code')=='FIT_SUPPORT_REQUIRED',value
                 print('FIT add-on: '+('verified' if value.get('status')=='prepared' else 'explicit local setup required'))
-    print('PASS: frozen executable MCP handshake, 46 tools and guarded lifecycle contract')
+    print('PASS: frozen executable MCP handshake, 51 tools and guarded lifecycle contract')
 
 if __name__=='__main__':asyncio.run(verify(sys.argv[1]))

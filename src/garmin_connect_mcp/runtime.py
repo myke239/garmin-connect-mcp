@@ -19,6 +19,7 @@ ALLOWED |= {"mcp_archive_activity", "mcp_commit_write", "get_workouts", "get_wor
 ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_devices", "get_activity_types",
             "get_body_composition", "get_hydration_data", "get_blood_pressure"}
 ALLOWED.add("get_lifestyle_logging_data")
+ALLOWED.add("get_respiration_data")
 
 
 class RequestError(Exception):
