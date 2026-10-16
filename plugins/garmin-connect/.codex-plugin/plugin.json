@@ -1,6 +1,6 @@
 {
   "name": "garmin-connect",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Garmin activity analysis and default-enabled reviewed account writes.",
   "author": {
     "name": "Das Kreb"

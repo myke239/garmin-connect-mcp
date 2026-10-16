@@ -1,3 +1,7 @@
+Coaching discovery and deployment verification — 0.16.1
+- Add get_garmin_coaching_guide with current nested schemas, exact units and runnable synthetic examples.
+- Improve parameter reference and both coaching skills; add independent numerical and MCP acceptance scenarios.
+
 Strength-first coaching evidence (unreleased) — 0.16.0
 - Add dated physiology collection, personal descriptive baselines and MFP nutrition projections.
 - Add regional strength exposure, planned sequence overlap and matched historical outcome references.

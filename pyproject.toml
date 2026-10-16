@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "garmin-connect-mcp"
-version = "0.16.0"
+version = "0.16.1"
 license = "MIT"
 license-files = ["LICENSE", "NOTICE"]
 description = "Garmin Connect MCP tools with default-enabled previewed account writes"

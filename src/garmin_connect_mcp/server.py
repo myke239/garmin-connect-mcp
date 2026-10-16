@@ -59,9 +59,19 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         from mcp.server.auth.middleware.auth_context import get_access_token
         writes = WriteService(backend.store.directory)
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        async def get_garmin_coaching_guide() -> dict:
+            """Start here for coaching tool discovery: exact nested schemas, units, limits,
+            source workflow and runnable synthetic examples. No account access or writes.
+            Explains strength weight/timestamp gaps and descriptive-versus-predictive limits.
+            """
+            from .coaching_guide import guide, NAMES
+            return guide({tool.name:tool.inputSchema for tool in await server.list_tools() if tool.name in NAMES})
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
         def assess_garmin_strength_session(as_of: str, recent_sets: list[WorkSet],
                 planned_exercises: list[PlannedExercise], regional_check_in: list[RegionalCheck]) -> dict:
             """Offline strength exposure and planned sequence; not recovery clearance or a reps forecast.
+            First call get_garmin_coaching_guide for validated examples and exact input contracts.
             as_of requires timezone offset. recent_sets <=500 in prior 90 days:
             {set_id,performed_at,exercise_id,equipment,regions,reps,external_load_kg?,rir?,warmup?}.
             planned_exercises 1–30: {exercise_id,equipment,regions,planned_sets,planned_reps,external_load_kg?}.
@@ -76,6 +86,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def get_garmin_coaching_day(calendar_date: str, timezone: str) -> dict:
             """Read six fixed Garmin sources into dated coaching scalars; no health score.
+            First call get_garmin_coaching_guide for the cross-source workflow and input contracts.
             Explicit IANA timezone must match Garmin calendar dates. Missing/unconfirmed dates
             and non-morning readiness are excluded. Authentication/rate-limit failures stop.
             Use returned day objects as history for analyze_garmin_daily_recovery.
@@ -88,6 +99,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
                 history: list[CoachingDay], nutrition: list[NutritionDay], check_in: CheckIn,
                 sessions: list[PlannedSession], baseline_days: StrictInt = 28) -> dict:
             """Offline descriptive evidence, not medical clearance or a performance prediction.
+            First call get_garmin_coaching_guide for schemas, exact units and runnable examples.
             history: up to 91 get_garmin_coaching_day.day objects, unique dates, same timezone.
             Baseline excludes target day; requires 14 observations per metric/source field.
             nutrition: up to 31 MFP diary projections {date,timezone,complete,totals,goals};
