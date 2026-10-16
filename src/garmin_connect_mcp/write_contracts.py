@@ -107,6 +107,39 @@ GUIDANCE.update({
 })
 
 
+# Fixed Android Lifestyle contracts. Bounds are connector safety limits, not
+# claimed Garmin validation limits. Raw quantities are integers without inferred units.
+LIFESTYLE_HASH = {"type":"string", "pattern":"^[a-f0-9]{64}$"}
+LIFESTYLE_ID = {"type":"integer", "minimum":1, "maximum":9007199254740991}
+LIFESTYLE_BASE = {"calendar_date":DATE,"expected_catalog_sha256":LIFESTYLE_HASH}
+LIFESTYLE_LOG = {**LIFESTYLE_BASE, "behaviour_id":LIFESTYLE_ID,"expected_log_sha256":LIFESTYLE_HASH}
+SCHEMAS.update({
+    "create_lifestyle_behaviours":obj({**LIFESTYLE_BASE,"behaviours":{"type":"array","minItems":1,"maxItems":20,
+        "items":obj({"name":{"type":"string","minLength":1,"maxLength":100},
+                     "measurement_type":{"enum":["NONE","QUANTITY"]},"sleep_related":{"type":"boolean"}})}}),
+    "rename_lifestyle_behaviour":obj({**LIFESTYLE_BASE,"behaviour_id":LIFESTYLE_ID,"name":{"type":"string","minLength":1,"maxLength":100}}),
+    "delete_lifestyle_behaviours":obj({**LIFESTYLE_BASE,"behaviour_ids":{"type":"array","minItems":1,"maxItems":20,"items":LIFESTYLE_ID},
+        "confirm_history_deletion":{"const":True,"type":"boolean"}}),
+    "set_tracked_lifestyle_behaviours":obj({**LIFESTYLE_BASE,"behaviour_ids":{"type":"array","maxItems":200,"items":LIFESTYLE_ID},
+        "confirm_replace_tracking":{"const":True,"type":"boolean"}}),
+    "set_lifestyle_log":obj({**LIFESTYLE_LOG,"log_status":{"enum":["YES","NO"]},
+        "details":{"type":"array","maxItems":100,"items":obj({"amount":{"type":"integer","minimum":1,"maximum":2147483647},
+            "sub_type_id":{"type":"integer","minimum":0,"maximum":2147483647}},["amount"])},
+        "time_zone":{"type":"string","minLength":1,"maxLength":100}}),
+    "clear_lifestyle_log":obj({**LIFESTYLE_LOG,"confirm_clear":{"type":"boolean","const":True}}),
+    "set_lifestyle_auto_logging":obj({"expected_enabled":{"type":["boolean","null"]},"enabled":{"type":"boolean"}}),
+})
+GUIDANCE.update({
+    "create_lifestyle_behaviours":"Read get_garmin_lifestyle_mutation_target(calendar_date). Create 1-20 distinct custom NONE (yes/no) or QUANTITY behaviors; sleep_related selects the custom sleep category. Newly created definitions are not implicitly added to tracking. Discover their assigned IDs and refresh target before changing tracking. Names max 100 characters are a connector bound.",
+    "rename_lifestyle_behaviour":"Read fresh mutation target and copy its catalog_sha256 to expected_catalog_sha256. Rename a custom definition only; native measurement/category/subtypes/tracking metadata are preserved. Built-ins cannot be renamed.",
+    "delete_lifestyle_behaviours":"Destructive custom-definition deletion, at most 20 explicit IDs. May remove all associated historical logs. Obtain explicit approval of exact IDs/names and possible history loss; confirm_history_deletion must be true. Prefer untracking when retention matters. Catalog absence readback does not prove historical erasure.",
+    "set_tracked_lifestyle_behaviours":"Replace the COMPLETE tracked behavior list for calendar_date. Retain all desired existing IDs; [] untracks everything. confirm_replace_tracking must be true. Fresh catalog hash required; do not silently fall back to another date. Order is sent as given; only membership readback is verified.",
+    "set_lifestyle_log":"Set/replace one dated daily summary, not append an individual event. Fresh catalog/log hashes required. NONE uses YES/NO with details=[]. QUANTITY YES uses raw integer amount(s); known subtype IDs required for built-in subtypes, omitted for a custom quantity. NO uses []. Garmin rejected zero-quantity writes in live testing: amounts must be positive. Preserve zeros on reads; never substitute NO or clear for a requested zero. Provide IANA time_zone for current updateTimestamp; it is not an event time. No unit conversion or medication inference.",
+    "clear_lifestyle_log":"Delete only the identified behavior/date daily log, using fresh catalog/log hashes and confirm_clear=true. Does not delete its definition or change tracking. Clear differs from explicit NO or a zero quantity.",
+    "set_lifestyle_auto_logging":"Read get_garmin_lifestyle_auto_logging first. Change only the account-backed global lifestyle.auto-logging.enabled boolean. Device-local reminders and onboarding acceptance are not exposed. Does not enable unsupported per-behavior automatic sources.",
+})
+
+
 def contract(operation):
     if operation not in SCHEMAS:
         raise ValueError("Unsupported write operation")

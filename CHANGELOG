@@ -1,3 +1,15 @@
+Lifestyle writes and custom behavior management - 0.17.0
+
+- Add a dated Lifestyle catalog/mutation target and global auto-logging read.
+- Add seven guarded operations for custom creation/rename/deletion, complete
+  tracking replacement, daily summary set/clear and account auto-logging.
+- Preserve read zeros; reject zero-quantity writes observed failing upstream.
+  Distinguish No and clear; validate
+  catalog subtype IDs. Use fresh state hashes, durable at-most-once commits,
+  operation policy, remote write scopes and readback verification.
+- Document possible historical loss on custom deletion, non-atomic remote edits,
+  unavailable mobile-local settings and limits of membership/deletion readback.
+
 Coaching discovery and deployment verification — 0.16.1
 - Add get_garmin_coaching_guide with current nested schemas, exact units and runnable synthetic examples.
 - Improve parameter reference and both coaching skills; add independent numerical and MCP acceptance scenarios.

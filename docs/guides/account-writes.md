@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md)
 
-Version 0.16.1 exposes 19 allowlisted operations through guarded prepare/commit tools and queryable contracts. Writes are enabled by default when no local policy exists. Existing explicit disable settings and operation allowlists are preserved; installation does not overwrite them. You do not need to run writes-enable on a new installation.
+Version 0.17.0 exposes 26 allowlisted operations through guarded prepare/commit tools and queryable contracts. Writes are enabled by default when no local policy exists. Existing explicit disable settings and operation allowlists are preserved; installation does not overwrite them. You do not need to run writes-enable on a new installation.
 
 To restrict operations (or re-enable a previously disabled installation), use the installed absolute launcher:
 
@@ -221,3 +221,5 @@ readback lost their sport identity. Multisport stepOrder must be globally unique
 Workout previews include operation-specific commit_tool/commit_arguments. Pass these unchanged after full-preview approval; content_sha256 and contextual fields must match the immutable stored intent. Generic commit remains supported. These tools retain scope, expiry, journal and preflight protections; do not use them to circumvent a platform rejection.
 
 Additional lifecycle operations: rename_workout and delete_workout require a fresh expected_name/expected_content_sha256 from get_garmin_workout_mutation_target; deletion also requires confirm_calendar_removal=true. schedule_existing_workouts takes 1-20 workout_id/date_str pairs and creates no templates. Clone drafts, lifecycle verification and partial-batch recovery are documented in [archive and analysis](archive-and-analysis.md). Operation allowlists apply again at commit; see [permissions and storage](permissions-and-storage.md).
+
+Lifestyle custom definitions, dated daily summaries, tracking and auto-logging use the same guarded workflow. Read [Lifestyle writes](lifestyle.md#guarded-writes-0170) for discovery, hashes, raw-value semantics and deletion/history limits.

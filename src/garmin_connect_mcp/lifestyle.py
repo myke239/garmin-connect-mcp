@@ -8,10 +8,10 @@ from .verification import iso_date
 CAPABILITIES = {
     "historical_daily_reads": "supported",
     "field_discovery": "partial: fields present in the requested daily report only",
-    "create_entry": "unverified: no supported SDK method or verified endpoint",
-    "update_entry": "unverified: stable entry IDs and endpoint not established",
-    "delete_entry": "unverified: stable entry IDs and endpoint not established",
-    "field_management": "unverified: endpoint and historical deletion effects unknown",
+    "create_entry": "set_lifestyle_log: guarded replacement of a dated daily summary",
+    "update_entry": "set_lifestyle_log: behavior ID + date, not individual events",
+    "delete_entry": "clear_lifestyle_log: behavior ID + date",
+    "field_management": "Read get_garmin_lifestyle_mutation_target; custom creation/rename/deletion, complete tracking replacement and global auto-logging writes available. Deletion may remove history.",
 }
 
 

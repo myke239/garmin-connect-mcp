@@ -1,6 +1,6 @@
 ---
 name: manage-garmin-account
-description: Create manual Garmin activity logs for completed sports sessions, edit activities or strength sets, import activity files, record actual health measurements, or send saved workouts to a device using guarded Garmin Connect MCP writes.
+description: Create manual Garmin activity logs for completed sports sessions, edit activities or strength sets, import activity files, record actual health measurements, manage Lifestyle logs/custom behaviors/tracking, or send saved workouts to a device using guarded Garmin Connect MCP writes.
 ---
 
 Use the Garmin Connect MCP server for account changes. Before preparing an operation, call `get_garmin_write_schema(operation)` and follow its current names, types, units, bounds and verification guidance. The server owns SDK calls; do not bypass it with direct HTTP, SDK scripts or journal edits. For workout construction/calendar workflows, use the plugin's `create-schedule-workouts` skill.
@@ -38,13 +38,53 @@ Use actual user-supplied measurements and explicit timestamp/offset. Never estim
 
 For device push, read `list_garmin_devices`, confirm the requested device, and specify both IDs. Preflight checks membership. A successful commit confirms queue acceptance, not physical download or watch sync. Do not send to an implicitly selected device.
 
+## Lifestyle logs and custom behaviors
+
+Use `get_garmin_lifestyle_mutation_target(calendar_date, behaviour_id?)` for a
+fresh dated catalog and catalog hash. Include the exact behavior ID to get its
+daily log and log hash before set/clear. `list_garmin_lifestyle_fields` is only a
+partial daily view; do not use it as a full definition catalog. Preserve exact
+names and raw amounts; do not infer medication units or recommended doses.
+
+Query the current schemas for `create_lifestyle_behaviours`,
+`rename_lifestyle_behaviour`, `delete_lifestyle_behaviours`,
+`set_tracked_lifestyle_behaviours`, `set_lifestyle_log`, `clear_lifestyle_log`
+and `set_lifestyle_auto_logging`. Prepare through `prepare_garmin_write`, review
+the exact preview, then use generic `commit_garmin_write` with authorization.
+
+Creation supports custom yes/no (NONE) and integer quantities (QUANTITY), with
+sleep-related selection. Discover assigned IDs afterward; adding a definition
+and enabling its tracking are separate intents. Tracking replaces the COMPLETE
+list for that date: retain every existing ID the user still wants. [] untracks
+all. Order is sent but only membership readback is verified. Do not silently
+fall back to today's date when a historical date is rejected.
+
+Daily set replaces a summary, not appends an event. Garmin rejects zero-quantity
+writes: use positive integer amounts only. Preserve zeros returned on reads;
+never substitute NO or clear for a requested zero. NO and clear are separate intents. A quantity with subtypes requires their exact catalog IDs.
+The IANA timezone is for current updateTimestamp, not a claimed consumption time.
+Copy fresh hashes into the expected fields and get new evidence after each
+write. Reject stale evidence instead of rebasing approved content automatically.
+
+Custom definition deletion may erase historical logs. Obtain explicit approval
+covering exact IDs/names and possible history loss; prefer untracking to retain
+history. Built-in definitions cannot be renamed/deleted. Catalog absence verifies
+only removal from that dated catalog, not historical erasure. Do not rewrite a
+measurement type after creation. Auto-logging changes only the account global
+boolean read by `get_garmin_lifestyle_auto_logging`; mobile reminders and
+onboarding/terms acceptance are not exposed.
+
+Synthetic tests require approved harmless test definitions. Never use medication
+records as write tests. Stop dependent writes on unknown/in_progress, including
+readback failure; do not create a new key to retry an uncertain request.
+
 ## Failure and recovery
 
 Use a stable intent key per exact payload. Validation errors say `garmin_request_sent: false`; terminal preflight/validation `rejected` results say `garmin_mutation_sent: false`. Fix the named issue and obtain/reuse authorization for corrected content before a new intent. Do not mistake a preflight read for a mutation.
 
 On `unknown` or `in_progress`, stop dependent writes. Read `get_garmin_write_status(draft_id)` and inspect Garmin with fresh verification tools. Preserve IDs, partial batch steps and safe error categories. Do not retry with a new key or delete the journal. SDK mutation replay is blocked, including after an HTTP 401; reauthorization does not make an old unknown write safe to repeat. Report partial-import failures even if the HTTP request returned successfully.
 
-Bulk deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, explicit local write-policy denial and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.
+Bulk activity deletion, gear defaults, reproductive-health configuration and arbitrary SDK/GraphQL requests are not MCP operations. Explain unavailable operations rather than finding a bypass. Authentication, explicit local write-policy denial and remote garmin:write failures require their specific user-facing setup guidance; never request passwords, MFA codes or tokens in chat.
 
 ## Reviewable workout commits
 

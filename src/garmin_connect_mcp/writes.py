@@ -26,12 +26,16 @@ METHODS = {
     "add_weight": "add_weigh_in", "add_body_composition": "add_body_composition",
     "add_hydration": "add_hydration_data", "add_blood_pressure": "set_blood_pressure",
 }
-OPERATIONS = tuple(METHODS) + ("create_training_calendar", "rename_workout", "delete_workout", "schedule_existing_workouts")
+from .lifestyle_writes import OPERATIONS as LIFESTYLE_OPERATIONS
+
+OPERATIONS = LIFESTYLE_OPERATIONS + tuple(METHODS) + ("create_training_calendar", "rename_workout", "delete_workout", "schedule_existing_workouts")
 WriteOperation = Literal["create_workout", "update_workout", "schedule_workout", "unschedule_workout",
     "send_workout_to_device", "create_manual_activity", "upload_activity_file", "set_activity_name",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
     "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar",
-    "rename_workout", "delete_workout", "schedule_existing_workouts"]
+    "rename_workout", "delete_workout", "schedule_existing_workouts",
+    "create_lifestyle_behaviours", "rename_lifestyle_behaviour", "delete_lifestyle_behaviours",
+    "set_lifestyle_log", "clear_lifestyle_log", "set_tracked_lifestyle_behaviours", "set_lifestyle_auto_logging"]
 from .sport_schemas import SPORT_IDS,manual_type_supported
 SPORTS = set(SPORT_IDS)
 
@@ -251,6 +255,9 @@ def _validate(operation, parameters):
             if times[-1]<=times[0]:
                 raise WriteInputError(operation,"Activity recording needs positive elapsed time")
         return parameters
+    if operation in LIFESTYLE_OPERATIONS:
+        from .lifestyle_writes import validate as validate_lifestyle
+        return validate_lifestyle(operation, parameters)
     method = METHODS[operation]
     try:
         inspect.signature(getattr(Garmin, method)).bind(None, **parameters)
@@ -572,7 +579,11 @@ def execute(client, directory, draft_id):
             strength_original = (client.get_activity_exercise_sets(draft["parameters"]["activity_id"])
                                  if operation == "replace_strength_sets" else None)
             parameters=validate(operation,draft["parameters"],strength_original=strength_original)
-            preflight(client,operation,parameters)
+            if operation in LIFESTYLE_OPERATIONS:
+                from .lifestyle_writes import preflight as lifestyle_preflight
+                lifestyle_rows = lifestyle_preflight(client, operation, parameters)
+            else:
+                preflight(client,operation,parameters)
         except Exception as error:
             draft["status"]="rejected"
             draft["error"]={"code":"INVALID_WRITE_INPUT" if isinstance(error,WriteInputError) else error_code(error),
@@ -585,7 +596,12 @@ def execute(client, directory, draft_id):
         draft["status"] = "in_progress"
         service.store.save(json.dumps(state))  # Persist before the first network mutation.
         try:
-            if operation == "rename_workout":
+            if operation in LIFESTYLE_OPERATIONS:
+                from .lifestyle_writes import perform
+                with prevent_sdk_replay(client):
+                    result = perform(client, operation, parameters, lifestyle_rows)
+                raw = result
+            elif operation == "rename_workout":
                 original=client.get_workout_by_id(parameters["workout_id"])
                 from .lifecycle import fingerprint
                 if fingerprint(original)!=parameters["expected_content_sha256"]:

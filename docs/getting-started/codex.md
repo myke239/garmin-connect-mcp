@@ -62,7 +62,7 @@ Configure a 30-second startup timeout and a 240-second tool timeout if the clien
 
 ## Updates and removal
 
-Re-run the installer from reviewed source, then `install-plugin`. A running remote service needs an intentional restart; preserve private grants and journals. Refresh ChatGPT tool definitions separately where needed. Default discovery is 52 tools; smaller [profiles](../guides/permissions-and-storage.md) intentionally expose fewer.
+Re-run the installer from reviewed source, then `install-plugin`. A running remote service needs an intentional restart; preserve private grants and journals. Refresh ChatGPT tool definitions separately where needed. Default discovery is 54 tools; smaller [profiles](../guides/permissions-and-storage.md) intentionally expose fewer.
 
 Remove registration with `codex plugin remove garmin-connect@myke-garmin`. That does not erase your Garmin session or stop an HTTPS process. Stop the service separately and use local logout/remote reset if you intend to revoke access.
 
