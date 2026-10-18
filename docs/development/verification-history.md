@@ -2,6 +2,21 @@
 
 [Documentation home](../README.md)
 
+## Windows cross-process lock fix - 0.18.1 (2026-10-18, local evidence)
+
+Active-deployment read checks exposed a PermissionError when one process read
+request.lock's byte while another process held a Windows byte-range lock.
+The old implementation was reproduced against a real held lock in an isolated
+no-account directory. Moving initialization/read after acquisition passed a
+real two-process contention/handoff test, including an empty new lock file.
+The existing timeout and mutation journal semantics are unchanged.
+
+15 foundation/runtime checks passed before any saved-session checks of this
+patch. The full Windows offline suite passed 609 tests, 3 skipped. Documentation
+inventory (58 tools), source lint, selected typing and secret checks passed.
+Installed/live/CI/merge/deployment gates are separate and are not claimed here
+before execution. No health record mutation is part of this regression test.
+
 ## Sleep and correction contracts - 0.18.0 (2026-10-18, local evidence)
 
 14 MCP foundation/runtime tests passed before saved-account reads. Derived
