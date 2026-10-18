@@ -2,11 +2,19 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **54 tools** in version **0.17.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **58 tools** in version **0.18.0**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
+
+- [`get_garmin_record_mutation_target`](#get_garmin_record_mutation_target)
+
+- [`get_garmin_nap_mutation_target`](#get_garmin_nap_mutation_target)
+
+- [`get_garmin_sleep_mutation_target`](#get_garmin_sleep_mutation_target)
+
+- [`get_garmin_capabilities`](#get_garmin_capabilities)
 
 - [`get_garmin_coaching_guide`](#get_garmin_coaching_guide)
 
@@ -669,3 +677,46 @@ also expose `create_lifestyle_behaviours`, `rename_lifestyle_behaviour`,
 `delete_lifestyle_behaviours`, `set_tracked_lifestyle_behaviours`,
 `set_lifestyle_log`, `clear_lifestyle_log` and `set_lifestyle_auto_logging`.
 Use `commit_garmin_write` only after reviewing and authorizing the exact preview.
+
+## get_garmin_capabilities
+
+Discover registered writes, missing/derived write counterparts and current policy/profile. Offline registry: does not contact Garmin or expand permission. Candidates are not callable. Query get_garmin_write_schema for each operation, then fresh target and reviewed preparation.
+
+**Annotations:** read-only `true`; destructive `false`.
+
+| Parameter | Required | Type / declared default |
+| --- | --- | --- |
+| `resource` | no | string; default `"all"` |
+
+## get_garmin_sleep_mutation_target
+
+Read a fresh main-sleep identity, original endpoints, note and snapshot hash. Use for add_sleep (absent target only), update_sleep_times/set_sleep_note/clear_sleep_note. Manual add creates duration only and cannot normally be deleted; review exact date/times. GMT endpoints are epoch milliseconds; write inputs require offset ISO times and IANA zone. Preserves recorded metadata. No sleep/stage deletion or score overwrite.
+
+**Annotations:** read-only `true`; destructive `false`.
+
+| Parameter | Required | Type / declared default |
+| --- | --- | --- |
+| `calendar_date` | yes | string |
+
+## get_garmin_nap_mutation_target
+
+List current-day naps with original GMT identities and full-list hash. Use schemas for add_nap/update_nap/delete_nap; 5 minutes to 3 hours, no overlap. Native offset fields are minutes. Write input ISO offsets must match IANA time_zone.
+
+**Annotations:** read-only `true`; destructive `false`.
+
+| Parameter | Required | Type / declared default |
+| --- | --- | --- |
+| `calendar_date` | yes | string |
+| `time_zone` | yes | string |
+
+## get_garmin_record_mutation_target
+
+Read exact activity/measurement deletion or signed hydration correction targets. Activity needs record_id; other kinds need calendar_date. No account changes. Returns exact native record_id/hash, not inferred summary IDs. Weight reads use raw grams. Deleting weight removes attached composition; activity archive is retained. No bulk deletion.
+
+**Annotations:** read-only `true`; destructive `false`.
+
+| Parameter | Required | Type / declared default |
+| --- | --- | --- |
+| `kind` | yes | string; enum activity, weight, blood_pressure, hydration |
+| `calendar_date` | no | union; default `null` |
+| `record_id` | no | union; default `null` |

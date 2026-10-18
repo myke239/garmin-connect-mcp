@@ -27,8 +27,8 @@ async def verify(codex_config=False, plugin_root=None):
         async with ClientSession(read, write) as client:
             await client.initialize()
             tools = await client.list_tools()
-            assert len(tools.tools) == 54
-            assert {tool.name for tool in tools.tools if not tool.annotations.readOnlyHint} == {"prepare_garmin_write", "commit_garmin_write", "commit_garmin_workout_creation", "commit_garmin_workout_update", "commit_garmin_workout_schedule", "commit_garmin_training_calendar"}
+            assert len(tools.tools) == 58
+            assert {tool.name for tool in tools.tools if not tool.annotations.readOnlyHint} == {"prepare_garmin_write", "commit_garmin_write", "commit_garmin_workout_creation", "commit_garmin_workout_update", "commit_garmin_workout_schedule", "commit_garmin_training_calendar", "commit_garmin_workout_rename", "commit_garmin_workout_delete", "commit_garmin_existing_workout_calendar", "archive_garmin_activity"}
             async def call(name, args):
                 result = await client.call_tool(name, args)
                 assert not result.isError
@@ -51,7 +51,7 @@ async def verify(codex_config=False, plugin_root=None):
             summary = await call("get_training_summary", {"start_date":(end-timedelta(days=6)).isoformat(),
                                                           "end_date":end.isoformat()})
             assert "coverage_complete" in summary
-            print("Live MCP passed: 54 tools discovered; read operations and cache verified; no writes performed.")
+            print("Live MCP passed: 58 tools discovered; read operations and cache verified; no writes performed.")
 
 
 if __name__ == "__main__":

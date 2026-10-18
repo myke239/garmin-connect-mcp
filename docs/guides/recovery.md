@@ -46,3 +46,5 @@ running and swimming templates passed create/readback checks, including all
 five swimming strokes, five equipment types and three drills. All synthetic
 templates were deleted and their absence verified. Physical watch execution
 remains unverified.
+
+For corrections, use `get_garmin_capabilities` and the [sleep/correction workflow](sleep-and-corrections.md). A dated recovery read is not an arbitrary metric setter. Correct supported source records and refresh analysis; Garmin recalculation and device synchronization remain separate.

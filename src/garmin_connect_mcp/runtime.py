@@ -20,7 +20,7 @@ ALLOWED |= {"get_scheduled_workouts", "get_scheduled_workout_by_id", "get_device
             "get_body_composition", "get_hydration_data", "get_blood_pressure"}
 ALLOWED.add("get_lifestyle_logging_data")
 ALLOWED.add("get_respiration_data")
-ALLOWED |= {"mcp_lifestyle_target", "mcp_lifestyle_auto_logging"}
+ALLOWED |= {"mcp_lifestyle_target", "mcp_lifestyle_auto_logging", "mcp_sleep_target", "mcp_nap_target", "mcp_record_target"}
 
 
 class RequestError(Exception):
@@ -106,6 +106,15 @@ def worker(connection, directory, method, args, kwargs):
             if method == "mcp_archive_activity":
                 from .archive import download
                 raw = download(client, directory, *args, **kwargs)
+            elif method == "mcp_nap_target":
+                from .nap_writes import mutation_target
+                raw = mutation_target(client, *args, **kwargs)
+            elif method == "mcp_record_target":
+                from .account_writes import mutation_target
+                raw = mutation_target(client, *args, **kwargs)
+            elif method == "mcp_sleep_target":
+                from .sleep_writes import mutation_target
+                raw = mutation_target(client, *args, **kwargs)
             elif method == "mcp_lifestyle_target":
                 from .lifestyle_writes import mutation_target
                 raw = mutation_target(client, *args, **kwargs)

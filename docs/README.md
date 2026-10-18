@@ -16,6 +16,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 | Goal | Guide |
 | --- | --- |
 | Create, verify and schedule a workout | [Workout workflow](guides/workouts.md) |
+| Correct sleep times, naps and exact records | [Sleep and corrections](guides/sleep-and-corrections.md) |
 | Save account changes with the right contract and consent | [Account writes](guides/account-writes.md) |
 | Review strength preparedness, recovery and nutrition | [Coaching evidence](guides/coaching.md) |
 | Read Lifestyle fields and historical amounts | [Lifestyle reports](guides/lifestyle.md) |
@@ -26,7 +27,7 @@ Choose a guide by what you want to do. Start with installation; API details and 
 
 ## Reference
 
-- [MCP tool reference](reference/tools.md): all 54 default tools, parameters, annotations and descriptions.
+- [MCP tool reference](reference/tools.md): all 58 default tools, parameters, annotations and descriptions.
 - [Workout sports and completed activities](reference/sports.md): distinct schemas, verified sport IDs and unsupported fields.
 - [Yoga poses](reference/yoga-poses.md): 85 exact identifiers, verification scope and [CSV](reference/catalogs/verified-yoga-poses.csv)/[JSON](reference/catalogs/verified-yoga-poses.json) catalogs.
 - [Data, privacy, units and limits](reference/data-and-limits.md): storage, response boundaries and missing-data behavior.
@@ -44,3 +45,5 @@ Choose a guide by what you want to do. Start with installation; API details and 
 - [Deferred partner API experiment](../gpt-actions/README.md): separate from the working personal MCP connection.
 
 Query `get_garmin_write_schema` and `get_garmin_workout_schema` for the installed server's exact current contracts. Examples in the guides explain the workflow; they do not authorize account changes.
+
+- [Write coverage and research gates](development/write-coverage.md): implemented corrections, noneditable metrics and contracts still awaiting verification.

@@ -27,15 +27,17 @@ METHODS = {
     "add_hydration": "add_hydration_data", "add_blood_pressure": "set_blood_pressure",
 }
 from .lifestyle_writes import OPERATIONS as LIFESTYLE_OPERATIONS
+from .extended_writes import OPERATIONS as EXTENDED_OPERATIONS
 
-OPERATIONS = LIFESTYLE_OPERATIONS + tuple(METHODS) + ("create_training_calendar", "rename_workout", "delete_workout", "schedule_existing_workouts")
+OPERATIONS = EXTENDED_OPERATIONS + LIFESTYLE_OPERATIONS + tuple(METHODS) + ("create_training_calendar", "rename_workout", "delete_workout", "schedule_existing_workouts")
 WriteOperation = Literal["create_workout", "update_workout", "schedule_workout", "unschedule_workout",
     "send_workout_to_device", "create_manual_activity", "upload_activity_file", "set_activity_name",
     "set_activity_description", "set_activity_type", "replace_strength_sets", "add_weight",
     "add_body_composition", "add_hydration", "add_blood_pressure", "create_training_calendar",
     "rename_workout", "delete_workout", "schedule_existing_workouts",
     "create_lifestyle_behaviours", "rename_lifestyle_behaviour", "delete_lifestyle_behaviours",
-    "set_lifestyle_log", "clear_lifestyle_log", "set_tracked_lifestyle_behaviours", "set_lifestyle_auto_logging"]
+    "set_lifestyle_log", "clear_lifestyle_log", "set_tracked_lifestyle_behaviours", "set_lifestyle_auto_logging", "update_sleep_times", "set_sleep_note", "clear_sleep_note", "add_sleep", "add_nap", "update_nap", "delete_nap", "delete_activity",
+    "delete_weight_measurement", "delete_blood_pressure_measurement", "adjust_hydration"]
 from .sport_schemas import SPORT_IDS,manual_type_supported
 SPORTS = set(SPORT_IDS)
 
@@ -255,6 +257,9 @@ def _validate(operation, parameters):
             if times[-1]<=times[0]:
                 raise WriteInputError(operation,"Activity recording needs positive elapsed time")
         return parameters
+    if operation in EXTENDED_OPERATIONS:
+        from .extended_writes import validate as validate_extended
+        return validate_extended(operation, parameters)
     if operation in LIFESTYLE_OPERATIONS:
         from .lifestyle_writes import validate as validate_lifestyle
         return validate_lifestyle(operation, parameters)
@@ -559,7 +564,7 @@ class WriteService:
             state=json.loads(self.store.load()) if self.store.exists() else {}
             draft=next((v for v in state.values() if v["draft_id"]==draft_id),None)
             if draft is None: raise RequestError("DRAFT_NOT_FOUND")
-            return {k:draft.get(k) for k in ("draft_id","operation","status","result","steps","error")}
+            return {k:draft.get(k) for k in ("draft_id","operation","status","result","steps","error","verification")}
 
 
 def execute(client, directory, draft_id):
@@ -571,7 +576,7 @@ def execute(client, directory, draft_id):
         if not draft: raise RequestError("DRAFT_NOT_FOUND")
         if draft["status"] != "prepared":
             return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],
-                    "error":draft.get("error")}
+                    "error":draft.get("error"),"verification":draft.get("verification")}
         if draft["expires_at"] <= time.time(): raise RequestError("DRAFT_EXPIRED")
         operation=draft["operation"]
         service.require_enabled(operation)
@@ -579,7 +584,10 @@ def execute(client, directory, draft_id):
             strength_original = (client.get_activity_exercise_sets(draft["parameters"]["activity_id"])
                                  if operation == "replace_strength_sets" else None)
             parameters=validate(operation,draft["parameters"],strength_original=strength_original)
-            if operation in LIFESTYLE_OPERATIONS:
+            if operation in EXTENDED_OPERATIONS:
+                from .extended_writes import preflight as extended_preflight
+                extended_state = extended_preflight(client, operation, parameters)
+            elif operation in LIFESTYLE_OPERATIONS:
                 from .lifestyle_writes import preflight as lifestyle_preflight
                 lifestyle_rows = lifestyle_preflight(client, operation, parameters)
             else:
@@ -592,11 +600,16 @@ def execute(client, directory, draft_id):
                 "guidance":"No Garmin mutation was attempted. Correct the input or resolve the read/preflight error before preparing a reviewed new intent."}
             service.store.save(json.dumps(state))
             return {
-                "draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],"error":draft["error"]}
+                "draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],"error":draft["error"],"verification":draft.get("verification")}
         draft["status"] = "in_progress"
         service.store.save(json.dumps(state))  # Persist before the first network mutation.
         try:
-            if operation in LIFESTYLE_OPERATIONS:
+            if operation in EXTENDED_OPERATIONS:
+                from .extended_writes import perform as perform_extended
+                with prevent_sdk_replay(client):
+                    result = perform_extended(client, operation, parameters, extended_state)
+                raw = result
+            elif operation in LIFESTYLE_OPERATIONS:
                 from .lifestyle_writes import perform
                 with prevent_sdk_replay(client):
                     result = perform(client, operation, parameters, lifestyle_rows)
@@ -644,14 +657,17 @@ def execute(client, directory, draft_id):
                 report=raw.get("detailedImportResult",{})
                 if isinstance(report,dict) and report.get("failures"):
                     raise RequestError("IMPORT_REJECTED_OR_PARTIAL")
+            from .mutation_targets import verification_result
+            draft["verification"] = verification_result(operation, result)
             draft["result"], draft["status"] = result,"completed"
         except Exception as error:
             draft["status"] = "unknown"
+            draft["verification"] = {"state":"unknown","stored_value_readback":"not_confirmed"}
             draft["error"] = {"code": error_code(error),
                 "guidance": "The write outcome is unconfirmed. Inspect Garmin before proceeding; do not retry with a new key."}
         service.store.save(json.dumps(state))
         return {"draft_id":draft_id,"status":draft["status"],"result":draft["result"],"steps":draft["steps"],
-                "error":draft.get("error")}
+                "error":draft.get("error"),"verification":draft.get("verification")}
 
 
 def main():

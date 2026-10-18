@@ -1,3 +1,15 @@
+Sleep and correction contracts - 0.18.0
+
+- Add complete resource/write capability discovery with policy/profile/scope evidence.
+- Add main sleep add/time/note operations and current-day nap lifecycle, guarded
+  by fresh native targets, strict time/offset bounds and stored-value readback.
+- Add exact activity/weight/BP deletion and signed hydration corrections.
+- Preserve at-most-once journals and add truthful verification metadata without
+  reinterpreting historical results. Keep device sync and erasure claims separate.
+- Expand management skill and tool/contract docs; explicitly track unregistered
+  device settings, PR semantics, summary/trim/strength-unit and calendar-move gates.
+- Native contracts and offline tests do not establish live mutation acceptance.
+
 Lifestyle writes and custom behavior management - 0.17.0
 
 - Add a dated Lifestyle catalog/mutation target and global auto-logging read.

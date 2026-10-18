@@ -25,6 +25,7 @@ def safe_call(function, *args):
         messages = {"FIT_SUPPORT_REQUIRED":"Install the user-local FIT add-on using the installed launcher fit-setup; no activation or checkout required.","WRITE_OPERATION_DENIED":"This operation is denied by the local owner policy; use the installed launcher to review allowed operations.",
             "ARCHIVE_DISABLED":"Local archive is disabled; the owner can opt in with the installed launcher archive-enable.",
             "ARCHIVE_NOT_FOUND":"This activity has no local archived recording.",
+            "MUTATION_TARGET_CHANGED":"The record changed since review; fetch a fresh target and review a new intent. No mutation was sent.",
             "WORKOUT_TARGET_CHANGED":"The workout changed since review; obtain a fresh target and review a new intent. No automatic retry.",
             "WRITES_DISABLED":"Writes were explicitly disabled locally. Use the installed launcher writes-enable to re-enable them.",
             "WRITE_SCOPE_REQUIRED":"Reconnect ChatGPT with garmin:read and garmin:write; existing read grants cannot write.",
@@ -58,6 +59,18 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         from .writes import WriteService, WriteOperation
         from mcp.server.auth.middleware.auth_context import get_access_token
         writes = WriteService(backend.store.directory)
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+        async def get_garmin_capabilities(resource: str = "all") -> dict:
+            """Discover registered writes, missing/derived write counterparts and current policy/profile.
+            Offline registry: does not contact Garmin or expand permission. Candidates are not callable.
+            Query get_garmin_write_schema for each operation, then fresh target and reviewed preparation.
+            """
+            from .capabilities import describe
+            token = get_access_token() if remote_access else None
+            exposed = {tool.name for tool in await server.list_tools()}
+            return safe_call(describe, resource, writes, exposed,
+                             (token is not None and "garmin:write" in token.scopes) if remote_access else None)
+
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
         async def get_garmin_coaching_guide() -> dict:
             """Start here for coaching tool discovery: exact nested schemas, units, limits,
@@ -181,6 +194,52 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
             Reminders remain mobile/device-local. No account change.
             """
             return safe_call(backend.fresh_call, "mcp_lifestyle_auto_logging")
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_sleep_mutation_target(calendar_date: str) -> dict:
+            """Read a fresh main-sleep identity, original endpoints, note and snapshot hash.
+            Use for add_sleep (absent target only), update_sleep_times/set_sleep_note/clear_sleep_note.
+            Manual add creates duration only and cannot normally be deleted; review exact date/times.
+            GMT endpoints are epoch milliseconds; write inputs require offset ISO times and IANA zone.
+            Preserves recorded metadata. No sleep/stage deletion or score overwrite.
+            """
+            from .verification import iso_date
+            def read():
+                iso_date(calendar_date)
+                return {**backend.fresh_call("mcp_sleep_target", calendar_date), **backend.meta()}
+            return safe_call(read)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_nap_mutation_target(calendar_date: str, time_zone: str) -> dict:
+            """List current-day naps with original GMT identities and full-list hash.
+            Use schemas for add_nap/update_nap/delete_nap; 5 minutes to 3 hours, no overlap.
+            Native offset fields are minutes. Write input ISO offsets must match IANA time_zone.
+            """
+            from .nap_writes import current_day
+            def read():
+                current_day(calendar_date, time_zone)
+                return {**backend.fresh_call("mcp_nap_target", calendar_date, time_zone), **backend.meta()}
+            return safe_call(read)
+
+        @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
+        def get_garmin_record_mutation_target(kind: Literal["activity", "weight", "blood_pressure", "hydration"],
+                                              calendar_date: str | None = None, record_id: str | None = None) -> dict:
+            """Read exact activity/measurement deletion or signed hydration correction targets.
+            Activity needs record_id; other kinds need calendar_date. No account changes.
+            Returns exact native record_id/hash, not inferred summary IDs. Weight reads use raw grams.
+            Deleting weight removes attached composition; activity archive is retained. No bulk deletion.
+            """
+            from .verification import iso_date
+            from .data import validate_id
+            def read():
+                if kind == "activity":
+                    validate_id(record_id)
+                    if calendar_date is not None: raise ValueError("Activity needs only record_id")
+                else:
+                    iso_date(calendar_date)
+                    if record_id is not None: raise ValueError("Measurement reader lists dated exact targets")
+                return {**backend.fresh_call("mcp_record_target", kind, calendar_date, record_id), **backend.meta()}
+            return safe_call(read)
 
         def write_permission():
             if remote_access:
