@@ -54,7 +54,9 @@ def hydration(client, day):
     iso_date(day)
     raw = client.get_hydration_data(day)
     value = raw.get("valueInML")
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+    if raw.get("calendarDate") != day:
+        raise ValueError("Hydration date mismatch")
+    if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0):
         raise ValueError("Unsupported hydration total")
     fingerprint(raw)
     return raw
@@ -84,7 +86,10 @@ def mutation_target(client, kind, calendar_date=None, record_id=None):
     if kind == "hydration":
         raw = hydration(client, calendar_date)
         return {"kind": kind, "calendar_date": calendar_date, "value_in_ml": raw["valueInML"],
-                "expected_content_sha256": fingerprint(raw), "operations": ["adjust_hydration"]}
+                "expected_content_sha256": fingerprint(raw),
+                "correction_available": raw["valueInML"] is not None,
+                "operations": ["adjust_hydration"] if raw["valueInML"] is not None else [],
+                "boundary": "A null daily total is unavailable, not zero. Use add_hydration for actual positive intake; corrections require a recorded total."}
     values, identity = rows(client, kind, calendar_date)
     allowed = {identity, "calendarDate", "timestampGMT", "measurementTimestampGMT", "measurementTimestampLocal",
                "date", "weight", "bmi", "bodyFat", "bodyWater", "boneMass", "muscleMass", "systolic", "diastolic", "pulse"}
@@ -115,6 +120,8 @@ def preflight(client, operation, parameters):
             raise RequestError("MUTATION_TARGET_CHANGED")
     elif operation == "adjust_hydration":
         raw = hydration(client, parameters["calendar_date"])
+        if raw["valueInML"] is None:
+            raise RequestError("HYDRATION_TOTAL_UNAVAILABLE")
         if raw["valueInML"] + parameters["value_in_ml"] < 0:
             raise RequestError("HYDRATION_NEGATIVE_TOTAL")
     else:

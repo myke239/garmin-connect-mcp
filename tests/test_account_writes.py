@@ -151,3 +151,23 @@ def test_bp_target_excludes_notes_and_rejects_missing_exact_version():
     del client.bp[0]["version"]
     with pytest.raises(ValueError):
         aw.mutation_target(client, "blood_pressure", DAY)
+
+
+def test_missing_hydration_total_is_unavailable_not_zero(tmp_path):
+    client = Client()
+    client.total["valueInML"] = None
+    target = aw.mutation_target(client, "hydration", DAY)
+    assert target["value_in_ml"] is None
+    assert target["correction_available"] is False and target["operations"] == []
+    draft = WriteService(tmp_path).prepare("adjust_hydration", parameters(client, "adjust_hydration"), "missing-hydration-total")
+    result = execute(client, tmp_path, draft["draft_id"])
+    assert result["status"] == "rejected"
+    assert result["error"]["code"] == "HYDRATION_TOTAL_UNAVAILABLE"
+    assert client.mutations == []
+
+
+def test_hydration_date_binding():
+    client = Client()
+    client.total["calendarDate"] = "2026-10-16"
+    with pytest.raises(ValueError):
+        aw.mutation_target(client, "hydration", DAY)

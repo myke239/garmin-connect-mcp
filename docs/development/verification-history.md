@@ -12,7 +12,7 @@ Saved-account GETs confirmed the current sleep DTO and weight day-view shapes;
 BP discovery on an empty date does not validate a nonempty account response.
 No app binary, decompiled source or personal response is committed.
 
-Windows offline suite: 606 passed, 3 skipped. New cases cover exact registry
+Windows offline suite: 608 passed, 3 skipped. New cases cover exact registry
 coverage, policy/profile/grant reporting, snapshot bounds, main-sleep absence
 versus overwrite, DST offsets, native metadata preservation, current-day nap
 identity/overlap/midnight, exact same-day deletion, signed ml bounds/nonnegative
@@ -24,7 +24,8 @@ passed. The local editable project itself is skipped by the public-PyPI audit.
 An isolated Windows candidate passed installed MCP discovery (58 tools), offline
 schema and HTTP authentication guard checks. Its real MCP transport passed all
 37 operation schemas and saved-account read-only sleep/nap/weight/BP target
-calls. No new live mutation acceptance is claimed: real-night changes need exact
+calls. A live hydration read exposed an unset/null total; the target now reports
+correction unavailable without replacing null with zero, with regression tests. No new live mutation acceptance is claimed: real-night changes need exact
 scope authorization; main-sleep creation cannot normally be cleaned up. Device
 settings, PR semantics and other unverified corrections remain unregistered as
 listed in [write coverage](write-coverage.md). CI, merge and active deployment

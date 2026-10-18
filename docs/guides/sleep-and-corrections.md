@@ -91,7 +91,9 @@ endpoint absence, not erasure across backups, integrations or physical devices.
 
 Hydration correction is a nonzero signed delta between -10,000 and +10,000 ml.
 The timestamp's local date must match the selected day. The fresh daily total
-must remain nonnegative. `add_hydration` retains its original positive-only
+must remain nonnegative. A null total is unavailable, not zero: the target
+reports no correction operation until a recorded total exists; actual positive
+intake can use add_hydration. `add_hydration` retains its original positive-only
 contract. There is no per-drink identity or arbitrary overwrite/delete API.
 Readback checks the expected total; concurrent external changes can produce an
 unconfirmed result. Never add a compensating delta automatically.

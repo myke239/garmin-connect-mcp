@@ -61,7 +61,9 @@ Local activity archives remain after account deletion.
 
 `adjust_hydration` is a nonzero signed ml delta within +/-10,000, with fresh dated
 total hash and explicit-offset timestamp on that local date. The resulting total
-must remain nonnegative. `add_hydration` remains positive-only. Verify the daily
+must remain nonnegative. A null total means unavailable, not zero: do not
+correct it; use add_hydration only for actual positive intake. `add_hydration`
+remains positive-only. Verify the daily
 total; do not invent a per-drink deletion identity or turn a correction into an
 absolute overwrite. Concurrent external changes can make readback uncertain.
 
