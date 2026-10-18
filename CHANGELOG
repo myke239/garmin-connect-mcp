@@ -1,3 +1,11 @@
+Windows session-lock serialization - 0.18.1
+
+- Acquire the cross-process lock before inspecting/initializing its byte. Windows
+  denies another process's pre-lock read while that byte is locked, which could
+  turn concurrent account reads or journal access into a permission/network error.
+- Add a real two-process regression test, including first-file initialization and
+  successful handoff. Preserve the existing timeout and at-most-once behavior.
+
 Sleep and correction contracts - 0.18.0
 
 - Add complete resource/write capability discovery with policy/profile/scope evidence.

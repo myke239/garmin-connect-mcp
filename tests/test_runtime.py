@@ -1,6 +1,7 @@
 import time
 import threading
 import sys
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -109,3 +110,39 @@ def test_local_logout_invalidates_cached_account_data(tmp_path):
     with pytest.raises(RequestError, match="AUTH_REQUIRED"):
         service.get_activity("1")
     assert len(calls) == 2
+
+
+def test_session_lock_serializes_real_processes_before_reading_lock_byte(tmp_path):
+    # No account session: use an isolated temporary lock directory. On Windows
+    # the old pre-lock read fails immediately with PermissionError in process 2.
+    script = """
+import sys
+from pathlib import Path
+from garmin_connect_mcp.auth import TokenStore
+from garmin_connect_mcp.runtime import session_lock
+print('attempting', flush=True)
+with session_lock(TokenStore(Path(sys.argv[1]))):
+    print('acquired', flush=True)
+    sys.stdin.readline()
+"""
+    processes = []
+    try:
+        first = subprocess.Popen([sys.executable, "-u", "-c", script, str(tmp_path)],
+                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        processes.append(first)
+        assert first.stdout.readline().strip() == "attempting"
+        assert first.stdout.readline().strip() == "acquired"
+        second = subprocess.Popen([sys.executable, "-u", "-c", script, str(tmp_path)],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        processes.append(second)
+        assert second.stdout.readline().strip() == "attempting"
+        time.sleep(.2)
+        assert second.poll() is None, "Contender must wait, not read a byte locked by another process"
+        first.communicate(input="\n", timeout=4)
+        output, errors = second.communicate(input="\n", timeout=4)
+        assert output.strip() == "acquired" and second.returncode == 0, errors
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=4)

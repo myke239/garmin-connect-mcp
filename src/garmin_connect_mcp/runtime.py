@@ -55,10 +55,6 @@ def session_lock(store):
         raise RequestError("SESSION_ERROR")
     with lockpath.open("a+b") as lock:
         restrict(lockpath)
-        lock.seek(0)
-        if not lock.read(1):
-            lock.write(b"0")
-            lock.flush()
         started = time.monotonic()
         while True:
             try:
@@ -75,6 +71,13 @@ def session_lock(store):
                     raise RequestError("BUSY") from None
                 time.sleep(.1)
         try:
+            # Windows byte-range locks reject reads by other processes too.
+            # Acquire before inspecting/initializing the byte, including an
+            # empty new file (both Windows and flock permit locking past EOF).
+            lock.seek(0)
+            if not lock.read(1):
+                lock.write(b"0")
+                lock.flush()
             yield
         finally:
             lock.seek(0)
