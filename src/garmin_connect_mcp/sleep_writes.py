@@ -62,6 +62,8 @@ OPERATIONS = ("add_sleep", "update_sleep_times", "set_sleep_note", "clear_sleep_
 
 
 def read_optional(client, calendar_date):
+    from .data import validate_id
+    validate_id(str(client.profile_id))
     iso_date(calendar_date)
     raw = client.connectapi(BASE + "/dailySleepData", params={
         "date": calendar_date, "nonSleepBufferMinutes": 60})
