@@ -157,7 +157,8 @@ def perform(client, operation, parameters, row):
         # Native new-record DTO defaults. Zero stage fields denote unavailable,
         # not estimated stages; Garmin's manual entry creates duration only.
         body = {k: copy.deepcopy(v) for k, v in row.items() if k in NATIVE_KEYS} if row else {
-            "id": -1, "userProfilePK": 0, "sleepTimeSeconds": 0, "napTimeSeconds": 0,
+            "id": -1, "userProfilePK": client.profile_id, "calendarDate": day,
+            "sleepTimeSeconds": 0, "napTimeSeconds": 0,
             "sleepWindowConfirmed": False, "sleepStartTimestampGMT": 0, "sleepEndTimestampGMT": 0,
             "sleepStartTimestampLocal": 0, "sleepEndTimestampLocal": 0,
             "unmeasurableSleepSeconds": 0, "deepSleepSeconds": 0, "lightSleepSeconds": 0,

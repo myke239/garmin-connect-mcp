@@ -139,7 +139,8 @@ def test_manual_sleep_requires_absence_and_uses_native_new_record_defaults(tmp_p
             assert method == "POST" and path == sw.BASE + "/dailySleep"
             body = copy.deepcopy(kwargs["json"])
             self.mutations.append((method, path, body))
-            assert body["id"] == -1 and body["userProfilePK"] == 0
+            assert body["id"] == -1 and body["userProfilePK"] == 123
+            assert body["calendarDate"] == "2026-10-17"
             assert body["sleepFromDevice"] is False
             assert body["deepSleepSeconds"] == body["remSleepSeconds"] == 0
             assert "sleepScores" not in body
