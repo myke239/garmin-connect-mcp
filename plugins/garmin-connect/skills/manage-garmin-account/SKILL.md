@@ -1,11 +1,71 @@
 ---
 name: manage-garmin-account
-description: Create manual Garmin activity logs for completed sports sessions, edit activities or strength sets, import activity files, record actual health measurements, manage Lifestyle logs/custom behaviors/tracking, or send saved workouts to a device using guarded Garmin Connect MCP writes.
+description: Create manual Garmin activity logs for completed sports sessions, edit sleep times/notes and current-day naps, correct hydration, delete exact activity/measurement records, edit activities or strength sets, import activity files, record actual health measurements, manage Lifestyle logs/custom behaviors/tracking, or send saved workouts to a device using guarded Garmin Connect MCP writes.
 ---
 
 Use the Garmin Connect MCP server for account changes. Before preparing an operation, call `get_garmin_write_schema(operation)` and follow its current names, types, units, bounds and verification guidance. The server owns SDK calls; do not bypass it with direct HTTP, SDK scripts or journal edits. For workout construction/calendar workflows, use the plugin's `create-schedule-workouts` skill.
 
 Honor the user's authorized scope. Establish the exact target and content before writing, show the preview, and commit only with authorization covering it. Existing explicit authorization for a bounded test or identical payload need not be requested again. Examples and proposed coaching advice are not measurements or permission to save them.
+
+## Capability and target discovery
+
+Start with `get_garmin_capabilities` for resource writes, current policy/profile,
+remote grant and target readers. Listed unregistered candidates cannot be called.
+Use the operation's current schema, not a guessed setter or arbitrary SDK/HTTP
+call. Readback, transport acceptance and watch sync are separate claims. New
+commits include verification metadata; old journal entries are not retroactively
+verified. Never create a second intent to retry an unknown/in-progress result.
+
+## Sleep and naps
+
+Read `get_garmin_sleep_mutation_target(calendar_date)` freshly. The date is the
+local wake/end date. Copy its ID/hash for `update_sleep_times`, `set_sleep_note`
+or `clear_sleep_note`. `add_sleep` needs the fresh absent-record hash and must
+not replace existing sleep. It creates duration only and cannot normally be
+deleted: never use a fabricated main sleep as disposable live test data.
+
+Time writes require whole-second ISO start/end with explicit offsets plus an
+IANA `time_zone`. The server checks DST offset agreement, elapsed UTC duration
+and end date. Main sleep windows are completed 1 minute to 24 hour intervals.
+Target endpoints are epoch milliseconds; write inputs are ISO strings. Time
+editing preserves original native local endpoints, confirmation type, stages,
+scores and note; Garmin owns recalculation. Do not manufacture score/stage data
+or edit the device's usual bedtime schedule through a dated sleep operation.
+Setting a note replaces the full text; clearing a note does not delete sleep.
+
+Read `get_garmin_nap_mutation_target(calendar_date,time_zone)` for current-day
+naps and the full-list hash. `add_nap`/`update_nap` need completed same-day
+5 minute to 3 hour windows without sleep/nap overlap. Updates/deletes use the
+original `nap_start_ms`; do not substitute the proposed new start. Delete also
+needs `confirm_delete=true`. The day gate is rechecked before send, so a draft
+can become ineligible at midnight. Native offsets are minutes; the server owns
+UTC-string conversion and native account/device context.
+
+These new native contracts have offline tests but no live mutation acceptance
+claim. For any real-night correction, establish the exact requested change;
+implementation or analysis permission alone is not permission to modify health
+history. Inspect returned readback evidence, then refresh the target. Report
+Garmin recalculation and physical synchronization as unverified unless separately
+observed.
+
+## Exact deletion and hydration corrections
+
+Use `get_garmin_record_mutation_target(kind,calendar_date?,record_id?)`.
+Activity needs record_id only; weight/BP/hydration need calendar_date only.
+Deletion requires explicit scope covering the exact returned record, fresh hash
+and `confirm_delete=true`. `delete_activity` also needs its exact old name.
+Use each weight sample's native ID or BP version, never an average or inferred
+identifier. Weight deletion removes attached composition too. No bulk delete,
+silent delete/recreate editor or automatic compensating write is available.
+Local activity archives remain after account deletion.
+
+`adjust_hydration` is a nonzero signed ml delta within +/-10,000, with fresh dated
+total hash and explicit-offset timestamp on that local date. The resulting total
+must remain nonnegative. A null total means unavailable, not zero: do not
+correct it; use add_hydration only for actual positive intake. `add_hydration`
+remains positive-only. Verify the daily
+total; do not invent a per-drink deletion identity or turn a correction into an
+absolute overwrite. Concurrent external changes can make readback uncertain.
 
 ## Activity edits and imports
 

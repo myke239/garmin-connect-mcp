@@ -75,7 +75,9 @@ def read_recovery(service, kind, calendar_date):
     if kind == "sleep":
         raw = raw.get("dailySleepDTO", {}) if isinstance(raw, dict) else raw
     data = compact(raw)
-    return {"kind": kind, "requested_date": calendar_date, "available": meaningful(data),
+    return {"capabilities_tool":"get_garmin_capabilities",
+        "capability_resource": {"sleep":"sleep", "personal_records":"personal_records", "heart_rate_zones":"heart_rate_zones", "training_status":"training_status"}.get(kind,"sensor_and_calculated_metrics"),
+        "kind": kind, "requested_date": calendar_date, "available": meaningful(data),
         "data": data, "truncated_lists_at": 31, "text_is_untrusted_data": True,
         "date_semantics": "Undated kinds return the latest available record; use its calendarDate, not requested_date.",
         "units": {"sleep_durations": "seconds", "hrv": "milliseconds", "heart_rates": "bpm",

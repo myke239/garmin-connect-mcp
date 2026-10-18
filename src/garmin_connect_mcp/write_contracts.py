@@ -140,6 +140,59 @@ GUIDANCE.update({
 })
 
 
+SLEEP_TARGET = {"calendar_date": DATE, "sleep_id": ID,
+                "expected_content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+SCHEMAS.update({
+    "add_sleep": obj({"calendar_date": DATE, "expected_content_sha256": SLEEP_TARGET["expected_content_sha256"],
+                       "start_time": STAMP, "end_time": STAMP,
+                       "time_zone": {"type": "string", "minLength": 1, "maxLength": 100}}),
+    "update_sleep_times": obj({**SLEEP_TARGET, "start_time": STAMP, "end_time": STAMP,
+                               "time_zone": {"type": "string", "minLength": 1, "maxLength": 100}}),
+    "set_sleep_note": obj({**SLEEP_TARGET, "note": {"type": "string", "minLength": 1, "maxLength": 2000}}),
+    "clear_sleep_note": obj(SLEEP_TARGET),
+})
+for _operation in ("add_sleep", "update_sleep_times", "set_sleep_note", "clear_sleep_note"):
+    GUIDANCE[_operation] = ("Read get_garmin_sleep_mutation_target. add_sleep requires a fresh absent-main-sleep target, creates duration only and cannot be normally deleted. Other operations require the date, sleep_id and expected_content_sha256. "
+        "Review the exact real-night change before commit. Native contract observed; no live mutation acceptance yet. "
+        "Times require explicit offsets and matching IANA time_zone; end date is calendar_date; completed 1 minute-24 hour window. "
+        "Original stage/score metadata and local timestamp fields are preserved as in Garmin Android's edit flow. "
+        "Garmin owns recalculation; no score/stage inputs, sleep deletion or usual sleep schedule changes. "
+        "Set note replaces text; use clear_sleep_note for deletion. Never retry an unknown outcome with a new key.")
+
+
+NAP_TARGET = {"calendar_date": DATE, "time_zone": {"type": "string", "minLength": 1, "maxLength": 100},
+              "expected_content_sha256": SLEEP_TARGET["expected_content_sha256"]}
+NAP_ID = {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+MEASUREMENT_TARGET = {"calendar_date": DATE, "record_id": ID,
+                      "expected_content_sha256": SLEEP_TARGET["expected_content_sha256"],
+                      "confirm_delete": {"type": "boolean", "const": True}}
+SCHEMAS.update({
+    "add_nap": obj({**NAP_TARGET, "start_time": STAMP, "end_time": STAMP}),
+    "update_nap": obj({**NAP_TARGET, "nap_start_ms": NAP_ID, "start_time": STAMP, "end_time": STAMP}),
+    "delete_nap": obj({**NAP_TARGET, "nap_start_ms": NAP_ID, "confirm_delete": {"type": "boolean", "const": True}}),
+    "delete_activity": obj({"activity_id": ID, "expected_name": NAME,
+                            "expected_content_sha256": SLEEP_TARGET["expected_content_sha256"],
+                            "confirm_delete": {"type": "boolean", "const": True}}),
+    "delete_weight_measurement": obj(MEASUREMENT_TARGET),
+    "delete_blood_pressure_measurement": obj(MEASUREMENT_TARGET),
+    "adjust_hydration": obj({"calendar_date": DATE, "timestamp": STAMP,
+                              "expected_content_sha256": SLEEP_TARGET["expected_content_sha256"],
+                              "value_in_ml": {"type": "number", "minimum": -10000, "maximum": 10000}}),
+})
+for _operation in ("add_nap", "update_nap", "delete_nap"):
+    GUIDANCE[_operation] = ("Read get_garmin_nap_mutation_target for current local calendar_date and IANA time_zone. "
+        "Use exact original nap_start_ms identity for update/delete and expected_content_sha256 of the full nap list. "
+        "Completed 5 minute to 3 hour same-day window; explicit ISO offsets must match the zone. Overlaps with main sleep/other naps are rejected. "
+        "Current-day eligibility is rechecked before send. No live write acceptance yet; native contract observed. "
+        "Read back after commit; never retry unknown outcomes with a new key.")
+for _operation in ("delete_activity", "delete_weight_measurement", "delete_blood_pressure_measurement", "adjust_hydration"):
+    GUIDANCE[_operation] = ("Read get_garmin_record_mutation_target(kind=activity/weight/blood_pressure/hydration) for exact identity/hash. "
+        "Deletion requires confirm_delete=true and explicit reviewed user intent. Deletes the entire selected record, including attached body composition; "
+        "no bulk deletion or silent delete/recreate. Weight samplePk and BP version are exact native target identifiers. "
+        "Hydration is a nonzero signed delta in ml, timestamp offset date must match calendar_date, and total cannot become negative. "
+        "No live mutation acceptance yet. Commit verifies absence/value by fresh reads; an uncertain outcome is terminal. Local activity archives are retained.")
+
+
 def contract(operation):
     if operation not in SCHEMAS:
         raise ValueError("Unsupported write operation")

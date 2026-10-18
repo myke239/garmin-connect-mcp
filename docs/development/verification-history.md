@@ -2,6 +2,35 @@
 
 [Documentation home](../README.md)
 
+## Sleep and correction contracts - 0.18.0 (2026-10-18, local evidence)
+
+14 MCP foundation/runtime tests passed before saved-account reads. Derived
+Garmin Android 5.30.1 contracts established sleep/nap routes, native copy/default
+DTO behavior, GMT strings, offset minutes and exact weight deletion. Pinned
+SDK contracts supplied signed hydration and exact BP/activity deletion routes.
+Saved-account GETs confirmed the current sleep DTO and weight day-view shapes;
+BP discovery on an empty date does not validate a nonempty account response.
+No app binary, decompiled source or personal response is committed.
+
+Windows offline suite: 608 passed, 3 skipped. New cases cover exact registry
+coverage, policy/profile/grant reporting, snapshot bounds, main-sleep absence
+versus overwrite, DST offsets, native metadata preservation, current-day nap
+identity/overlap/midnight, exact same-day deletion, signed ml bounds/nonnegative
+totals, readback mismatch, terminal uncertain outcomes and commit replay.
+Source lint, selected strict typing, documentation links/inventory (58 tools),
+management-skill validation, source/wheel build and third-party dependency audit
+passed. The local editable project itself is skipped by the public-PyPI audit.
+
+An isolated Windows candidate passed installed MCP discovery (58 tools), offline
+schema and HTTP authentication guard checks. Its real MCP transport passed all
+37 operation schemas and saved-account read-only sleep/nap/weight/BP target
+calls. A live hydration read exposed an unset/null total; the target now reports
+correction unavailable without replacing null with zero, with regression tests. No new live mutation acceptance is claimed: real-night changes need exact
+scope authorization; main-sleep creation cannot normally be cleaned up. Device
+settings, PR semantics and other unverified corrections remain unregistered as
+listed in [write coverage](write-coverage.md). CI, merge and active deployment
+are separate gates; no pass is claimed before those checks run.
+
 ## Lifestyle write contracts - 0.17.0 (2026-10-16, local evidence)
 
 14 foundation/runtime tests passed before saved-session reads. Garmin Connect
