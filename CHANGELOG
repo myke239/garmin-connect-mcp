@@ -1,3 +1,10 @@
+Executable download checksums - 0.18.1
+
+- Record a SHA256 checksum for each final executable after the build, and after
+  Windows signing, then publish SHA256SUMS with the release notes.
+- Document how to compare a downloaded executable with that release's checksum.
+  Unsigned CI artifacts keep a separate checksum file and are not the published hashes.
+
 Windows session-lock serialization - 0.18.1
 
 - Acquire the cross-process lock before inspecting/initializing its byte. Windows

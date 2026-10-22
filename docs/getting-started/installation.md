@@ -157,7 +157,7 @@ window using its launcher `desktop --tray`. Installation preserves old releases
 and existing credentials, grants and journals.
 
 The public frozen build excludes Garmin's separately licensed official FIT SDK.
-Download links and checksums are on the release page. Use `doctor` to confirm the extracted version before installing.
+Download links are on the release page. Use `doctor` to confirm the extracted version before installing.
 
 Choose **Install FIT support** in the setup app or run the executable `fit-setup`.
 That obtains managed Python and the SDK directly from PyPI into the application's
@@ -169,6 +169,38 @@ Frozen builds are unsigned and target Windows x64 and Linux x86-64 with glibc
 2.35 or newer. macOS/ARM frozen builds have not been tested. Linux graphical mode
 needs a display, X11/Tk libraries and a supported tray host; CLI operation remains
 available on headless systems. Keep all bundle files together.
+
+## Compare a download
+
+Each GitHub release publishes `SHA256SUMS` next to the downloads, and the same
+lines are in that release's notes. The file lists one SHA256 hash for each final
+executable: `garmin-connect` and `garmin-connect-desktop` (`.exe` on Windows),
+plus the Windows setup executable when that release includes one. Compare the
+file you downloaded or extracted with the line of the same name. Signing and a
+later rebuild change the hash, so use the release you downloaded. Unsigned CI
+artifacts are test builds and are not these published checksums.
+`release-integrity.json` remains the full bundle record for maintainers.
+
+On Windows, in PowerShell:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -Path .\garmin-connect.exe
+```
+
+The printed hash matches the `garmin-connect.exe` line when the file is the one
+from that release. Repeat for `garmin-connect-desktop.exe` and the setup
+executable.
+
+On Linux, put `SHA256SUMS` in the directory that contains the extracted
+executable, then run:
+
+```bash
+sha256sum -c SHA256SUMS
+```
+
+`sha256sum` checks every name in `SHA256SUMS`. A file you did not put in this
+directory is reported as missing. A hash that does not match is reported as a
+failed checksum.
 
 ## Optional background operation
 
