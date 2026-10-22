@@ -1,4 +1,4 @@
 """Garmin MCP integration with bounded reads and guarded account writes."""
 
-__version__ = "0.18.1"
+__version__ = "0.19.0"
 

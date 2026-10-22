@@ -9,7 +9,7 @@ import secrets
 import shlex
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager, AsyncExitStack
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 
@@ -22,6 +22,7 @@ from pydantic import AnyHttpUrl
 from starlette.responses import HTMLResponse, RedirectResponse, JSONResponse
 
 from .auth import TokenStore, data_directory
+from .endpoints import CANONICAL, LEGACY, connection_info
 from .runtime import session_lock
 from .server import create_server
 
@@ -79,10 +80,13 @@ class OwnerRefresh(RefreshToken):
 
 
 class OwnerProvider:
-    def __init__(self, origin, directory=None):
+    def __init__(self, origin, directory=None, endpoint=LEGACY):
+        self.endpoint = endpoint
         self.origin = public_origin(origin)
-        self.resource = self.origin + "/mcp"
-        self.store = TokenStore(directory or data_directory() / "remote-oauth")
+        self.base_url = self.origin + endpoint.prefix
+        self.resource = self.origin + endpoint.mcp_path
+        root = Path(directory) if directory is not None else data_directory() / "remote-oauth"
+        self.store = TokenStore(root / endpoint.storage_name if endpoint.storage_name else root)
 
     @contextmanager
     def state(self):
@@ -127,7 +131,7 @@ class OwnerProvider:
             state["pending"][ticket] = {"client_id": client.client_id,
                 "params": params.model_dump(mode="json"), "approved": False,
                 "expires_at": time.time() + 300}
-        return self.origin + "/consent?ticket=" + ticket
+        return self.base_url + "/consent?ticket=" + ticket
 
     def consent(self, ticket):
         with self.state() as state:
@@ -147,7 +151,7 @@ class OwnerProvider:
                     + html.escape(approval_command(ticket))
                     + "</pre><p>Review the connection and type APPROVE when prompted. "
                     "Then return here and select Continue. The request expires after five minutes.</p>"
-                    '<form method="get" action="/consent"><input type="hidden" name="ticket" value="'
+                    '<form method="get" action="' + self.endpoint.route('/consent') + '"><input type="hidden" name="ticket" value="'
                     + html.escape(ticket, quote=True) + '"><button>Continue</button></form>')
             params = AuthorizationParams.model_validate(pending["params"])
             code = secrets.token_urlsafe(32)
@@ -230,7 +234,7 @@ class OwnerProvider:
     async def load_access_token(self, token):
         with self.state() as state:
             value = state["access"].get(key(token))
-            return AccessToken.model_validate(value) if value else None
+            return AccessToken.model_validate(value) if value and value["resource"] == self.resource else None
 
     async def revoke_token(self, token):
         family = token.family if isinstance(token, OwnerRefresh) else (token.claims or {}).get("family")
@@ -241,7 +245,8 @@ class OwnerProvider:
 
 class Boundary:
     """Apply host/origin checks, bounded bodies and a process-wide request rate cap."""
-    def __init__(self, app, origin, port):
+    def __init__(self, app, origin, port, endpoint=LEGACY):
+        self.endpoint = endpoint
         self.app, self.origin = app, origin
         self.hosts = {urlsplit(origin).netloc, f"127.0.0.1:{port}", f"localhost:{port}"}
         self.window, self.count = time.monotonic(), 0
@@ -263,20 +268,20 @@ class Boundary:
             if message["type"] == "http.disconnect":
                 return
             body.extend(message.get("body", b""))
-            if len(body) > (3 * 1024 * 1024 if scope["path"] == "/mcp" else 16384):
+            if len(body) > (3 * 1024 * 1024 if scope["path"] == self.endpoint.mcp_path else 16384):
                 return await JSONResponse({"error": "Request too large"}, status_code=413)(scope, receive, send)
             if not message.get("more_body", False):
                 break
-        if scope["path"] in ("/token", "/revoke"):
+        if scope["path"] in (self.endpoint.route("/token"), self.endpoint.route("/revoke")):
             form = parse_qs(bytes(body).decode("utf-8", errors="replace"), keep_blank_values=True)
             # SDK 1.30 does not pass the requested token resource to the provider.
             # Refuse a resource override here; issued tokens remain bound to /mcp.
-            if "resource" in form and form["resource"] != [self.origin + "/mcp"]:
+            if "resource" in form and form["resource"] != [self.origin + self.endpoint.mcp_path]:
                 return await JSONResponse({"error": "invalid_target"}, status_code=400)(scope, receive, send)
             # SDK revocation schema requires the optional client_secret field.
             # An empty field enables standard public-client revocation; the SDK
             # still validates registered client authentication independently.
-            if scope["path"] == "/revoke" and "client_secret" not in form:
+            if scope["path"] == self.endpoint.route("/revoke") and "client_secret" not in form:
                 body.extend(b"&client_secret=")
         delivered = False
         async def replay():
@@ -314,9 +319,9 @@ class Boundary:
         await self.app(scope, replay, secure_send)
 
 
-def create_http_app(origin, port=8787, directory=None, adapter=None):
-    provider = OwnerProvider(origin, directory)
-    auth = AuthSettings(issuer_url=AnyHttpUrl(provider.origin),
+def create_http_app(origin, port=8787, directory=None, adapter=None, endpoint=LEGACY):
+    provider = OwnerProvider(origin, directory, endpoint)
+    auth = AuthSettings(issuer_url=AnyHttpUrl(provider.base_url),
         resource_server_url=AnyHttpUrl(provider.resource), validate_token_resource=True,
         required_scopes=[READ_SCOPE],
         client_registration_options=ClientRegistrationOptions(enabled=True,
@@ -326,11 +331,12 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
         f"127.0.0.1:{port}", f"localhost:{port}"], allowed_origins=[provider.origin])
     server = create_server(adapter, remote_access=True, host="127.0.0.1", port=port,
         auth=auth, auth_server_provider=provider, transport_security=security,
-        json_response=True, stateless_http=True, max_request_body_size=3 * 1024 * 1024)
-    @server.custom_route("/consent", methods=["GET"])
+        json_response=True, stateless_http=True, streamable_http_path=endpoint.mcp_path,
+        max_request_body_size=3 * 1024 * 1024)
+    @server.custom_route(endpoint.route("/consent"), methods=["GET"])
     async def consent(request):
         return provider.consent(request.query_params.get("ticket", ""))
-    @server.custom_route("/health", methods=["GET"])
+    @server.custom_route(endpoint.route("/health"), methods=["GET"])
     async def health(request):
         from .writes import WriteService
         return JSONResponse({"status": "ready", "authentication": "oauth", "read_only": not WriteService().enabled()})
@@ -340,7 +346,7 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
     from mcp.server.auth.routes import create_protected_resource_routes
     metadata_routes = create_protected_resource_routes(
         resource_url=AnyHttpUrl(provider.resource),
-        authorization_servers=[AnyHttpUrl(provider.origin)],
+        authorization_servers=[AnyHttpUrl(provider.base_url)],
         scopes_supported=[READ_SCOPE, WRITE_SCOPE])
     for replacement in metadata_routes:
         for index, route in enumerate(app.routes):
@@ -349,22 +355,66 @@ def create_http_app(origin, port=8787, directory=None, adapter=None):
                 break
         else:
             raise RuntimeError("Expected protected-resource metadata route missing")
-    return Boundary(app, provider.origin, port), provider
+    # SDK OAuth routes are root-relative even when the issuer has a path.
+    if endpoint.prefix:
+        from starlette.routing import compile_path, Route
+        for route in app.routes:
+            path = getattr(route, "path", "")
+            if path in {"/authorize", "/token", "/register", "/revoke"}:
+                route.path = endpoint.route(path)
+            elif path == "/.well-known/oauth-authorization-server":
+                route.path = endpoint.authorization_metadata
+            else:
+                continue
+            route.path_regex, route.path_format, route.param_convertors = compile_path(route.path)
+        async def slash_redirect(request):
+            return RedirectResponse(provider.resource, status_code=307)
+        app.routes.append(Route(endpoint.mcp_path.rstrip("/"), slash_redirect, methods=["GET", "POST", "DELETE"]))
+    return Boundary(app, provider.origin, port, endpoint), provider
 
+
+
+def create_deployment_app(origin, port=8787, directory=None, adapter=None, legacy=None):
+    """Namespace new connections; retain root routes only for existing grants."""
+    from starlette.applications import Starlette
+    from starlette.routing import Mount
+    root = Path(directory) if directory is not None else data_directory() / "remote-oauth"
+    canonical, provider = create_http_app(origin, port, root, adapter, CANONICAL)
+    if legacy is None:
+        legacy = TokenStore(root).exists()
+    if not legacy:
+        return canonical, provider
+    old, _ = create_http_app(origin, port, root, adapter, LEGACY)
+    @asynccontextmanager
+    async def lifespan(app):
+        async with AsyncExitStack() as stack:
+            await stack.enter_async_context(canonical.app.router.lifespan_context(canonical.app))
+            await stack.enter_async_context(old.app.router.lifespan_context(old.app))
+            yield
+    async def dispatch(scope, receive, send):
+        path = scope.get("path", "")
+        target = canonical if (path == CANONICAL.prefix or path.startswith(CANONICAL.prefix + "/")
+            or path in {CANONICAL.authorization_metadata, CANONICAL.resource_metadata}) else old
+        await target(scope, receive, send)
+    return Starlette(lifespan=lifespan, routes=[Mount("/", app=dispatch)]), provider
 
 def main():
     parser = argparse.ArgumentParser(description="Personal HTTP Garmin MCP with local-owner OAuth approval")
-    parser.add_argument("command", choices=["serve", "approve", "reset"])
+    parser.add_argument("command", choices=["serve", "approve", "reset", "connection-info"])
     parser.add_argument("ticket", nargs="?")
     parser.add_argument("--public-url")
     parser.add_argument("--port", type=int, default=8787)
+    parser.add_argument("--no-legacy-root", action="store_true")
     args = parser.parse_args()
-    store = TokenStore(data_directory() / "remote-oauth")
+    root = data_directory() / "remote-oauth"
+    stores = [TokenStore(root / CANONICAL.storage_name), TokenStore(root)]
+    store = next((item for item in stores if item.exists()), stores[0])
     if args.command == "reset":
         if not sys.stdin.isatty() or input("Revoke all remote connections? Type RESET: ") != "RESET":
             raise SystemExit("Not reset")
-        with session_lock(store):
-            store.clear()
+        for item in stores:
+            with session_lock(item):
+                item.clear()
         print("All remote connections revoked. Reconnect in ChatGPT.")
         return
     origin = args.public_url
@@ -372,14 +422,26 @@ def main():
         origin = json.loads(store.load())["origin"]
     if not origin:
         raise SystemExit("Provide --public-url https://your-tunnel-host")
+    if args.command == "connection-info":
+        print(json.dumps(connection_info(origin), indent=2))
+        return
     if args.command == "approve":
-        OwnerProvider(origin).approve(args.ticket)
+        matches = []
+        for endpoint in (CANONICAL, LEGACY):
+            candidate = OwnerProvider(origin, endpoint=endpoint)
+            if candidate.store.exists():
+                with candidate.state() as state:
+                    if args.ticket in state["pending"]:
+                        matches.append(candidate)
+        if len(matches) != 1:
+            raise SystemExit("Connection request expired or not found, or ambiguous. Restart authorization.")
+        matches[0].approve(args.ticket)
         print("Approved. Return to the browser and select Continue.")
     else:
         if not 1024 <= args.port <= 65535:
             raise SystemExit("Use an unprivileged local port")
         import uvicorn
-        app, _ = create_http_app(origin, args.port)
+        app, _ = create_deployment_app(origin, args.port, legacy=False if args.no_legacy_root else None)
         uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning",
                     access_log=False, proxy_headers=False, timeout_keep_alive=5,
                     limit_concurrency=16)
