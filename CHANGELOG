@@ -1,9 +1,21 @@
-Executable download checksums - 0.18.1
+Executable download checksums - unreleased
 
-- Record a SHA256 checksum for each final executable after the build, and after
-  Windows signing, then publish SHA256SUMS with the release notes.
-- Document how to compare a downloaded executable with that release's checksum.
-  Unsigned CI artifacts keep a separate checksum file and are not the published hashes.
+- Publish final executable hashes alongside archive checksums for portable and
+  signed releases. Hash signed binaries only after signing and verification.
+- Include executable hashes in release notes and document verification.
+
+Shared-host routing and portable release - 0.19.0
+
+- Publish /mcp/garmin-connect/ with namespaced OAuth endpoints/discovery and
+  separate resource-bound grants. Preserve legacy root routes only for saved
+  legacy installations; allow explicit disabling without deleting grants.
+- Add backend-only remote-serve and public connection-info commands, a desktop
+  URL helper, and actionable occupied-port/missing-Codex errors.
+- Add genuine Windows setup screenshots, explicit Codex versus ChatGPT steps,
+  checksum instructions and multi-connector shared-host guidance.
+- Add a CI-gated Windows/Linux portable release workflow, integrity records and
+  checksums; retain honest unsigned labeling and separate signing enrollment.
+
 
 Windows session-lock serialization - 0.18.1
 

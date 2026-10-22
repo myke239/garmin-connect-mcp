@@ -2,9 +2,35 @@
 
 [Documentation home](../README.md)
 
-Version 0.16.1 includes managed installers, a desktop setup/tray application,
+The current release includes managed installers, a desktop setup/tray application,
 optional per-user background startup and downloadable frozen builds. Every
 launcher works from any directory with no environment activation.
+
+## First-time setup in pictures
+
+![Connection tab with local sign-in, verification and Codex buttons](../assets/screenshots/setup-connection.png)
+
+*Actual Windows setup UI for 0.19.0, captured with an isolated data directory and no account connected.*
+
+Sign in in the private terminal, return to **Verify saved session**, then choose
+[Codex](codex.md) or [ChatGPT](chatgpt.md). ChatGPT does **not** need the Codex CLI
+or `install-plugin`. A saved session in `doctor` means a file exists; successful
+`verify` confirms Garmin accepted it.
+
+For the shortest route, download the platform portable archive from the
+[latest release](https://github.com/myke239/garmin-connect-mcp/releases/latest),
+verify its checksum, extract every file, and open the desktop executable. These
+builds are **unsigned**. Publisher signing is not configured; an icon or vendor
+name is not proof of a verified publisher. If your organization blocks unsigned
+apps, use an approved source installation rather than bypassing its policy.
+
+```powershell
+# Compare the value with the exact filename in the release SHA256SUMS file.
+Get-FileHash .\garmin-connect-mcp-0.19.0-windows-x64.zip -Algorithm SHA256
+```
+
+On Linux use `sha256sum <downloaded archive>`. Checksums detect altered downloads;
+they do not replace publisher identity verification.
 
 ## Standard locations
 
@@ -54,6 +80,8 @@ $Garmin = Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP\bin\garmin-conn
 & $Garmin doctor
 & $Garmin login
 & $Garmin verify
+
+# Codex only (requires Codex CLI on PATH):
 & $Garmin install-plugin
 ```
 
@@ -82,6 +110,8 @@ garmin="${XDG_DATA_HOME:-$HOME/.local/share}/garmin-connect-mcp/application/bin/
 "$garmin" doctor
 "$garmin" login
 "$garmin" verify
+
+# Codex only (requires Codex CLI on PATH):
 "$garmin" install-plugin
 ```
 
@@ -120,7 +150,7 @@ Keep the PC awake and service running. Writes are enabled by default when no loc
 
 ## Update, remove and troubleshooting
 
-Re-run the installer from the desired reviewed release, then `install-plugin`
+Re-run the installer from the desired reviewed release. For Codex, run `install-plugin`
 to refresh local tools/skills. Registration replaces only the known one-plugin
 `myke-garmin` marketplace and restores its previous source if the switch fails.
 Unexpected additional plugins stop migration before removal. Restart your tunnel deliberately after checking
@@ -172,35 +202,36 @@ available on headless systems. Keep all bundle files together.
 
 ## Compare a download
 
-Each GitHub release publishes `SHA256SUMS` next to the downloads, and the same
-lines are in that release's notes. The file lists one SHA256 hash for each final
-executable: `garmin-connect` and `garmin-connect-desktop` (`.exe` on Windows),
-plus the Windows setup executable when that release includes one. Compare the
-file you downloaded or extracted with the line of the same name. Signing and a
-later rebuild change the hash, so use the release you downloaded. Unsigned CI
-artifacts are test builds and are not these published checksums.
-`release-integrity.json` remains the full bundle record for maintainers.
+`SHA256SUMS` verifies downloaded archives and integrity records. Keep it beside
+the downloaded release assets, then use `sha256sum -c SHA256SUMS` on Linux, or
+compare `Get-FileHash` output on Windows. The 0.19.0 release uses this format;
+its integrity JSON additionally records individual bundle file hashes.
 
-On Windows, in PowerShell:
+Starting with the next checksum-enabled release, portable releases also include
+platform-specific `*-executable-SHA256SUMS` files. Signed Windows releases use
+`EXECUTABLE_SHA256SUMS`. These list the console and desktop executable hashes;
+signed releases additionally list the setup executable, after signing. The same
+executable hashes appear in the release notes. Archive checksums remain separate.
+
+On Windows, compare the extracted file with the line for the same name in the
+matching platform executable checksum file:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 -Path .\garmin-connect.exe
 ```
 
-The printed hash matches the `garmin-connect.exe` line when the file is the one
-from that release. Repeat for `garmin-connect-desktop.exe` and the setup
-executable.
-
-On Linux, put `SHA256SUMS` in the directory that contains the extracted
-executable, then run:
+On Linux, put the platform executable checksum file beside the two extracted
+executables and pass its path to `sha256sum`:
 
 ```bash
-sha256sum -c SHA256SUMS
+sha256sum -c /path/to/garmin-connect-mcp-VERSION-linux-x64-executable-SHA256SUMS
 ```
 
-`sha256sum` checks every name in `SHA256SUMS`. A file you did not put in this
-directory is reported as missing. A hash that does not match is reported as a
-failed checksum.
+Signing or rebuilding changes the hashes. Always use the checksum files from
+the exact release you downloaded. Unsigned CI bundles have their own
+`EXECUTABLE_SHA256SUMS` for the two bundled executables; these are test-build
+hashes, not published release hashes. Checksums detect changed files and do not
+replace publisher identity verification.
 
 ## Optional background operation
 
@@ -238,4 +269,4 @@ and Docker docs do not grant Garmin write scope automatically.
 
 ## Publisher identity and Windows installer
 
-Current 0.13.0 release executables are unsigned. The new Das Kreb installer/signing work is described in [trusted distribution](../development/distribution.md); signed publisher status requires completed identity validation and a verified signed release. Do not treat the vendor name/icon as a signature.
+Portable release executables are unsigned. The new Das Kreb installer/signing work is described in [trusted distribution](../development/distribution.md); signed publisher status requires completed identity validation and a verified signed release. Do not treat the vendor name/icon as a signature.

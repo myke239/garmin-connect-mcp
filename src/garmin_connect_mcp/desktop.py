@@ -29,14 +29,14 @@ def terminal(arguments):
 class Application:
     def __init__(self,root,auto_diagnostics=True):
         self.root=root;self.events=queue.Queue();self.tray=None
-        root.title('Garmin Connect');root.geometry('740x590');root.minsize(640,500)
+        root.title('Garmin Connect MCP');root.geometry('820x760');root.minsize(760,700)
         frame=ttk.Frame(root,padding=18);frame.pack(fill='both',expand=True)
-        ttk.Label(frame,text='Garmin Connect',font=('Segoe UI',20,'bold')).pack(anchor='w')
-        ttk.Label(frame,text='Local setup and phone connection. Passwords and OAuth consent stay on this computer.',wraplength=690).pack(anchor='w',pady=(4,14))
+        ttk.Label(frame,text='Garmin Connect MCP',font=('Segoe UI',20,'bold')).pack(anchor='w')
+        ttk.Label(frame,text='Local setup • Account permissions • ChatGPT and phone access',wraplength=690).pack(anchor='w',pady=(4,14))
         tabs=ttk.Notebook(frame);tabs.pack(fill='both',expand=True)
         connection=ttk.Frame(tabs,padding=12);permissions=ttk.Frame(tabs,padding=12);remote=ttk.Frame(tabs,padding=12)
         tabs.add(connection,text='Connection');tabs.add(permissions,text='Permissions');tabs.add(remote,text='Phone / background')
-        ttk.Label(connection,text='1. Sign in locally\n2. Verify your saved session\n3. Install the Codex plugin',justify='left').pack(anchor='w')
+        ttk.Label(connection,text='1. Sign in locally, then verify your saved session.\n2. Choose your client: Codex uses the plugin; ChatGPT uses an HTTPS connection.\n3. Try a read request before reviewing account writes.',justify='left').pack(anchor='w')
         self.buttons={}
         if getattr(sys,"frozen",False):
             ttk.Button(connection,text="Install this app locally",command=lambda:self.invoke(["install-local"])).pack(anchor="w",pady=4)
@@ -54,9 +54,12 @@ class Application:
             self.operations.insert('end',name)
             if name in current:self.operations.selection_set(index)
         ttk.Button(permissions,text='Save local write policy',command=self.save_policy).pack(anchor='w',pady=6)
-        ttk.Label(remote,text='Set up ngrok first. Start is optional; startup registration does not start now.\nYour PC must remain on for phone access.',wraplength=660).pack(anchor='w')
+        ttk.Label(remote,text='Standalone: set up ngrok, then start one tunnel. Shared host: keep your gateway running.\nDo not start a second tunnel on an occupied port. Your PC must remain awake.',wraplength=660).pack(anchor='w')
         for label,args in [('Set tunnel token (private terminal)',['tunnel-setup']),('Start background tunnel',['background-start']),('Stop managed tunnel',['background-stop']),('Enable startup on sign-in',['background-install']),('Disable startup',['background-uninstall'])]:
             ttk.Button(remote,text=label,command=lambda a=args:self.invoke(a,interactive=a[0]=='tunnel-setup')).pack(anchor='w',pady=3)
+        ttk.Label(remote,text='Shared HTTPS origin (example: https://your-host.ngrok-free.dev):').pack(anchor='w',pady=(8,0))
+        self.origin=ttk.Entry(remote,width=70);self.origin.pack(anchor='w')
+        ttk.Button(remote,text='Show / copy Garmin connection URL',command=self.copy_connection).pack(anchor='w',pady=4)
         ttk.Label(remote,text='OAuth approval code / ticket from ChatGPT:').pack(anchor='w',pady=(8,0))
         self.ticket=ttk.Entry(remote,width=60);self.ticket.pack(anchor='w')
         ttk.Button(remote,text='Review consent in private terminal',command=self.approve).pack(anchor='w',pady=4)
@@ -64,6 +67,14 @@ class Application:
         root.protocol('WM_DELETE_WINDOW',self.close)
         root.after(150,self.drain)
         if auto_diagnostics:self.invoke(['diagnostics'])
+    def copy_connection(self):
+        from .endpoints import connection_info
+        try:
+            info=connection_info(self.origin.get().strip())
+        except ValueError:
+            self.show('Enter only your public HTTPS origin, without /mcp or another path.');return
+        self.root.clipboard_clear();self.root.clipboard_append(info['server_url'])
+        self.show('Copied ChatGPT server URL:\n'+info['server_url']+'\nShared host: forward the Garmin namespace and its OAuth metadata to this backend. Keep MyFitnessPal on its own path. See the shared-hosting guide.')
     def drain(self):
         try:
             while True:self.show(self.events.get_nowait())

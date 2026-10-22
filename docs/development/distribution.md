@@ -26,7 +26,17 @@ The bundle's executable/DLL/PYD files must have valid trusted signatures, timest
 
 `build_windows_installer.ps1` accepts `-UnsignedTest` only for development checks. The normal path requires signing tools and publisher verification. Tests install in an isolated application directory, verify launch and CompanyName, then uninstall while preserving a private-data sentinel. Installer registration refuses paths outside the standard versioned application root. Each version has its own uninstall entry; removing an older version cannot remove a newer receipt. Existing credentials/journals and other releases remain separate. Stop services using a version before uninstalling it. Reinstall Codex registration deliberately when moving to a new runtime.
 
-Public release records include SHA256SUMS and release-integrity.json. SHA256SUMS is written after Authenticode signing and lists each final executable, including the console executable, the desktop executable, and the setup executable. The same lines are appended to the release notes. Users compare a download with those lines by following [Compare a download](../getting-started/installation.md#compare-a-download). release-integrity.json keeps every final bundle file hash, the source commit, and an explicitly labeled build-environment package inventory. The inventory is not a claim that every development dependency ships. No Garmin private data is collected. Public executables exclude Garmin's separately licensed FIT SDK. Unsigned CI artifacts carry their own SHA256SUMS and are not the published release hashes.
+Public release records retain `SHA256SUMS` for archive and integrity-record hashes.
+Starting with the next checksum-enabled release, portable builds add platform
+`*-executable-SHA256SUMS` files; signed Windows builds add `EXECUTABLE_SHA256SUMS`
+with the two bundled executable hashes and the setup hash, computed after signing
+and signature verification. Executable hashes also appear in release notes.
+[Compare a download](../getting-started/installation.md#compare-a-download) explains
+the distinction. Integrity JSON retains full bundle hashes, source commit and a
+clearly scoped build-environment inventory, not a shipped-component SBOM. Public
+executables exclude Garmin's separately licensed FIT SDK. No account data is
+collected. Unsigned CI bundles contain their own executable-only checksum file;
+they do not include a checksum for an installer absent from the uploaded bundle.
 
 ## Antivirus false positives
 
@@ -37,3 +47,27 @@ For an actual malware detection, record the exact security product/version, dete
 The public evidence needed for a report is reproducible from the release checksums and integrity manifest. An exact detection and owner signing configuration are still needed to complete external review; no vendor clearance is claimed here.
 
 Prepare the public review facts with `python scripts/antivirus_report.py <published executable or zip> --product <antivirus> --detection <exact detection> --release-url <project release URL>`. It prints a report and does not upload anything. Only submit the actual public release file and exact recorded detection to the vendor portal.
+
+
+## Portable releases from 0.19.0
+
+Run **Portable release** on main with the successful exact-commit **CI** run ID.
+The workflow verifies the branch, source SHA, workflow identity and conclusion;
+then builds Windows x64 and Ubuntu 22.04 x86-64 executables, verifies real MCP
+handshakes and desktop construction, and creates platform archives and integrity
+records. All builds must succeed before the publishing job runs. A tag that
+already exists fails publication rather than silently replacing its assets.
+
+Portable releases are explicitly **unsigned**. They do not publish the unsigned
+development installer. `SHA256SUMS` covers both archives and integrity JSON.
+The manifest inspects embedded Python archives on both platforms for the
+restricted FIT SDK. Build-environment inventory is not a shipped-component SBOM.
+Signed Windows releases continue to require the separate owner-enrolled workflow.
+
+
+Linux PyInstaller bundles retain relative internal symbolic links. Portable
+integrity records list each link and its target alongside hashes of the physical
+files. Absolute, broken, cyclic or out-of-bundle targets are refused before
+archive inspection. Windows/signed bundles retain the no-link restriction.
+Normal frozen CI also runs production packaging, so release-only layout failures
+are covered before a merge.

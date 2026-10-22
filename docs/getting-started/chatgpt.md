@@ -3,10 +3,24 @@
 [Documentation home](../README.md)
 
 The optional remote service exposes the read tools and previewed account writes through
-Streamable HTTP at `/mcp`. It requires OAuth with PKCE and explicit approval in
+Streamable HTTP at `/mcp/garmin-connect/`. It requires OAuth with PKCE and explicit approval in
 the owner's local terminal. Garmin credentials never go to ChatGPT or ngrok.
 Ngrok carries the HTTPS traffic, including tool responses, so it is a trusted
 transport provider. Your PC and the tunnel process must remain running.
+
+## Choose one hosting mode
+
+- **Garmin only:** start one standalone tunnel using the instructions below.
+- **Multiple MCP servers on one hostname:** keep one tunnel to your gateway and
+  route each service by path. Follow [shared hosting](shared-hosting.md); do not
+  start Garmin's standalone tunnel as well.
+
+![Phone and background tab showing the shared HTTPS origin field](../assets/screenshots/setup-shared-host.png)
+
+*Actual 0.19.0 Windows setup UI; the hostname is an example, no account is connected.*
+Enter the HTTPS origin in **Phone / background**, then choose **Show / copy Garmin
+connection URL**. It copies the full `/mcp/garmin-connect/` URL. This helper does
+not start or configure a gateway.
 
 ## Install and start (Windows)
 
@@ -24,8 +38,12 @@ On Linux, install with `--remote`, then use the absolute installed launcher with
 Setup prompts for the ngrok authtoken without echoing it. Tokens and remote
 OAuth state use Windows account encryption in the existing private data
 directory. The launcher reserves a loopback socket before opening the tunnel.
-It prints the public MCP URL; `tunnel status` also reports the URL and process ID.
+It prints the public MCP URL; `tunnel-status` also reports the URL and process ID.
 Ctrl+C closes the foreground server and tunnel. No startup task is installed.
+
+The expected new connection URL is `https://YOUR-HOST/mcp/garmin-connect/`.
+Run `connection-info --public-url https://YOUR-HOST` to print the exact public
+URLs without accessing Garmin or exposing credentials.
 
 ## Connect ChatGPT
 
@@ -51,6 +69,27 @@ minutes; restart authorization if needed.
 After installation, verify access in a new ChatGPT conversation, then check the
 app on your phone. Phone availability must be checked with your account; a
 successful local test does not establish mobile support.
+
+### Verify the connection
+
+After installing the plugin, start a fresh chat and ask for the connector's
+version and tool capabilities, then a bounded read such as yesterday's sleep.
+Do not use a write as a connectivity test. If only discovery succeeds, Garmin
+session verification is still a separate check.
+
+The current official [custom MCP setup guide](https://developers.openai.com/api/docs/guides/custom-mcp-server)
+describes the Plugins screen and account availability. Open **Plugins**, choose
+**Add custom MCP server**, enter the full server URL and OAuth/DCR, create the
+plugin, then install it. UI labels and workspace availability can change.
+
+### Existing connections when upgrading
+
+An existing `/mcp` connection keeps its old OAuth identity and grants. Version
+0.19.0 retains the legacy routes when their saved state exists. To adopt the new
+URL, create a **new** ChatGPT connection and approve its requested scopes locally.
+Do not change an old connection's URL and reuse its token. After verifying the
+new connection, remove the old one in ChatGPT. `remote-serve --no-legacy-root`
+can disable the old public routes without deleting saved grants.
 
 ## Revoke and troubleshoot
 

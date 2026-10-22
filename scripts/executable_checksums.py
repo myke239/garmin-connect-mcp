@@ -33,7 +33,9 @@ def collect(paths, output):
                     continue
                 if child.is_symlink():
                     raise ValueError(f"Refusing to hash a link: {child}")
-                if child.is_file() and child.resolve() != output_resolved:
+                if child.is_file():
+                    if child.resolve() == output_resolved:
+                        raise ValueError("Checksum output cannot overwrite an executable")
                     found.append(child)
         elif path.is_file():
             if not is_executable(path):

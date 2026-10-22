@@ -71,8 +71,15 @@ def test_rejects_empty_directory_foreign_file_duplicate_and_link(tmp_path):
     with pytest.raises(ValueError, match="one file per name"):
         checksums.collect([first, second], tmp_path / "SHA256SUMS")
 
+def test_links_are_rejected_and_nonexecutables_ignored(tmp_path):
+    first = tmp_path / "one"
+    first.mkdir()
+    (first / "garmin-connect").write_bytes(b"a")
     link = tmp_path / "garmin-connect.exe"
-    link.symlink_to(first / "garmin-connect")
+    try:
+        link.symlink_to(first / "garmin-connect")
+    except OSError:
+        pytest.skip("Symlink creation requires platform privileges")
     with pytest.raises(ValueError, match="Refusing to hash a link"):
         checksums.collect([link], tmp_path / "SHA256SUMS")
 
@@ -85,3 +92,12 @@ def test_rejects_empty_directory_foreign_file_duplicate_and_link(tmp_path):
     (nested / "garmin-connect-desktop").symlink_to(nested / "garmin-connect")
     with pytest.raises(ValueError, match="Refusing to hash a link"):
         checksums.collect([nested], tmp_path / "SHA256SUMS")
+
+
+def test_output_cannot_overwrite_executable_in_input_directory(tmp_path):
+    console = tmp_path / "garmin-connect"
+    console.write_bytes(b"console")
+    (tmp_path / "garmin-connect-desktop").write_bytes(b"desktop")
+    with pytest.raises(ValueError, match="cannot overwrite"):
+        checksums.write_checksums([tmp_path], console)
+    assert console.read_bytes() == b"console"
