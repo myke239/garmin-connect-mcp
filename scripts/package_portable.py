@@ -14,7 +14,7 @@ def package(bundle, output, platform):
     if platform not in {"windows", "linux"}:
         raise ValueError("Unsupported release platform")
     output.mkdir(parents=True, exist_ok=True)
-    integrity = manifest(bundle)
+    integrity = manifest(bundle, allow_internal_links=platform == "linux")
     if integrity["source_dirty"]:
         raise ValueError("Release requires a clean checkout")
     integrity.update(version=version, platform=platform + "-x64", signing="unsigned")
@@ -30,7 +30,7 @@ def package(bundle, output, platform):
         for name in ("garmin-connect", "garmin-connect-desktop"):
             os.chmod(bundle / name, 0o755)
         archive = output / (stem + ".tar.gz")
-        with tarfile.open(archive, "w:gz") as target:
+        with tarfile.open(archive, "w:gz", dereference=False) as target:
             target.add(bundle, arcname="garmin-connect")
     checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
     print(f"{checksum}  {archive.name}")
