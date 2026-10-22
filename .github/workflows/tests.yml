@@ -84,6 +84,12 @@ jobs:
           subprocess.run([sys.executable, 'scripts/verify_frozen.py', str(executable.absolute())], check=True, timeout=90)
           command = [str(executable.absolute()), 'desktop', '--smoke-test']
           subprocess.run(command if os.name == 'nt' else ['xvfb-run', '-a', *command], check=True, timeout=30)
+      - name: Verify production portable packaging
+        shell: python
+        run: |
+          import os, subprocess, sys
+          platform='windows' if os.name=='nt' else 'linux'
+          subprocess.run([sys.executable,'scripts/package_portable.py','dist/frozen/garmin-connect','dist/release','--platform',platform],check=True)
       - name: Compile and verify unsigned test installer
         if: runner.os == 'Windows'
         shell: pwsh

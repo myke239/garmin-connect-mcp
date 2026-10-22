@@ -53,3 +53,11 @@ development installer. `SHA256SUMS` covers both archives and integrity JSON.
 The manifest inspects embedded Python archives on both platforms for the
 restricted FIT SDK. Build-environment inventory is not a shipped-component SBOM.
 Signed Windows releases continue to require the separate owner-enrolled workflow.
+
+
+Linux PyInstaller bundles retain relative internal symbolic links. Portable
+integrity records list each link and its target alongside hashes of the physical
+files. Absolute, broken, cyclic or out-of-bundle targets are refused before
+archive inspection. Windows/signed bundles retain the no-link restriction.
+Normal frozen CI also runs production packaging, so release-only layout failures
+are covered before a merge.
