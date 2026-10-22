@@ -31,13 +31,13 @@ async def verify(receipt):
                 assert not contract.isError
         if metadata["remote"]:
             import httpx
-            from garmin_connect_mcp.remote import create_http_app
+            from garmin_connect_mcp.remote import create_deployment_app
             previous = os.environ.get("GARMIN_MCP_DATA_DIR")
             os.environ["GARMIN_MCP_DATA_DIR"] = temporary
             try:
-                app, _ = create_http_app("https://install-test.example", 8787)
+                app, _ = create_deployment_app("https://install-test.example", 8787)
                 async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="https://install-test.example") as client:
-                    response = await client.post("/mcp", json={})
+                    response = await client.post("/mcp/garmin-connect/", json={})
                     assert response.status_code == 401
             finally:
                 if previous is None:

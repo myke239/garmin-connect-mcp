@@ -8,7 +8,8 @@ import socket
 import sys
 
 from .auth import TokenStore, data_directory
-from .remote import create_http_app
+from .remote import create_deployment_app
+from .endpoints import CANONICAL
 
 
 def main():
@@ -39,18 +40,22 @@ def main():
     import uvicorn
     # Reserve the port before forwarding; never expose another local process.
     listener_socket = socket.socket()
-    listener_socket.bind(("127.0.0.1", args.port))
+    try:
+        listener_socket.bind(("127.0.0.1", args.port))
+    except OSError as error:
+        listener_socket.close()
+        raise SystemExit(f"Port {args.port} is already in use or unavailable. If your shared MCP gateway is running, use its existing HTTPS origin; do not start a second tunnel. Run diagnostics to check the service.") from error
     listener_socket.listen(128)
     listener = None
     try:
         listener = ngrok.forward(f"http://127.0.0.1:{args.port}",
             authtoken=json.loads(store.load())["authtoken"])
         origin = listener.url()
-        app, provider = create_http_app(origin, args.port)
+        app, provider = create_deployment_app(origin, args.port)
         with provider.state():
             pass
-        status.save(json.dumps({"url": origin + "/mcp", "pid": os.getpid(), "port": args.port}))
-        print("Authenticated Garmin MCP: " + origin + "/mcp", flush=True)
+        status.save(json.dumps({"url": origin + CANONICAL.mcp_path, "pid": os.getpid(), "port": args.port}))
+        print("Authenticated Garmin MCP: " + origin + CANONICAL.mcp_path, flush=True)
         config = uvicorn.Config(app, log_level="warning", access_log=False,
             proxy_headers=False, timeout_keep_alive=5, limit_concurrency=16)
         uvicorn.Server(config).run(sockets=[listener_socket])

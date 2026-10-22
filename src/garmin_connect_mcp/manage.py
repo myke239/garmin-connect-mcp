@@ -46,7 +46,7 @@ def register_plugin(codex, marketplace):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Garmin Connect setup and launch commands")
     parser.add_argument("command", choices=["login", "verify", "logout", "serve", "approve",
-        "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
+        "remote-serve", "connection-info", "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
         "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check", "install-local", "installer-register", "installer-unregister", "fit-setup", "desktop", "diagnostics", "background-start", "background-stop", "background-status", "background-install", "background-uninstall"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -67,12 +67,14 @@ def main() -> None:
             parser.error("install-plugin takes no arguments")
         metadata = installation()
         codex = shutil.which("codex")
-        if not metadata or not codex:
-            parser.error("An installed runtime and the Codex CLI on PATH are required.")
+        if not metadata:
+            parser.error("Install the application first; install-plugin requires an installed runtime.")
+        if not codex:
+            parser.error("Codex CLI is not on PATH. This command is only for Codex. For ChatGPT, use the HTTPS server URL from connection-info; see docs/getting-started/chatgpt.md.")
         register_plugin(codex, metadata["marketplace"])
         print("Plugin installed. Open a new Codex chat.")
         return
-    mapping = {"installer-register":("frozen_install",["--register-bundle"]),"installer-unregister":("frozen_install",["--unregister-bundle"]),"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
+    mapping = {"remote-serve": ("remote", ["serve"]), "connection-info": ("remote", ["connection-info"]),"installer-register":("frozen_install",["--register-bundle"]),"installer-unregister":("frozen_install",["--unregister-bundle"]),"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
         "writes-status": ("writes", ["status"]), "approve": ("remote", ["approve"]), "tunnel-setup": ("tunnel", ["setup"]),
         "tunnel": ("tunnel", ["run"]), "tunnel-status": ("tunnel", ["status"])}
     module, prefix = mapping.get(args.command, ("cli", [args.command]))

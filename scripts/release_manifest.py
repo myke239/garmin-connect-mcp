@@ -10,7 +10,9 @@ import subprocess
 def manifest(bundle):
     bundle=bundle.resolve()
     from PyInstaller.archive.readers import CArchiveReader
-    for executable in bundle.glob('garmin-connect*.exe'):
+    for executable in bundle.iterdir():
+        if not executable.is_file() or not (executable.name in {'garmin-connect', 'garmin-connect-desktop'} or executable.name.endswith('.exe')):
+            continue
         archive=CArchiveReader(str(executable))
         for name in archive.toc:
             if name.endswith('.pyz') and any('garmin_fit_sdk' in module for module in archive.open_embedded_archive(name).toc):

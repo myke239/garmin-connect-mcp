@@ -11,7 +11,7 @@ from .auth import TokenStore,data_directory
 def health(port: int = 8787) -> dict[str, Any]:
     if isinstance(port,bool) or not 1024<=port<=65535: raise ValueError('Unprivileged port required')
     try:
-        with urlopen('http://127.0.0.1:'+str(port)+'/mcp',timeout=2) as response:
+        with urlopen('http://127.0.0.1:'+str(port)+'/mcp/garmin-connect/',timeout=2) as response:
             return {'reachable':True,'status':response.status,'oauth_guard_verified':False}
     except HTTPError as error:
         return {'reachable':True,'status':error.code,'oauth_guard_verified':error.code==401}

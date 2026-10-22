@@ -2,6 +2,29 @@
 
 [Documentation home](../README.md)
 
+## Namespaced HTTPS and release experience - 0.19.0 (2026-10-22, local evidence)
+
+The 15 foundation/runtime checks passed before account verification. The complete
+Windows offline suite passed 611 tests, 3 skipped. Namespaced HTTP tests exercise
+PKCE, DCR, local-consent routing, metadata/issuer/resource identity, refresh,
+revocation, both directions of token isolation, real 58-tool discovery, request
+bounds, the canonical slash redirect, legacy saved-state compatibility and fresh
+installations leaving root routes unclaimed. No real account mutation is involved.
+
+An isolated installed 0.19.0 candidate passed a real MCP handshake, schema checks
+and its namespaced HTTP 401 guard. Source lint, selected strict typing, document
+links/inventory and source/wheel builds passed. Desktop construction passed;
+two actual isolated Windows setup screenshots were captured without account data.
+Dependency audit exposed old Pillow/certifi advisories; Pillow 13.0.0 and the
+certifi 2026.10.19 floor replace them. The updated local dependency audit reports
+no known vulnerabilities (the local non-PyPI project is explicitly unaudited).
+
+The companion MyFitnessPal gateway's complete offline suite passed 113 tests,
+including the new Garmin path and request bound. Its independently published
+0.5.2 release at d4b3458 already includes the compatible gateway. CI, merged
+release, packaged binaries and active deployment are separate subsequent gates;
+no completion of those gates is claimed in this local evidence entry.
+
 ## Windows cross-process lock fix - 0.18.1 (2026-10-18, local evidence)
 
 Active-deployment read checks exposed a PermissionError when one process read

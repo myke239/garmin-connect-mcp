@@ -47,3 +47,5 @@ Choose a guide by what you want to do. Start with installation; API details and 
 Query `get_garmin_write_schema` and `get_garmin_workout_schema` for the installed server's exact current contracts. Examples in the guides explain the workflow; they do not authorize account changes.
 
 - [Write coverage and research gates](development/write-coverage.md): implemented corrections, noneditable metrics and contracts still awaiting verification.
+
+See also [shared HTTPS hosting](getting-started/shared-hosting.md) for multiple connectors behind one ngrok origin.

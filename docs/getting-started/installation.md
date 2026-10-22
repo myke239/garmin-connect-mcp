@@ -2,9 +2,35 @@
 
 [Documentation home](../README.md)
 
-Version 0.16.1 includes managed installers, a desktop setup/tray application,
+The current release includes managed installers, a desktop setup/tray application,
 optional per-user background startup and downloadable frozen builds. Every
 launcher works from any directory with no environment activation.
+
+## First-time setup in pictures
+
+![Connection tab with local sign-in, verification and Codex buttons](../assets/screenshots/setup-connection.png)
+
+*Actual Windows setup UI for 0.19.0, captured with an isolated data directory and no account connected.*
+
+Sign in in the private terminal, return to **Verify saved session**, then choose
+[Codex](codex.md) or [ChatGPT](chatgpt.md). ChatGPT does **not** need the Codex CLI
+or `install-plugin`. A saved session in `doctor` means a file exists; successful
+`verify` confirms Garmin accepted it.
+
+For the shortest route, download the platform portable archive from the
+[latest release](https://github.com/myke239/garmin-connect-mcp/releases/latest),
+verify its checksum, extract every file, and open the desktop executable. These
+builds are **unsigned**. Publisher signing is not configured; an icon or vendor
+name is not proof of a verified publisher. If your organization blocks unsigned
+apps, use an approved source installation rather than bypassing its policy.
+
+```powershell
+# Compare the value with the exact filename in the release SHA256SUMS file.
+Get-FileHash .\garmin-connect-mcp-0.19.0-windows-x64.zip -Algorithm SHA256
+```
+
+On Linux use `sha256sum <downloaded archive>`. Checksums detect altered downloads;
+they do not replace publisher identity verification.
 
 ## Standard locations
 
@@ -54,6 +80,8 @@ $Garmin = Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP\bin\garmin-conn
 & $Garmin doctor
 & $Garmin login
 & $Garmin verify
+
+# Codex only (requires Codex CLI on PATH):
 & $Garmin install-plugin
 ```
 
@@ -82,6 +110,8 @@ garmin="${XDG_DATA_HOME:-$HOME/.local/share}/garmin-connect-mcp/application/bin/
 "$garmin" doctor
 "$garmin" login
 "$garmin" verify
+
+# Codex only (requires Codex CLI on PATH):
 "$garmin" install-plugin
 ```
 
@@ -120,7 +150,7 @@ Keep the PC awake and service running. Writes are enabled by default when no loc
 
 ## Update, remove and troubleshooting
 
-Re-run the installer from the desired reviewed release, then `install-plugin`
+Re-run the installer from the desired reviewed release. For Codex, run `install-plugin`
 to refresh local tools/skills. Registration replaces only the known one-plugin
 `myke-garmin` marketplace and restores its previous source if the switch fails.
 Unexpected additional plugins stop migration before removal. Restart your tunnel deliberately after checking
@@ -206,4 +236,4 @@ and Docker docs do not grant Garmin write scope automatically.
 
 ## Publisher identity and Windows installer
 
-Current 0.13.0 release executables are unsigned. The new Das Kreb installer/signing work is described in [trusted distribution](../development/distribution.md); signed publisher status requires completed identity validation and a verified signed release. Do not treat the vendor name/icon as a signature.
+Portable release executables are unsigned. The new Das Kreb installer/signing work is described in [trusted distribution](../development/distribution.md); signed publisher status requires completed identity validation and a verified signed release. Do not treat the vendor name/icon as a signature.

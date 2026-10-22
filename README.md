@@ -11,7 +11,14 @@ Bring your runs, recovery metrics, strength sessions and workout library into Co
 [![CI](https://github.com/myke239/garmin-connect-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/myke239/garmin-connect-mcp/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**[Download v0.13.0](https://github.com/myke239/garmin-connect-mcp/releases/tag/v0.13.0)** · **[Get started](docs/getting-started/installation.md)** · **[Documentation](docs/README.md)** · **[Changelog](CHANGELOG)**
+**[Download latest release](https://github.com/myke239/garmin-connect-mcp/releases/latest)** · **[Get started](docs/getting-started/installation.md)** · **[Documentation](docs/README.md)** · **[Changelog](CHANGELOG)**
+
+**One hostname, multiple connectors:** new Garmin connections use
+`/mcp/garmin-connect/`, with namespaced OAuth discovery. Existing `/mcp`
+connections remain compatible. See [shared hosting](docs/getting-started/shared-hosting.md).
+The [illustrated installation guide](docs/getting-started/installation.md) separates
+Codex setup from ChatGPT setup. Portable binaries are unsigned; releases include
+checksums and integrity records.
 
 ## What you can do
 
@@ -43,7 +50,7 @@ Verified catalogs, training analysis and reviewable account management work toge
 
 1. Follow the [installation guide](docs/getting-started/installation.md). Windows x64 and Linux x86-64 executable bundles are available; managed installers can obtain Python for you.
 2. Run the installed launcher's `login`, then `verify`. Enter credentials and MFA only on your machine—never in chat.
-3. Run `install-plugin` for Codex, then open a new chat. Other clients can use [the stdio configuration](docs/getting-started/codex.md#other-mcp-clients).
+3. For Codex, run `install-plugin` (requires Codex CLI), then open a new chat. For ChatGPT use [HTTPS setup](docs/getting-started/chatgpt.md). Other clients can use [the stdio configuration](docs/getting-started/codex.md#other-mcp-clients).
 4. Try: “Use Garmin Connect to summarize my last three runs.” Review or restrict write access using the [account-write guide](docs/guides/account-writes.md).
 
 Launchers work from any directory without activating a virtual environment. Standard application locations are `%LOCALAPPDATA%\Programs\GarminConnectMCP` on Windows and `${XDG_DATA_HOME:-~/.local/share}/garmin-connect-mcp/application` on Linux. Credentials and journals stay in a separate private data directory.
@@ -59,7 +66,7 @@ For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/ch
 
 ## Compatibility and honest limits
 
-Development version **0.18.1** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
+Release **0.19.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
 
 Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The 0.12.0 Ubuntu 22.04 WSL suite passed **419 tests**; the default-write change adds explicit policy/revocation regression coverage. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
 

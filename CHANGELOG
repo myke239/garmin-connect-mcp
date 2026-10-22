@@ -1,3 +1,15 @@
+Shared-host routing and portable release - 0.19.0
+
+- Publish /mcp/garmin-connect/ with namespaced OAuth endpoints/discovery and
+  separate resource-bound grants. Preserve legacy root routes only for saved
+  legacy installations; allow explicit disabling without deleting grants.
+- Add backend-only remote-serve and public connection-info commands, a desktop
+  URL helper, and actionable occupied-port/missing-Codex errors.
+- Add genuine Windows setup screenshots, explicit Codex versus ChatGPT steps,
+  checksum instructions and multi-connector shared-host guidance.
+- Add a CI-gated Windows/Linux portable release workflow, integrity records and
+  checksums; retain honest unsigned labeling and separate signing enrollment.
+
 Windows session-lock serialization - 0.18.1
 
 - Acquire the cross-process lock before inspecting/initializing its byte. Windows
