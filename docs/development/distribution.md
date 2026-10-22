@@ -26,7 +26,17 @@ The bundle's executable/DLL/PYD files must have valid trusted signatures, timest
 
 `build_windows_installer.ps1` accepts `-UnsignedTest` only for development checks. The normal path requires signing tools and publisher verification. Tests install in an isolated application directory, verify launch and CompanyName, then uninstall while preserving a private-data sentinel. Installer registration refuses paths outside the standard versioned application root. Each version has its own uninstall entry; removing an older version cannot remove a newer receipt. Existing credentials/journals and other releases remain separate. Stop services using a version before uninstalling it. Reinstall Codex registration deliberately when moving to a new runtime.
 
-Public release records include SHA256SUMS and release-integrity.json: final file hashes, source commit and an explicitly labeled build-environment package inventory. The inventory is not a claim that every development dependency ships. No Garmin private data is collected. Public executables exclude Garmin's separately licensed FIT SDK.
+Public release records retain `SHA256SUMS` for archive and integrity-record hashes.
+Starting with the next checksum-enabled release, portable builds add platform
+`*-executable-SHA256SUMS` files; signed Windows builds add `EXECUTABLE_SHA256SUMS`
+with the two bundled executable hashes and the setup hash, computed after signing
+and signature verification. Executable hashes also appear in release notes.
+[Compare a download](../getting-started/installation.md#compare-a-download) explains
+the distinction. Integrity JSON retains full bundle hashes, source commit and a
+clearly scoped build-environment inventory, not a shipped-component SBOM. Public
+executables exclude Garmin's separately licensed FIT SDK. No account data is
+collected. Unsigned CI bundles contain their own executable-only checksum file;
+they do not include a checksum for an installer absent from the uploaded bundle.
 
 ## Antivirus false positives
 

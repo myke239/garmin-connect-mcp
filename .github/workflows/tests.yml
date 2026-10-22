@@ -98,6 +98,14 @@ jobs:
           ./scripts/build_windows_installer.ps1 -Bundle dist/frozen/garmin-connect -Compiler $env:DAS_KREB_INNO -UnsignedTest
           $v = (Get-Content VERSION -Raw).Trim()
           ./scripts/verify_windows_installer.ps1 -Installer "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe"
+      - name: Record SHA256 checksums of unsigned test executables
+        shell: python
+        run: |
+          import os, pathlib, subprocess, sys
+          bundle = pathlib.Path('dist/frozen/garmin-connect')
+          output = bundle / 'EXECUTABLE_SHA256SUMS'
+          command = [sys.executable, 'scripts/executable_checksums.py', '--output', str(output), str(bundle)]
+          subprocess.run(command, check=True)
       - uses: actions/upload-artifact@v4
         with:
           name: garmin-connect-${{ runner.os }}-x64

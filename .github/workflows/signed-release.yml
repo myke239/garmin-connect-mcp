@@ -76,6 +76,12 @@ jobs:
           $v = (Get-Content VERSION -Raw).Trim()
           ./scripts/verify_windows_installer.ps1 -Installer "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe" -ExpectedPublisher $env:SIGNING_PUBLISHER
       - run: python scripts/release_manifest.py dist/signed/garmin-connect dist/installer/release-integrity.json
+      - name: Record SHA256 checksums of signed executables
+        shell: pwsh
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim()
+          python scripts/executable_checksums.py --output dist/installer/EXECUTABLE_SHA256SUMS --release-notes docs/development/signed-release-notes.md --release-notes-output dist/release-notes.md dist/signed/garmin-connect "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Checksum generation failed" }
       - name: Publish only verified artifacts
         shell: pwsh
         env:
@@ -86,5 +92,5 @@ jobs:
           Get-ChildItem dist/installer -File | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(),$_.Name } | Set-Content dist/SHA256SUMS -Encoding ascii
           $assets = @(Get-ChildItem dist/installer -File | Select-Object -ExpandProperty FullName)
           $assets += (Resolve-Path dist/SHA256SUMS).Path
-          gh release create "v$v" @assets --target $env:GITHUB_SHA --title "Garmin Connect MCP $v - signed Windows release" --notes-file docs/development/signed-release-notes.md
+          gh release create "v$v" @assets --target $env:GITHUB_SHA --title "Garmin Connect MCP $v - signed Windows release" --notes-file dist/release-notes.md
           if ($LASTEXITCODE -ne 0) { throw "Release publication failed" }

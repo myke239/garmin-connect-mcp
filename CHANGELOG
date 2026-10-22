@@ -1,3 +1,9 @@
+Executable download checksums - unreleased
+
+- Publish final executable hashes alongside archive checksums for portable and
+  signed releases. Hash signed binaries only after signing and verification.
+- Include executable hashes in release notes and document verification.
+
 Shared-host routing and portable release - 0.19.0
 
 - Publish /mcp/garmin-connect/ with namespaced OAuth endpoints/discovery and
@@ -9,6 +15,7 @@ Shared-host routing and portable release - 0.19.0
   checksum instructions and multi-connector shared-host guidance.
 - Add a CI-gated Windows/Linux portable release workflow, integrity records and
   checksums; retain honest unsigned labeling and separate signing enrollment.
+
 
 Windows session-lock serialization - 0.18.1
 

@@ -85,5 +85,12 @@ jobs:
           cd dist/release
           sha256sum * > SHA256SUMS
           cd ../..
+          python - <<'PY'
+          from pathlib import Path
+          notes=Path('docs/development/portable-release-notes.md').read_text(encoding='utf-8')
+          sums=''.join(p.read_text(encoding='utf-8') for p in sorted(Path('dist/release').glob('*-executable-SHA256SUMS')))
+          assert sums.strip(), 'Missing executable checksums'
+          Path('dist/release-notes.md').write_text(notes+'\n\n## Executable SHA256 checksums\n\nCompare extracted executables with the matching platform checksum file. Archive hashes remain in SHA256SUMS.\n\n```text\n'+sums+'```\n',encoding='utf-8')
+          PY
           v=$(cat VERSION)
-          gh release create "v$v" dist/release/* --target "$GITHUB_SHA" --title "Garmin Connect MCP $v" --notes-file docs/development/portable-release-notes.md
+          gh release create "v$v" dist/release/* --target "$GITHUB_SHA" --title "Garmin Connect MCP $v" --notes-file dist/release-notes.md

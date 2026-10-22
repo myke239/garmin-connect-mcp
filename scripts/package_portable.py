@@ -7,6 +7,7 @@ from pathlib import Path
 import tarfile
 import zipfile
 from release_manifest import manifest
+from executable_checksums import write_checksums
 
 
 def package(bundle, output, platform):
@@ -20,6 +21,7 @@ def package(bundle, output, platform):
     integrity.update(version=version, platform=platform + "-x64", signing="unsigned")
     stem = f"garmin-connect-mcp-{version}-{platform}-x64"
     (output / (stem + "-integrity.json")).write_text(json.dumps(integrity, indent=2) + "\n", encoding="utf-8")
+    write_checksums([bundle], output / (stem + "-executable-SHA256SUMS"))
     if platform == "windows":
         archive = output / (stem + ".zip")
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as target:

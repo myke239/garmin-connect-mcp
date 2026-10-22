@@ -187,7 +187,7 @@ window using its launcher `desktop --tray`. Installation preserves old releases
 and existing credentials, grants and journals.
 
 The public frozen build excludes Garmin's separately licensed official FIT SDK.
-Download links and checksums are on the release page. Use `doctor` to confirm the extracted version before installing.
+Download links are on the release page. Use `doctor` to confirm the extracted version before installing.
 
 Choose **Install FIT support** in the setup app or run the executable `fit-setup`.
 That obtains managed Python and the SDK directly from PyPI into the application's
@@ -199,6 +199,39 @@ Frozen builds are unsigned and target Windows x64 and Linux x86-64 with glibc
 2.35 or newer. macOS/ARM frozen builds have not been tested. Linux graphical mode
 needs a display, X11/Tk libraries and a supported tray host; CLI operation remains
 available on headless systems. Keep all bundle files together.
+
+## Compare a download
+
+`SHA256SUMS` verifies downloaded archives and integrity records. Keep it beside
+the downloaded release assets, then use `sha256sum -c SHA256SUMS` on Linux, or
+compare `Get-FileHash` output on Windows. The 0.19.0 release uses this format;
+its integrity JSON additionally records individual bundle file hashes.
+
+Starting with the next checksum-enabled release, portable releases also include
+platform-specific `*-executable-SHA256SUMS` files. Signed Windows releases use
+`EXECUTABLE_SHA256SUMS`. These list the console and desktop executable hashes;
+signed releases additionally list the setup executable, after signing. The same
+executable hashes appear in the release notes. Archive checksums remain separate.
+
+On Windows, compare the extracted file with the line for the same name in the
+matching platform executable checksum file:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -Path .\garmin-connect.exe
+```
+
+On Linux, put the platform executable checksum file beside the two extracted
+executables and pass its path to `sha256sum`:
+
+```bash
+sha256sum -c /path/to/garmin-connect-mcp-VERSION-linux-x64-executable-SHA256SUMS
+```
+
+Signing or rebuilding changes the hashes. Always use the checksum files from
+the exact release you downloaded. Unsigned CI bundles have their own
+`EXECUTABLE_SHA256SUMS` for the two bundled executables; these are test-build
+hashes, not published release hashes. Checksums detect changed files and do not
+replace publisher identity verification.
 
 ## Optional background operation
 
