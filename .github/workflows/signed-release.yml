@@ -25,8 +25,11 @@ jobs:
           ACCOUNT: ${{ vars.SIGNING_ACCOUNT }}
           PROFILE: ${{ vars.SIGNING_PROFILE }}
           ENDPOINT: ${{ vars.SIGNING_ENDPOINT }}
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          foreach ($v in @($env:PUBLISHER,$env:ACCOUNT,$env:PROFILE,$env:ENDPOINT)) { if (-not $v) { throw 'Validated owner signing configuration required. No unsigned fallback.' } }
+          foreach ($v in @($env:PUBLISHER,$env:ACCOUNT,$env:PROFILE,$env:ENDPOINT,$env:CLIENT,$env:TENANT,$env:SUBSCRIPTION)) { if (-not $v) { throw 'Validated owner signing configuration required. No unsigned fallback.' } }
       - run: python -m pip install --upgrade 'pip>=26.2.1'
       - run: python -m pip install -e '.[dev,remote,secure,desktop,package]'
       - run: python -m pytest -q
@@ -80,7 +83,8 @@ jobs:
         shell: pwsh
         run: |
           $v = (Get-Content VERSION -Raw).Trim()
-          python scripts/executable_checksums.py --output dist/installer/EXECUTABLE_SHA256SUMS --release-notes docs/development/signed-release-notes.md --release-notes-output dist/release-notes.md dist/signed/garmin-connect "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe"
+          Move-Item "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe" dist/installer/GarminConnectSetup.exe
+          python scripts/executable_checksums.py --output dist/installer/EXECUTABLE_SHA256SUMS --release-notes docs/development/signed-release-notes.md --release-notes-output dist/release-notes.md dist/signed/garmin-connect dist/installer/GarminConnectSetup.exe
           if ($LASTEXITCODE -ne 0) { throw "Checksum generation failed" }
       - name: Publish only verified artifacts
         shell: pwsh

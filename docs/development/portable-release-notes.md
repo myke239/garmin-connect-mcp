@@ -1,4 +1,7 @@
-# Garmin Connect MCP 0.20.0
+# Garmin Connect MCP 0.20.1
+
+Fixes the blank Server URL field in setup. The visible URL now remains available
+and matches the value copied to the clipboard.
 
 **Windows: download GarminConnectSetup.exe, open it, and select Begin Install.**
 The app guides Garmin sign-in, verification codes, ChatGPT/Codex connection and

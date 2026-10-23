@@ -166,6 +166,16 @@ See [installation](../getting-started/installation.md) for usage and platform li
 
 # Verification record
 
+## Version 0.20.1 — setup URL regression (2026-10-23)
+
+The new graphical regression test reproduced the blank URL before the fix and
+passed afterward, checking both the read-only entry and clipboard after garbage
+collection. All five wizard tests passed; the full offline suite passed with
+637 tests and 9 skips. Graphical tests share one Tcl interpreter, matching the
+application's lifecycle. Documentation checks, lint and scoped strict typing
+passed locally. Azure signing remains unverified until the owner's validated
+account/profile and federated identity configuration are available.
+
 ## Version 0.20.0 — guided installation (2026-10-23)
 
 Local Windows/Python 3.13: foundation checks passed (15); complete offline suite

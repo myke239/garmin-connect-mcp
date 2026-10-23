@@ -85,6 +85,8 @@ class Application:
     def field(self, label, secret=False, variable=None, readonly=False):
         ttk.Label(self.content, text=label, style='Body.TLabel').pack(anchor='w', pady=(6, 4))
         entry = ttk.Entry(self.content, width=68, show='\u2022' if secret else '', textvariable=variable)
+        # Tk keeps the variable name, not the Python object; retain it with its field.
+        entry._textvariable = variable
         entry.pack(fill='x', pady=(0, 10))
         if readonly:
             entry.configure(state='readonly')
