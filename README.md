@@ -46,16 +46,13 @@ The focus is the complete path from understanding a session to preparing and man
 
 Verified catalogs, training analysis and reviewable account management work together in one connector, with explicit handling of partial or uncertain outcomes.
 
-## Start here
+## Install
 
-1. Follow the [installation guide](docs/getting-started/installation.md). Windows x64 and Linux x86-64 executable bundles are available; managed installers can obtain Python for you.
-2. Run the installed launcher's `login`, then `verify`. Enter credentials and MFA only on your machine—never in chat.
-3. For Codex, run `install-plugin` (requires Codex CLI), then open a new chat. For ChatGPT use [HTTPS setup](docs/getting-started/chatgpt.md). Other clients can use [the stdio configuration](docs/getting-started/codex.md#other-mcp-clients).
-4. Try: “Use Garmin Connect to summarize my last three runs.” Review or restrict write access using the [account-write guide](docs/guides/account-writes.md).
+**[Download Windows installer](https://github.com/myke239/garmin-connect-mcp/releases/latest/download/GarminConnectSetup.exe)**
 
-Launchers work from any directory without activating a virtual environment. Standard application locations are `%LOCALAPPDATA%\Programs\GarminConnectMCP` on Windows and `${XDG_DATA_HOME:-~/.local/share}/garmin-connect-mcp/application` on Linux. Credentials and journals stay in a separate private data directory.
+Open it, select **Begin Install**, and follow the wizard. No terminal, Python or Git required.
 
-For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/chatgpt.md). Your account/workspace must support custom MCP connections, and your computer must stay awake with the tunnel running. This is a self-hosted, single-owner connection; there is no approved public ChatGPT marketplace listing or hosted multi-user service.
+[Quick setup with screenshots](docs/getting-started/installation.md) · [Linux / macOS](docs/getting-started/unix.md)
 
 ## Documentation
 
@@ -66,11 +63,11 @@ For ChatGPT and phone use, follow [personal HTTPS setup](docs/getting-started/ch
 
 ## Compatibility and honest limits
 
-Release **0.19.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
+Release **0.20.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
 
 Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The 0.12.0 Ubuntu 22.04 WSL suite passed **419 tests**; the default-write change adds explicit policy/revocation regression coverage. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
 
-Garmin acceptance and queued device delivery do **not** prove execution or animation on your watch. Physical watch execution and macOS/ARM executable builds remain unverified. Public executables exclude Garmin's separately licensed FIT SDK; [local FIT setup](docs/getting-started/installation.md#executables-and-desktop-setup) obtains it directly when needed. Sparse recordings and unsupported sport fields are reported rather than invented.
+Garmin acceptance and queued device delivery do **not** prove execution or animation on your watch. Physical watch execution and macOS/ARM executable builds remain unverified. Public executables exclude Garmin's separately licensed FIT SDK; [local FIT setup](docs/getting-started/advanced-installation.md#executables-and-desktop-setup) obtains it directly when needed. Sparse recordings and unsupported sport fields are reported rather than invented.
 
 ## Contribute and get help
 

@@ -17,6 +17,10 @@ AppSupportURL=https://github.com/myke239/garmin-connect-mcp/issues
 DefaultDirName={localappdata}\Programs\GarminConnectMCP\releases\{#AppVersion}-installer
 DisableDirPage=yes
 DisableProgramGroupPage=yes
+DisableWelcomePage=no
+DisableReadyPage=yes
+DisableFinishedPage=yes
+WizardStyle=modern
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -26,7 +30,7 @@ OutputDir={#OutputPath}
 OutputBaseFilename=garmin-connect-mcp-{#AppVersion}-windows-x64-setup
 Compression=lzma2
 SolidCompression=yes
-CloseApplications=yes
+CloseApplications=no
 RestartApplications=no
 CloseApplicationsFilter=garmin-connect.exe,garmin-connect-desktop.exe
 #ifdef TrustedRelease
@@ -40,7 +44,7 @@ Source: "{#BundleDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 [Icons]
 Name: "{userprograms}\Garmin Connect MCP {#AppVersion} (Das Kreb)"; Filename: "{app}\garmin-connect-desktop.exe"
 [Run]
-Filename: "{app}\garmin-connect-desktop.exe"; Description: "Open Garmin Connect setup"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\garmin-connect-desktop.exe"; Parameters: "--internal-module desktop --installed"; Flags: nowait skipifsilent
 [UninstallRun]
 Filename: "{app}\garmin-connect.exe"; Parameters: "installer-unregister"; RunOnceId: "unregister-bundle"; Flags: runhidden waituntilterminated
 [UninstallDelete]
@@ -48,6 +52,18 @@ Type: files; Name: "{app}\installation.json"
 Type: filesandordirs; Name: "{app}\marketplace"
 
 [Code]
+procedure InitializeWizard;
+begin
+  WizardForm.WelcomeLabel1.Caption := 'Install Garmin Connect';
+  WizardForm.WelcomeLabel2.Caption := 'Connect Garmin to ChatGPT or Codex. Setup installs the app, then guides you through signing in and connecting. No terminal is needed.';
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpWelcome then
+    WizardForm.NextButton.Caption := 'Begin Install';
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var ResultCode: Integer;
 begin

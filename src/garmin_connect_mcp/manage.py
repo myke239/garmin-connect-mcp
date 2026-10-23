@@ -17,10 +17,15 @@ def installation():
 
 
 
-def register_plugin(codex, marketplace):
+def register_plugin(codex, marketplace, quiet=False):
     """Replace only our known one-plugin marketplace; restore it on failure."""
+    window_options = {'creationflags': subprocess.CREATE_NO_WINDOW} if __import__('os').name == 'nt' else {}
+    action_options = dict(window_options)
+    action_options['timeout'] = 120
+    if quiet:
+        action_options.update(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     result = subprocess.run([codex, "plugin", "marketplace", "list", "--json"],
-                            check=True, capture_output=True, text=True)
+                            check=True, capture_output=True, text=True, timeout=120, **window_options)
     entries = json.loads(result.stdout)["marketplaces"]
     previous = next((entry["root"] for entry in entries if entry["name"] == "myke-garmin"), None)
     changed = previous is not None and Path(previous).resolve() != Path(marketplace).resolve()
@@ -29,18 +34,18 @@ def register_plugin(codex, marketplace):
         document = json.loads(catalog.read_text(encoding="utf-8"))
         if document.get("name") != "myke-garmin" or [item["name"] for item in document["plugins"]] != ["garmin-connect"]:
             raise ValueError("Existing Garmin marketplace has unexpected plugins; inspect it before replacing.")
-        subprocess.run([codex, "plugin", "marketplace", "remove", "myke-garmin"], check=True)
+        subprocess.run([codex, "plugin", "marketplace", "remove", "myke-garmin"], check=True, **action_options)
     added = False
     try:
-        subprocess.run([codex, "plugin", "marketplace", "add", marketplace], check=True)
+        subprocess.run([codex, "plugin", "marketplace", "add", marketplace], check=True, **action_options)
         added = True
-        subprocess.run([codex, "plugin", "add", "garmin-connect@myke-garmin"], check=True)
+        subprocess.run([codex, "plugin", "add", "garmin-connect@myke-garmin"], check=True, **action_options)
     except subprocess.CalledProcessError:
         if changed:
             if added:
-                subprocess.run([codex, "plugin", "marketplace", "remove", "myke-garmin"], check=True)
-            subprocess.run([codex, "plugin", "marketplace", "add", previous], check=True)
-            subprocess.run([codex, "plugin", "add", "garmin-connect@myke-garmin"], check=True)
+                subprocess.run([codex, "plugin", "marketplace", "remove", "myke-garmin"], check=True, **action_options)
+            subprocess.run([codex, "plugin", "marketplace", "add", previous], check=True, **action_options)
+            subprocess.run([codex, "plugin", "add", "garmin-connect@myke-garmin"], check=True, **action_options)
         raise
 
 def main() -> None:

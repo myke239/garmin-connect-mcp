@@ -27,7 +27,8 @@ def owned(value):
     try:
         if os.name=='nt':
             script='Get-CimInstance Win32_Process -Filter "ProcessId = '+str(pid)+'" | Select-Object -ExpandProperty CommandLine'
-            result=subprocess.run(['powershell','-NoProfile','-Command',script],capture_output=True,text=True,timeout=5)
+            result=subprocess.run(['powershell','-NoProfile','-Command',script],capture_output=True,text=True,timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW)
             line=result.stdout
         else:
             line=Path('/proc/'+str(pid)+'/cmdline').read_bytes().replace(b'\0',b' ').decode()

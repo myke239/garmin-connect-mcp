@@ -1,28 +1,14 @@
-# Personal HTTPS access
+# Connect ChatGPT
 
-[Documentation home](../README.md)
+**Windows:** open **Garmin Connect** from the Start menu. Follow the wizard and select **ChatGPT**. No terminal is needed.
 
-The optional remote service exposes the read tools and previewed account writes through
-Streamable HTTP at `/mcp/garmin-connect/`. It requires OAuth with PKCE and explicit approval in
-the owner's local terminal. Garmin credentials never go to ChatGPT or ngrok.
-Ngrok carries the HTTPS traffic, including tool responses, so it is a trusted
-transport provider. Your PC and the tunnel process must remain running.
+You need your Garmin sign-in and either a free [ngrok authtoken](https://dashboard.ngrok.com/get-started/your-authtoken) or an existing shared HTTPS address. The wizard shows what to enter on each page.
 
-## Choose one hosting mode
+When the wizard shows **You're connected**, start a new chat and ask **“Summarize my last three activities.”** Keep your computer awake for ChatGPT access.
 
-- **Garmin only:** start one standalone tunnel using the instructions below.
-- **Multiple MCP servers on one hostname:** keep one tunnel to your gateway and
-  route each service by path. Follow [shared hosting](shared-hosting.md); do not
-  start Garmin's standalone tunnel as well.
+[Install first](installation.md) · [Shared-host reference](shared-hosting.md)
 
-![Phone and background tab showing the shared HTTPS origin field](../assets/screenshots/setup-shared-host.png)
-
-*Actual 0.19.0 Windows setup UI; the hostname is an example, no account is connected.*
-Enter the HTTPS origin in **Phone / background**, then choose **Show / copy Garmin
-connection URL**. It copies the full `/mcp/garmin-connect/` URL. This helper does
-not start or configure a gateway.
-
-## Install and start (Windows)
+## Terminal setup
 
 Install with remote dependencies first (`scripts/install.ps1 -Remote`, optionally `-Desktop`). Then run from any directory:
 
@@ -33,7 +19,7 @@ $Garmin = Join-Path $env:LOCALAPPDATA 'Programs\GarminConnectMCP\bin\garmin-conn
 & $Garmin tunnel
 ```
 
-On Linux, install with `--remote`, then use the absolute installed launcher with the same commands. For a background tunnel use `background-start`; startup registration is separately opt-in. See [installation](installation.md#optional-background-operation).
+On Linux, install with `--remote`, then use the absolute installed launcher with the same commands. For a background tunnel use `background-start`; startup registration is separately opt-in. See [installation](advanced-installation.md#optional-background-operation).
 
 Setup prompts for the ngrok authtoken without echoing it. Tokens and remote
 OAuth state use Windows account encryption in the existing private data

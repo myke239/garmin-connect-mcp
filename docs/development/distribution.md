@@ -6,7 +6,10 @@ Das Kreb is the product/vendor branding. A trusted Windows publisher is a separa
 
 ## Status
 
-Version 0.13.0 downloads are unsigned. The 0.14.0 work adds vendor/version resources, the approved icon, per-user installer/uninstaller, signature verification and a signed-release workflow. Until the owner completes signing enrollment and a signed run passes, do not claim the new workflow has produced a verified-publisher release. Ordinary CI builds remain explicitly unsigned test artifacts.
+Public downloads are unsigned. Version 0.20.0 adds a production Windows installer
+to the portable release workflow. Vendor resources, per-user uninstall and
+checksums do not establish a verified publisher. Signing requires owner enrollment
+and the separate signed-release workflow. Ordinary CI installers remain test artifacts.
 
 ## Owner setup
 
@@ -24,14 +27,22 @@ The bundle's executable/DLL/PYD files must have valid trusted signatures, timest
 ./scripts/verify_signatures.ps1 -Path '<bundle directory>' -ExpectedPublisher '<validated certificate name>' -Recursive
 ```
 
-`build_windows_installer.ps1` accepts `-UnsignedTest` only for development checks. The normal path requires signing tools and publisher verification. Tests install in an isolated application directory, verify launch and CompanyName, then uninstall while preserving a private-data sentinel. Installer registration refuses paths outside the standard versioned application root. Each version has its own uninstall entry; removing an older version cannot remove a newer receipt. Existing credentials/journals and other releases remain separate. Stop services using a version before uninstalling it. Reinstall Codex registration deliberately when moving to a new runtime.
+`build_windows_installer.ps1` accepts `-UnsignedTest` for development checks and
+explicit `-UnsignedRelease` for the unsigned public release. The default requires
+signing tools and publisher verification. Tests install in an isolated application
+directory, verify launch and CompanyName, then uninstall while preserving a
+private-data sentinel. Installer registration refuses paths outside the standard
+versioned application root. Each version has its own uninstall entry; removing
+an older version cannot remove a newer receipt. Existing credentials/journals and
+other releases remain separate. Stop services using a version before uninstalling
+it. Reconnect Codex when deliberately moving to a new runtime.
 
 Public release records retain `SHA256SUMS` for archive and integrity-record hashes.
 Starting with the next checksum-enabled release, portable builds add platform
 `*-executable-SHA256SUMS` files; signed Windows builds add `EXECUTABLE_SHA256SUMS`
 with the two bundled executable hashes and the setup hash, computed after signing
 and signature verification. Executable hashes also appear in release notes.
-[Compare a download](../getting-started/installation.md#compare-a-download) explains
+[Compare a download](../getting-started/advanced-installation.md#compare-a-download) explains
 the distinction. Integrity JSON retains full bundle hashes, source commit and a
 clearly scoped build-environment inventory, not a shipped-component SBOM. Public
 executables exclude Garmin's separately licensed FIT SDK. No account data is
@@ -58,8 +69,10 @@ handshakes and desktop construction, and creates platform archives and integrity
 records. All builds must succeed before the publishing job runs. A tag that
 already exists fails publication rather than silently replacing its assets.
 
-Portable releases are explicitly **unsigned**. They do not publish the unsigned
-development installer. `SHA256SUMS` covers both archives and integrity JSON.
+Portable releases are explicitly **unsigned**. From 0.20.0 they publish
+`GarminConnectSetup.exe`, built in explicit production unsigned mode and checked
+through an isolated install/uninstall cycle. `SHA256SUMS` covers the installer,
+archives, integrity JSON and executable checksum sidecars.
 The manifest inspects embedded Python archives on both platforms for the
 restricted FIT SDK. Build-environment inventory is not a shipped-component SBOM.
 Signed Windows releases continue to require the separate owner-enrolled workflow.

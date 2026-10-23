@@ -144,13 +144,18 @@ class OwnerProvider:
                     "<p>This gives ChatGPT access to your Garmin account with scopes: "
                     + html.escape(" ".join(pending["params"]["scopes"])) + ". "
                     "Only approve a connection you just started.</p>"
+                    "<p>In Garmin Connect Setup, select <b>Review request</b>. "
+                    "Paste this connection code, review the requested access, and select "
+                    "<b>Approve connection</b>:</p><pre>" + html.escape(ticket) + "</pre>"
+                    "<p>Then return here and select Continue.</p>"
+                    "<details><summary>Linux or advanced terminal approval</summary>"
                     "<p>On the PC running this server, open "
                     + ("PowerShell" if os.name == "nt" else "a terminal")
                     + " and paste this entire command. You can run it from any folder; "
                     "no Python environment activation is needed.</p><pre>"
                     + html.escape(approval_command(ticket))
                     + "</pre><p>Review the connection and type APPROVE when prompted. "
-                    "Then return here and select Continue. The request expires after five minutes.</p>"
+                    "Then return here and select Continue. The request expires after five minutes.</p></details>"
                     '<form method="get" action="' + self.endpoint.route('/consent') + '"><input type="hidden" name="ticket" value="'
                     + html.escape(ticket, quote=True) + '"><button>Continue</button></form>')
             params = AuthorizationParams.model_validate(pending["params"])

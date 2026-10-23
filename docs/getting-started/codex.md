@@ -4,6 +4,11 @@
 
 ## Codex plugin
 
+On Windows, select **Codex** in the setup wizard, then **Connect Codex**.
+Setup obtains the official helper if needed. Open a new Codex chat after success.
+
+### Terminal setup
+
 After installation, invoke the full installed launcher with `install-plugin`:
 
 ```powershell
