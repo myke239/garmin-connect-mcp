@@ -1,4 +1,14 @@
-Executable download checksums - unreleased
+Guided Windows installation - 0.20.0
+
+- Publish GarminConnectSetup.exe: per-user installation followed by a linear,
+  terminal-free Garmin sign-in, MFA and ChatGPT/Codex connection wizard.
+- Reuse existing shared HTTPS hosting without stopping another connector.
+- Review the exact browser connection code locally before OAuth approval.
+- Download and verify the official Codex helper when absent on Windows.
+- Reduce the main installation guide to download, run, follow and verify;
+  retain source and terminal instructions in separate references.
+
+Executable download checksums - 0.20.0
 
 - Publish final executable hashes alongside archive checksums for portable and
   signed releases. Hash signed binaries only after signing and verification.

@@ -60,6 +60,17 @@ jobs:
           cmd=[str(exe.resolve()),'desktop','--smoke-test']
           subprocess.run(cmd if os.name=='nt' else ['xvfb-run','-a',*cmd],check=True,timeout=30)
       - run: python scripts/package_portable.py dist/frozen/garmin-connect dist/release --platform ${{ matrix.platform }}
+      - name: Build and verify Windows setup executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./scripts/setup_inno.ps1
+          ./scripts/build_windows_installer.ps1 -Bundle dist/frozen/garmin-connect -Compiler $env:DAS_KREB_INNO -UnsignedRelease
+          $v = (Get-Content VERSION -Raw).Trim()
+          ./scripts/verify_windows_installer.ps1 -Installer "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe"
+          Copy-Item "dist/installer/garmin-connect-mcp-$v-windows-x64-setup.exe" dist/release/GarminConnectSetup.exe
+          python scripts/executable_checksums.py --output "dist/release/garmin-connect-mcp-$v-windows-x64-executable-SHA256SUMS" dist/frozen/garmin-connect dist/release/GarminConnectSetup.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Installer checksum verification failed' }
       - uses: actions/upload-artifact@v4
         with:
           name: portable-${{ matrix.platform }}

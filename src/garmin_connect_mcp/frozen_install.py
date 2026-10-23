@@ -36,7 +36,8 @@ def install():
     path.write_text(json.dumps(value,indent=2),encoding='utf-8')
     # Verify the newly installed binary before publishing pointers.
     import subprocess
-    subprocess.run([str(executable),'doctor'],check=True,stdout=subprocess.DEVNULL)
+    subprocess.run([str(executable),'doctor'],check=True,stdout=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
     metadata={'version':__version__,'python':str(executable),'kind':'frozen','marketplace':str(marketplace),'remote':True,'launcher':str(executable)}
     text=json.dumps(metadata,indent=2)
     (release/'installation.json').write_text(text,encoding='utf-8')
@@ -76,7 +77,8 @@ def register_bundle(remove=False):
     value['mcpServers']['garmin-connect'].update(command=str(executable),args=['serve'])
     manifest.write_text(json.dumps(value,indent=2),encoding='utf-8')
     import subprocess
-    subprocess.run([str(executable),'doctor'],check=True,stdout=subprocess.DEVNULL)
+    subprocess.run([str(executable),'doctor'],check=True,stdout=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
     metadata={'version':__version__,'python':str(executable),'kind':'frozen','marketplace':str(marketplace),'remote':True,'launcher':str(executable)}
     text=json.dumps(metadata,indent=2)
     (source/'installation.json').write_text(text,encoding='utf-8')

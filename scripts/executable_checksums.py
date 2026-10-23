@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 
 EXECUTABLE_NAMES = {
+    "GarminConnectSetup.exe",
     "garmin-connect",
     "garmin-connect.exe",
     "garmin-connect-desktop",

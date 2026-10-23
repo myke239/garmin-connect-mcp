@@ -166,6 +166,23 @@ See [installation](../getting-started/installation.md) for usage and platform li
 
 # Verification record
 
+## Version 0.20.0 — guided installation (2026-10-23)
+
+Local Windows/Python 3.13: foundation checks passed (15); complete offline suite
+passed (636 passed, 9 skipped). Wizard tests exercised failed sign-in without
+secret leakage, synthetic MFA, Codex completion, shared-host navigation and exact
+request approval. OAuth transport tests preserved other pending requests and
+rejected changed scopes, expired requests and preexisting requests.
+
+Frozen MCP discovery exposed all 58 tools and passed guarded lifecycle checks.
+The production unsigned installer passed isolated per-user installation, launch,
+vendor metadata and uninstall with private-data preservation. A genuine installer
+welcome screenshot is included in the short guide. Lint, strict typing of the
+typed launch/diagnostics modules, documentation links, source/wheel build and
+dependency audit passed locally. No Garmin login, MFA or health writes were
+performed against a live account. CI results are recorded on the release PR;
+local checks do not substitute for independent platform gates.
+
 ## Current release — 0.8.0 (2026-10-12)
 
 357 offline tests passed locally; independent Windows/Linux CI passed on PR #16.
