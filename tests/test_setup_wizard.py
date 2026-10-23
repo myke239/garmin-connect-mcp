@@ -1,6 +1,7 @@
 """Exercise page transitions with fake services; never signs in or starts tunnels."""
 import time
 import os
+import gc
 from types import SimpleNamespace
 
 import pytest
@@ -10,14 +11,23 @@ tk = pytest.importorskip('tkinter')
 from garmin_connect_mcp import setup_wizard as wizard
 
 
-@pytest.fixture
-def app():
+@pytest.fixture(scope='module')
+def graphical_root():
     try:
         root = tk.Tk()
     except tk.TclError:
         if os.name != 'nt' and not os.environ.get('DISPLAY'):
             pytest.skip('No graphical display; frozen CI constructs the wizard under Xvfb')
         raise
+    root.withdraw()
+    yield root
+    root.destroy()
+
+
+@pytest.fixture
+def app(graphical_root):
+    # Share one Tcl interpreter, as the application does; isolate each page tree.
+    root = tk.Toplevel(graphical_root)
     root.withdraw()
     backend = SimpleNamespace(existing_origin=lambda: '', session_saved=lambda: False,
         install=lambda: None, connect_codex=lambda: None)
@@ -112,3 +122,17 @@ def test_shared_connection_keeps_choice_and_never_runs_new_tunnel(app, monkeypat
     app.primary.invoke()
     pump(app, 'finish')
     assert calls == ['https://shared.example', 'https://chatgpt.com/plugins', 'approve', 'verify']
+
+
+def test_server_url_stays_visible_and_matches_copied_url(app, monkeypatch):
+    expected = 'https://shared.example/mcp/garmin-connect/'
+    monkeypatch.setattr(wizard.webbrowser, 'open', lambda url: None)
+    app.server_ready(expected)
+    gc.collect()
+    app.root.update_idletasks()
+    fields = [child for child in app.content.winfo_children() if isinstance(child, wizard.ttk.Entry)]
+    assert len(fields) == 1
+    assert fields[0].get() == expected
+    assert str(fields[0]['state']) == 'readonly'
+    app.primary.invoke()
+    assert app.root.clipboard_get() == expected

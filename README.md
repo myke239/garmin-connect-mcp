@@ -63,7 +63,7 @@ Open it, select **Begin Install**, and follow the wizard. No terminal, Python or
 
 ## Compatibility and honest limits
 
-Release **0.20.0** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
+Release **0.20.1** uses Python **3.12+** and pinned [python-garminconnect](https://github.com/cyberjunky/python-garminconnect) **0.3.17**. It is an independent, unofficial project; Garmin service changes can affect it.
 
 Windows/Linux CI covers Python 3.12/3.13, installed runtimes, executable bundles, containers and quality checks. The 0.12.0 Ubuntu 22.04 WSL suite passed **419 tests**; the default-write change adds explicit policy/revocation regression coverage. Live synthetic workout acceptance, readback and cleanup are recorded separately in [verification history](docs/development/verification-history.md).
 

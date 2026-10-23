@@ -1,3 +1,10 @@
+Setup URL display correction - 0.20.1
+
+- Keep the server URL visible in the ChatGPT setup page; retain its Tk variable
+  and verify the displayed value agrees with Copy after garbage collection.
+- Keep the signed installer download name consistent with the installation guide
+  and reject incomplete Azure signing configuration before building.
+
 Guided Windows installation - 0.20.0
 
 - Publish GarminConnectSetup.exe: per-user installation followed by a linear,
