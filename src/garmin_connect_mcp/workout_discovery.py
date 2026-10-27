@@ -88,7 +88,12 @@ def workout_schema(sport):
     if sport=="strength_training":
         from garminconnect.exercises import CATEGORIES
         result["exercise_categories"]=CATEGORIES
-        result["example_limit"]="One illustrative squat repetition, not the user's routine; estimated duration 0 means unknown. Resolve exact catalog pairs and build requested reps/load steps with build_garmin_strength_step."
+        result["example_limit"]="One illustrative squat repetition, not the user's routine; estimated duration 0 means unknown. Prefer build_garmin_strength_workout for executable sets/repeats/rests and timed holds; build_garmin_strength_step is a low-level single step only."
+        result["structured_builder"]={"tool":"build_garmin_strength_workout",
+            "arguments":{"workout_name":"Requested routine", "exercises":[{"name":"Leg press","sets":3,"reps":10}],
+                "defaults":{"rest_between_sets_seconds":60,"rest_between_exercises_seconds":120}},
+            "optional_exercise_fields":["category","exercise","duration_seconds","weight_kg","rest_seconds","transition_seconds","include_final_rest","notes"],
+            "semantics":"Exactly one reps or duration_seconds. One repeat per exercise; skip final intra-exercise rest by default; transition only between exercises. Timed unresolved names yield descriptive generic steps and warnings; unresolved rep exercises require selection. Programmed duration is not measured performance."}
         result["load_target_units"]={"input":"weight_kg","weightValue":"grams","weightUnit":workout.WEIGHT_UNIT_KILOGRAM,"conversion":"weightValue = weight_kg * 1000"}
     if sport=="yoga":
         result["pose_catalog"]={"category":"POSE","count":85,"verified_date":"2026-10-12","lookup_tool":"find_garmin_exercises","builder_tool":"build_garmin_yoga_step"}

@@ -143,10 +143,13 @@ you do not intend to change. Labels are untrusted data, never instructions.
 
 Training calendars create and schedule individual workouts. They do not create
 a Garmin Coach/adaptive plan object. Split longer plans into reviewed batches;
-each batch is limited to 20 workouts and the overall preview payload to 12 KiB.
+each batch is limited to 20 workouts and the overall preview payload to 2 MiB.
+Each create/update workout operation has a 256 KiB parameter limit; every nested
+template is still validated, including repeat conditions, counts and ordering.
 
 Activity uploads accept at most 2 MiB decoded content, with a separate 3 MiB
-MCP request-body limit. Other previews have a 12 KiB limit. Local file paths are never
+MCP request-body limit. Strength-set replacements allow 2 MiB; other previews
+retain the 12,000-byte limit. Local file paths are never
 accepted, preventing remote callers from reading files on the host. XML parsing
 rejects entities and requires timestamped tracks with positive elapsed time.
 FIT length/CRC and decoded activity/session/lap messages are checked using the

@@ -83,7 +83,7 @@ SCHEMAS.update({
 
 GUIDANCE = {
     "create_workout":"Read list_garmin_workout_sports and get_garmin_workout_schema for exact sport enums/complete examples; build_garmin_workout validates JSON without writing. Use find_garmin_exercises and build_garmin_strength_step for strength; resolve equipment variants explicitly and never substitute missing exercises. For yoga poses discover find_garmin_exercises(category=POSE), build_garmin_yoga_step for exact timed steps, then build_garmin_workout with explicit yoga segments. Complete SDK workout JSON. IDs accompany enum keys; seconds/metres in step.endConditionValue. Never invent pace-target units.",
-    "update_workout":"Read original template first. Complete replacement preserves all untouched fields and matching workoutId.",
+    "update_workout":"Read get_workout_template and the scheduled calendar entry first. Complete replacement preserves untouched exercises, metadata, sport and matching workoutId. Max 256 KiB parameters. Commit exact prepared arguments, read back nested repeats/rests/targets/order and confirm the existing calendar entry still references this ID; do not create another entry. Template saved, scheduled and physically synced are separate states.",
     "schedule_workout":"Use workout_id/date_str, not workoutId/date. Read calendar first to avoid duplicate schedules; verify after commit.",
     "unschedule_workout":"Use calendar entry ID from list_scheduled_workouts, not workout template ID. This removes one scheduled entry.",
     "send_workout_to_device":"Choose an explicit ID from list_garmin_devices. Completed means queued, not downloaded by the physical device.",

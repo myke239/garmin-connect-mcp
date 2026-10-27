@@ -16,7 +16,7 @@ and `workoutSteps`. Pair numeric enum IDs with their keys:
 | targetType | workoutTargetTypeId | workoutTargetTypeKey | 1 / no.target |
 
 SDK step types: warmup 1, cooldown 2, interval 3, recovery 4, rest 5, repeat 6.
-End conditions: lap.button 1, time 2, distance 3, iterations 7.
+End conditions: lap.button 1, time 2, distance 3, iterations 7, reps 10.
 
 Executable steps use `type: ExecutableStepDTO`, positive `stepOrder`, and those
 step/condition/target objects. A time or distance step needs positive
@@ -37,8 +37,20 @@ Repeat groups use `type: RepeatGroupDTO`, `stepType` 6 / repeat,
 `numberOfIterations`, and nested `workoutSteps`. The SDK helper also supplies
 `endCondition` 7 / iterations and `endConditionValue` equal to the repeat count.
 Include those when building a group. All child steps need complete enum objects
-and values. Server limits: 100 total steps, five nested repeat levels, 1–100
-iterations, and 12 KiB for an operation's parameters.
+and values. Use globally unique preorder `stepOrder` values; builder groups
+and their executable children share a `childStepId`, distinct for each group.
+Preserve server-issued IDs on unchanged template groups. `skipLastRestStep`
+must be a boolean and applies only to a final rest/recovery child.
+Server limits: 100 stored steps, five nested repeat levels, 1–100 iterations
+(builders use 1–99). Create/update parameters may use up to 256 KiB;
+calendar batches up to 2 MiB with at most 20 individually valid templates.
+These are connector bounds, not Garmin/watch guarantees; see
+[research and device limits](workout-research.md).
+
+Build compact JSON by omitting unnecessary null/default fields for new templates.
+Do not strip unrelated metadata from a complete update just to fit a limit.
+If an update exceeds its bound, report the specific validation issue; do not
+replace it with a new template or a new key after an uncertain write outcome.
 
 ## Simple distance run
 
