@@ -8,6 +8,8 @@ Structured workout authoring - unreleased
   allow bounded larger complete workout updates.
 - Expand the workout skill with scheduled-update readback, acceptance examples
   and sourced Garmin device/step-limit guidance.
+- Return fresh complete bounded edit templates, preserving metadata and nested
+  identifiers and avoiding stale post-update readback.
 
 Setup URL display correction - 0.20.1
 

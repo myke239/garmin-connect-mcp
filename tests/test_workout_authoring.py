@@ -8,6 +8,9 @@ from garminconnect.workout import create_repeat_group, create_strength_exercise_
 
 from garmin_connect_mcp.builders import strength_workout, running_workout, swim_workout
 from garmin_connect_mcp.server import create_server
+from garmin_connect_mcp.service import GarminService
+from garmin_connect_mcp.auth import TokenStore
+from garmin_connect_mcp.lifecycle import template
 from garmin_connect_mcp.writes import WriteService, WriteInputError, execute, validate
 
 
@@ -196,7 +199,8 @@ def test_mcp_declarative_builder_is_readonly_and_exposes_errors():
 
 def test_scheduled_update_preserves_id_calendar_and_unrelated_content(tmp_path):
     original = strength_workout("Scheduled", [squat(), {"name":"Leg press","sets":2,"reps":8}])["workout_json"]
-    original.update(workoutId=123, description="Preserve these notes", ownerId=456)
+    original.update(workoutId=123, description="Preserve these notes", ownerId=456,
+        estimatedDurationInSecs=1800, customMetadata={"synthetic":"preserve"})
     calendar = {"calendarItems":[{"id":789,"workoutId":123,"itemType":"workout","date":"2026-10-28"}]}
 
     class Client:
@@ -218,16 +222,42 @@ def test_scheduled_update_preserves_id_calendar_and_unrelated_content(tmp_path):
             return copy.deepcopy(self.saved)
 
     client = Client()
-    replacement = client.get_workout_by_id(123)
+    read_calls = []
+    def read_runner(directory, method, args, kwargs):
+        read_calls.append(method)
+        return getattr(client, method)(*args, **kwargs)
+    backend = GarminService(TokenStore(tmp_path), read_runner)
+    server = create_server(adapter=backend, tool_profile="all")
+    async def mcp_read(name, args):
+        result = await server.call_tool(name, args)
+        return json.loads(result[0][0].text if isinstance(result, tuple) else result[0].text)
+    replacement = asyncio.run(mcp_read("get_workout_template", {"workout_id":"123"}))
+    assert replacement == original  # No dropped metadata, estimates or identifiers.
+    before_calendar = asyncio.run(mcp_read("list_scheduled_workouts", {"year":2026,"month":10}))
+    # Populate the pre-mutation template cache explicitly.
+    backend.call("get_workout_by_id", "123")
     replacement["workoutSegments"][0]["workoutSteps"][0]["workoutSteps"][0]["endConditionValue"] = 12
     service = WriteService(tmp_path, runner=lambda directory, method, args, kwargs: execute(client, directory, *args, **kwargs))
     draft = service.prepare("update_workout", {"workout_id":123,"workout_json":replacement}, "scheduled-edit")
     context = {k:v for k,v in draft["commit_arguments"].items() if k != "draft_id"}
     result = service.commit_reviewed(draft["draft_id"], "update_workout", context)
     assert result["status"] == "completed"
-    readback = client.get_workout_by_id(123)
+    readback = asyncio.run(mcp_read("get_workout_template", {"workout_id":"123"}))
     assert readback == replacement
     assert readback["workoutSegments"][0]["workoutSteps"][1:] == original["workoutSegments"][0]["workoutSteps"][1:]
-    assert client.get_scheduled_workouts(2026,10) == calendar
+    after_calendar = asyncio.run(mcp_read("list_scheduled_workouts", {"year":2026,"month":10}))
+    assert after_calendar["scheduled_workouts"] == before_calendar["scheduled_workouts"] == calendar["calendarItems"]
+    assert before_calendar["cached"] is after_calendar["cached"] is False
+    assert read_calls.count("get_workout_by_id") == 3
+    assert read_calls.count("get_scheduled_workouts") == 2
     assert service.commit_reviewed(draft["draft_id"], "update_workout", context) == result
     assert client.updates == 1
+
+
+@pytest.mark.parametrize("raw", [{"workoutId":456}, {"workoutId":123,"description":"x"*(256*1024)}])
+def test_full_template_never_returns_wrong_identity_or_truncated_content(raw):
+    class Backend:
+        def fresh_call(self, *args):
+            return raw
+    with pytest.raises(WriteInputError):
+        template(Backend(), "123")
