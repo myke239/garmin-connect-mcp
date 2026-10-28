@@ -1,3 +1,16 @@
+Structured workout authoring - unreleased
+
+- Group strength sets and running intervals as executable repeats, with
+  configurable set/transition rests and intentional final recovery handling.
+- Resolve exact exercise names, preserve unsupported timed movements as labeled
+  generic steps, and distinguish programmed duration from measured performance.
+- Correct running/swim pace target bound order, validate nested repeat contracts and
+  allow bounded larger complete workout updates.
+- Expand the workout skill with scheduled-update readback, acceptance examples
+  and sourced Garmin device/step-limit guidance.
+- Return fresh complete bounded edit templates, preserving metadata and nested
+  identifiers and avoiding stale post-update readback.
+
 Setup URL display correction - 0.20.1
 
 - Keep the server URL visible in the ChatGPT setup page; retain its Tk variable

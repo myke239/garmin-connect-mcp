@@ -66,11 +66,16 @@ def validate_schedule(parameters):
 
 
 def validate_workout(payload):
+    location = "workout_json"
+
+    def invalid(message):
+        return WriteInputError("create_workout", f"{location}: {message}")
+
     def enum(value, id_name, key_name):
         if (not isinstance(value, dict) or not isinstance(value.get(id_name), int)
                 or isinstance(value.get(id_name), bool) or value[id_name] < 1
                 or not isinstance(value.get(key_name), str) or not value[key_name]):
-            raise ValueError(f"Workout {key_name} requires its numeric {id_name} and string key")
+            raise invalid(f"Workout {key_name} requires its numeric {id_name} and string key")
         mappings={"sportTypeKey":SPORT_IDS,
             "stepTypeKey":{"warmup":1,"cooldown":2,"interval":3,"recovery":4,"rest":5,"repeat":6,"other":7,"main":8},
             "conditionTypeKey":{"lap.button":1,"time":2,"distance":3,"calories":4,"power":5,"heart.rate":6,"iterations":7,"fixed.rest":8,"fixed.repetition":9,"reps":10},
@@ -79,32 +84,39 @@ def validate_workout(payload):
             raise WriteInputError("create_workout", "Each segment must use a supported Garmin workout sport; unsupported legacy enums lose identity.")
         known=mappings.get(key_name,{})
         if value[key_name] not in known or value[id_name] != known[value[key_name]]:
-            raise ValueError("Workout enum ID does not match its SDK key")
+            raise invalid("Workout enum ID does not match its SDK key")
 
     enum(payload.get("sportType"), "sportTypeId", "sportTypeKey")
     total = 0
     seen_orders=set()
+    seen_group_ids=set()
+    last_order = 0
 
-    def steps(items, depth=0, sport=None):
-        nonlocal total
+    def steps(items, depth=0, sport=None, path="workoutSteps"):
+        nonlocal total, location, last_order
+        location = path
         if not isinstance(items, list) or not 1 <= len(items) <= 100 or depth > 5:
-            raise ValueError("Provide 1–100 steps per group, with at most five nested repeat groups")
-        for step in items:
+            raise invalid("Provide 1–100 steps per group, with at most five nested repeat groups")
+        for index, step in enumerate(items):
+            location = f"{path}[{index}]"
             total += 1
             if total > 100 or not isinstance(step, dict):
-                raise ValueError("Workout requires at most 100 total steps")
+                raise invalid("Workout requires at most 100 total steps")
             if not isinstance(step.get("stepOrder"), int) or isinstance(step["stepOrder"], bool) or step["stepOrder"] < 1:
-                raise ValueError("Each workout step requires positive stepOrder")
-            if payload["sportType"]["sportTypeKey"]=="multi_sport":
-                if step["stepOrder"] in seen_orders:raise WriteInputError("create_workout","Multisport stepOrder values must be unique across every segment and nested step")
-                seen_orders.add(step["stepOrder"])
+                raise invalid("Each workout step requires positive stepOrder")
+            if step["stepOrder"] in seen_orders:
+                raise invalid("stepOrder values must be unique across every segment and nested step")
+            if step["stepOrder"] <= last_order:
+                raise invalid("stepOrder must increase in execution-tree order across segments and nested steps")
+            last_order = step["stepOrder"]
+            seen_orders.add(step["stepOrder"])
             enum(step.get("stepType"), "stepTypeId", "stepTypeKey")
             for field in ("targetValueOne","targetValueTwo","secondaryTargetValueOne","secondaryTargetValueTwo","weightValue"):
                 value=step.get(field)
                 if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<0):
-                    raise ValueError("Workout target/load values must be finite nonnegative numbers")
-            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"] and step.get("targetType",{}).get("workoutTargetTypeKey") != "pace.zone":
-                raise ValueError("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
+                    raise invalid("Workout target/load values must be finite nonnegative numbers")
+            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"]:
+                raise invalid("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
             if step.get("category") is not None:
                 from garminconnect.exercises import CATEGORIES,EXERCISES
                 if step["category"]=="POSE":
@@ -121,51 +133,80 @@ def validate_workout(payload):
                             or any(step.get(field) is not None for field in ("weightValue","targetValueOne","targetValueTwo","secondaryTargetType","secondaryTargetValueOne","secondaryTargetValueTwo"))):
                         raise WriteInputError("create_workout","POSE requires an exact verified identifier in a yoga segment and a timed untargeted interval of 1-86400 whole seconds. Use build_garmin_yoga_step.")
                 elif step["category"] not in CATEGORIES:
-                    raise ValueError("Unknown Garmin exercise category")
+                    raise invalid("Unknown Garmin exercise category")
                 name=step.get("exerciseName")
                 if step["category"]!="POSE" and name and not any(e["category"]==step["category"] and e["exercise"]==name for e in EXERCISES):
-                    raise ValueError("Exercise name does not match its Garmin category")
+                    raise invalid("Exercise name does not match its Garmin category")
             if step.get("type") == "RepeatGroupDTO":
                 count = step.get("numberOfIterations")
                 if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 100:
-                    raise ValueError("Repeat groups require 1–100 iterations")
+                    raise invalid("Repeat groups require 1–100 iterations")
                 if step["stepType"].get("stepTypeKey") != "repeat":
-                    raise ValueError("Repeat groups require the repeat step type")
-                steps(step.get("workoutSteps"), depth + 1, sport)
+                    raise invalid("Repeat groups require the repeat step type")
+                enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
+                if step["endCondition"]["conditionTypeKey"] != "iterations":
+                    raise invalid("Repeat groups require endCondition 7 / iterations")
+                value = step.get("endConditionValue")
+                if value is not None and (isinstance(value, bool) or value != count):
+                    raise invalid("Repeat endConditionValue must equal numberOfIterations")
+                if "skipLastRestStep" in step and not isinstance(step["skipLastRestStep"], bool):
+                    raise invalid("skipLastRestStep must be boolean")
+                group_location = location
+                steps(step.get("workoutSteps"), depth + 1, sport, location + ".workoutSteps")
+                location = group_location
+                if step.get("skipLastRestStep") and step["workoutSteps"][-1]["stepType"]["stepTypeKey"] not in {"rest", "recovery"}:
+                    raise invalid("skipLastRestStep requires a final rest or recovery child")
+                group_id = step.get("childStepId")
+                if group_id is not None:
+                    if isinstance(group_id, bool) or not isinstance(group_id, int) or group_id < 1:
+                        raise invalid("Repeat childStepId must be a positive integer")
+                    if group_id in seen_group_ids:
+                        raise invalid("Repeat groups require distinct childStepId values")
+                    seen_group_ids.add(group_id)
+                    if any(isinstance(child.get("childStepId"), bool) or child.get("childStepId") not in (None, group_id) for child in step["workoutSteps"] if child["type"] == "ExecutableStepDTO"):
+                        raise invalid("Executable childStepId must match its repeat group")
             elif step.get("type") == "ExecutableStepDTO":
+                if step["stepType"]["stepTypeKey"] == "repeat":
+                    raise invalid("Repeat step types require RepeatGroupDTO")
                 enum(step.get("endCondition"), "conditionTypeId", "conditionTypeKey")
                 enum(step.get("targetType"), "workoutTargetTypeId", "workoutTargetTypeKey")
                 if step.get("zoneNumber") is not None and (isinstance(step["zoneNumber"], bool) or
                         not isinstance(step["zoneNumber"], int) or not 1 <= step["zoneNumber"] <= 5):
-                    raise ValueError("zoneNumber must be a whole zone 1-5")
+                    raise invalid("zoneNumber must be a whole zone 1-5")
                 if step.get("zoneNumber") is not None and any(step.get(k) is not None for k in ("targetValueOne", "targetValueTwo")):
-                    raise ValueError("Do not combine a named zone with a custom target range")
+                    raise invalid("Do not combine a named zone with a custom target range")
                 if any(k in step["targetType"] for k in ("targetValueOne", "targetValueTwo", "zoneNumber")):
-                    raise ValueError("Place target values on the step, not inside targetType")
+                    raise invalid("Place target values on the step, not inside targetType")
                 if "conditionValue" in step["endCondition"]:
-                    raise ValueError("Put duration/distance in step.endConditionValue, not endCondition.conditionValue")
+                    raise invalid("Put duration/distance in step.endConditionValue, not endCondition.conditionValue")
                 if step["endCondition"]["conditionTypeKey"] in {"distance", "time"}:
                     value = step.get("endConditionValue")
                     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
-                        raise ValueError("Time/distance steps require positive endConditionValue (seconds/metres)")
+                        raise invalid("Time/distance steps require positive endConditionValue (seconds/metres)")
                 if step["endCondition"]["conditionTypeKey"] == "reps":
                     value=step.get("endConditionValue")
                     if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not 1<=value<=1000 or not float(value).is_integer():
-                        raise ValueError("Rep-based steps require 1–1000 whole repetitions in endConditionValue")
+                        raise invalid("Rep-based steps require 1–1000 whole repetitions in endConditionValue")
             else:
-                raise ValueError("Use ExecutableStepDTO or RepeatGroupDTO")
+                raise invalid("Use ExecutableStepDTO or RepeatGroupDTO")
 
-    for segment in payload["workoutSegments"]:
+    seen_segments = set()
+    for index, segment in enumerate(payload["workoutSegments"]):
+        location = f"workout_json.workoutSegments[{index}]"
         if not isinstance(segment, dict):
-            raise ValueError("Workout segments must be objects")
+            raise invalid("Workout segments must be objects")
+        order = segment.get("segmentOrder")
+        if isinstance(order, bool) or not isinstance(order, int) or order < 1 or order in seen_segments:
+            raise invalid("Each segment requires a unique positive segmentOrder")
+        seen_segments.add(order)
         enum(segment.get("sportType"), "sportTypeId", "sportTypeKey")
         if segment["sportType"]["sportTypeKey"] not in SPORTS:
             raise WriteInputError("create_workout","Each segment must use a supported Garmin workout sport; legacy walking/hiking workout enums lose their sport identity.")
         if payload["sportType"]["sportTypeKey"]!="multi_sport" and segment["sportType"]["sportTypeKey"]!=payload["sportType"]["sportTypeKey"]:
-            raise ValueError("Single-sport segments must match the workout sport")
+            raise invalid("Single-sport segments must match the workout sport")
         if payload["sportType"]["sportTypeKey"]=="multi_sport" and segment["sportType"]["sportTypeKey"]=="multi_sport":
-            raise ValueError("Multisport segments require explicit constituent sports")
-        steps(segment.get("workoutSteps"), sport=segment["sportType"]["sportTypeKey"])
+            raise invalid("Multisport segments require explicit constituent sports")
+        steps(segment.get("workoutSteps"), sport=segment["sportType"]["sportTypeKey"], path=location + ".workoutSteps")
 
 
 def _validate(operation, parameters):
@@ -174,7 +215,9 @@ def _validate(operation, parameters):
     if operation not in OPERATIONS or not isinstance(parameters, dict):
         raise ValueError("Unsupported operation")
     parameters = json.loads(json.dumps(parameters, allow_nan=False))
-    limit = 2 * 1024 * 1024 if operation == "replace_strength_sets" else 12000
+    limit = (2 * 1024 * 1024 if operation == "replace_strength_sets" else
+             256 * 1024 if operation in {"create_workout", "update_workout"} else
+             2 * 1024 * 1024 if operation == "create_training_calendar" else 12000)
     if operation != "upload_activity_file" and len(json.dumps(parameters).encode("utf-8")) > limit:
         raise WriteInputError(operation, f"parameters: payload exceeds {limit} bytes")
     if operation in {"rename_workout", "delete_workout"}:

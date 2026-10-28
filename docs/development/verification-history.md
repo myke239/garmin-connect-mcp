@@ -2,6 +2,26 @@
 
 [Documentation home](../README.md)
 
+## Structured workout authoring — 2026-10-27 (local evidence)
+
+All 15 MCP foundation/runtime checks passed without Garmin authentication.
+The complete Windows/Python 3.13 offline suite passed 675 tests, 9 skipped.
+Acceptance cases independently expand repeat groups to check executing rests,
+transition replacement, final-exercise behavior, 10 × 20s/40s practice, the
+54-minute tempo example, SDK running/swim pace units, catalog resolution, nested validation,
+larger bounded payloads, and synthetic update/readback/calendar identity.
+MCP readback regression retains full template metadata, bypasses pre-update
+caches, rejects oversized/mismatched template reads and confirms fresh calendar
+identity without duplicating an entry. Calendar reads were already fresh.
+MCP discovery exposes the enhanced builder defaults without adding a write path.
+
+Documentation links and the 58-tool inventory, skill validation, source lint,
+scoped strict typing, secret checks and source/wheel builds passed locally.
+Research sources are recorded in the workout skill. This is offline structural
+and synthetic transport evidence: no new live-account mutation, physical watch
+execution, sync, installed deployment or release acceptance is claimed. PR CI
+and merge are separate gates and must pass before merging.
+
 ## Namespaced HTTPS and release experience - 0.19.0 (2026-10-22, local evidence)
 
 The 15 foundation/runtime checks passed before account verification. The complete

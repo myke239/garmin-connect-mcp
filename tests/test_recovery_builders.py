@@ -51,14 +51,15 @@ def test_partial_context_keeps_network_error_but_stops_rate_limit(tmp_path):
         session_context(service(tmp_path, replies), "1")
 
 
-def test_timed_strength_expands_sets_rests_and_preserves_grams():
+def test_timed_strength_groups_sets_rests_and_preserves_grams():
     workout = strength_workout("Timed squat", [{"category": "SQUAT", "exercise": "SQUAT",
         "sets": 3, "duration_seconds": 20, "weight_kg": 5, "rest_seconds": 10}])["workout_json"]
     steps = workout["workoutSegments"][0]["workoutSteps"]
-    assert len(steps) == 5
-    assert [row["stepOrder"] for row in steps] == [1,2,3,4,5]
-    assert steps[0]["weightValue"] == 5000
-    assert steps[0]["endCondition"]["conditionTypeId"] == 2
+    assert len(steps) == 1
+    assert steps[0]["numberOfIterations"] == 3
+    assert [row["stepOrder"] for row in steps[0]["workoutSteps"]] == [2,3]
+    assert steps[0]["workoutSteps"][0]["weightValue"] == 5000
+    assert steps[0]["workoutSteps"][0]["endCondition"]["conditionTypeId"] == 2
     assert workout["estimatedDurationInSecs"] == 80
     validate("create_workout", {"workout_json": workout})
 
@@ -68,9 +69,9 @@ def test_running_pace_conversion_and_hr_targets():
         "recovery_seconds": 60, "pace_s_km": [300,360]}, {"duration_seconds": 600, "hr_zone": 2}],
         120, 120)["workout_json"]
     steps = workout["workoutSegments"][0]["workoutSteps"]
-    assert steps[1]["targetValueOne"] == pytest.approx(1000/300)
-    assert steps[1]["targetValueTwo"] == pytest.approx(1000/360)
-    assert steps[4]["zoneNumber"] == 2
+    assert steps[1]["workoutSteps"][0]["targetValueOne"] == pytest.approx(1000/360)
+    assert steps[1]["workoutSteps"][0]["targetValueTwo"] == pytest.approx(1000/300)
+    assert steps[2]["zoneNumber"] == 2
     assert workout["estimatedDurationInSecs"] == 0
     validate("create_workout", {"workout_json": workout})
 
@@ -89,7 +90,7 @@ def test_swimming_distance_equipment_and_pool_metadata():
     (strength_workout, ("Bad", [{"category":"SQUAT","exercise":"STEP_DOWN","reps":10}])),
     (running_workout, ("Bad", [{"duration_seconds":float("nan")}])),
     (running_workout, ("Bad", [{"duration_seconds":10,"hr_zone":2,"pace_s_km":[300,360]}])),
-    (running_workout, ("Bad", [{"duration_seconds":10,"repeats":30},{"duration_seconds":10,"repeats":30},{"duration_seconds":10,"repeats":30},{"duration_seconds":10,"repeats":30}])),
+    (running_workout, ("Bad", [{"duration_seconds":10,"repeats":100}])),
     (swim_workout, ("Bad",25,[{"distance_m":101}])),
     (swim_workout, ("Bad",25,[{"distance_m":100,"stroke":"unknown"}])),
 ])

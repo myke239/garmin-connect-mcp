@@ -24,6 +24,30 @@ Use the appropriate pure builder:
 
 Builders return validated drafts and do not mutate Garmin. Reps, seconds, metres and kilograms have different fields; use the returned schema rather than hand-converting enum IDs. A named custom timed step is supported, but unsupported identities/fields cannot be made valid just by putting them in a description.
 
+Strength uses one repeat group per exercise. Default rest is 60 seconds between
+sets and a separate 120-second equipment transition between exercises; the
+last intra-exercise rest is skipped, and no transition follows the last exercise.
+Pass `defaults.rest_between_sets_seconds` and
+`defaults.rest_between_exercises_seconds` to change these conventions, or use
+each exercise's `rest_seconds` and `transition_seconds` overrides.
+
+Exercise specifications accept a name for exact catalog lookup or a selected
+category/exercise pair, sets, and either reps or duration_seconds. Holds and
+skill practice use timed steps. `include_final_rest=true` retains an intentional
+final recovery: ten 20-second holds with ten 40-second recoveries total ten
+minutes. The following equipment transition is separate. Unresolved timed
+movements preserve their actual names and technique in descriptive generic
+steps and return a display-label warning; unresolved rep exercises require
+catalog resolution. See the plugin's
+[complete strength example](../../plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md#declarative-authoring).
+
+Running intervals use repeat groups with optional final recovery and explicit
+warmup/cooldown. Pace inputs are seconds/km and become ascending m/s bounds.
+The builder counts only executing time steps; rep/distance duration remains
+unknown. Programmed hold duration is not measured successful performance.
+Builders warn above 50 stored steps; the connector's 100-step maximum does not
+establish watch compatibility. See [research sources and device limits](../../plugins/garmin-connect/skills/create-schedule-workouts/references/workout-research.md).
+
 ## 3. Prepare and review
 
 Query `get_garmin_write_schema(operation="create_workout")`. Prepare the returned `workout_json` with `prepare_garmin_write`, using one stable idempotency key for this intent. Show the full preview: name, sport, exercises, repetitions/timing, loads, rests and any targets. Writes are enabled by default; explicit local disable/allowlist settings still apply, and remote commits also require `garmin:write`.
@@ -33,6 +57,14 @@ After approval of this exact preview, invoke the returned `commit_tool` with its
 ## 4. Verify before scheduling
 
 Read the saved ID with `get_workout_template`. Confirm the requested sport and executable content were retained. Scheduling an existing verified workout uses SDK argument names:
+
+For an existing scheduled workout, first read the complete template and calendar
+entry. Preserve its ID, metadata and unrelated exercises in the full replacement
+body, then prepare `update_workout` and commit its exact returned arguments.
+Read back repeat counts, skip flags, ordering, exercise IDs, durations, rests and
+targets; confirm the same calendar entry still references the updated ID.
+Updating a template does not require another calendar entry. Template saved,
+calendar scheduled, device queued and physically synced are distinct states.
 
 ```json
 {

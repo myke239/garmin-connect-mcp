@@ -6,6 +6,18 @@ from .data import validate_id
 from .writes import validate_workout
 
 
+def template(backend, workout_id):
+    """Fresh, complete and bounded edit/readback source; never silently truncate."""
+    from .writes import WriteInputError
+    validate_id(workout_id)
+    raw = backend.fresh_call('get_workout_by_id', workout_id)
+    if not isinstance(raw, dict) or str(raw.get('workoutId')) != workout_id:
+        raise WriteInputError('get_workout_template', 'Garmin returned an invalid or mismatched workout identity; do not prepare an update.')
+    if len(json.dumps(raw, allow_nan=False).encode('utf-8')) > 256 * 1024:
+        raise WriteInputError('get_workout_template', 'The complete template exceeds 256 KiB; no truncated edit source was returned. Use Garmin Connect to inspect this template.')
+    return raw
+
+
 def fingerprint(raw):
     return hashlib.sha256(json.dumps(raw, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
