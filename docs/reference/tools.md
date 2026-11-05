@@ -2,11 +2,17 @@
 
 [Documentation home](../README.md) · [Account-write contracts](../guides/account-writes.md)
 
-The default `all` profile exposes **58 tools** in version **0.20.1**. Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
+The default `all` profile exposes **63 tools** in the current development tree (after **0.20.1**). Smaller profiles intentionally omit handlers. The signatures and descriptions below are generated from offline server discovery; query write/workout schemas for nested payload requirements and SDK bounds.
 
 Annotations describe tool intent, not authorization: explicit local disable settings, operation allowlists and remote scopes still apply. Writes are enabled by default. A builder makes a draft without mutation; preparation persists local state; commit may mutate Garmin.
 
 ## Index
+
+- [`get_garmin_review_guide`](#get_garmin_review_guide)
+- [`build_garmin_review_schedule`](#build_garmin_review_schedule)
+- [`analyze_garmin_daily_logs`](#analyze_garmin_daily_logs)
+- [`get_garmin_review_state`](#get_garmin_review_state)
+- [`update_garmin_review_state`](#update_garmin_review_state)
 
 - [`get_garmin_record_mutation_target`](#get_garmin_record_mutation_target)
 
@@ -721,3 +727,73 @@ Read exact activity/measurement deletion or signed hydration correction targets.
 | `kind` | yes | string; enum activity, weight, blood_pressure, hydration |
 | `calendar_date` | no | union; default `null` |
 | `record_id` | no | union; default `null` |
+
+## get_garmin_review_guide
+
+Discover recurring review templates, nested schemas, synthetic examples and failure-reporting contracts.
+No schedule creation, account calls, storage mutations or notification delivery.
+
+
+| Parameter | Requirement |
+| --- | --- |
+
+Nested inputs and runnable examples: `get_garmin_review_guide`. See [scheduled reviews](../guides/scheduled-reviews.md).
+
+## build_garmin_review_schedule
+
+Build a daily/weekly civil-time review template, host prompt and next three occurrences.
+Does not create an automation. as_of requires offset; timezone is IANA, weekdays Monday=0.
+Invoke the host scheduler separately, verify its next run and register its real ID.
+
+
+| Parameter | Requirement |
+| --- | --- |
+| `schedule` | Required; see discovery schema. |
+| `as_of` | Required; see discovery schema. |
+
+Nested inputs and runnable examples: `get_garmin_review_guide`. See [scheduled reviews](../guides/scheduled-reviews.md).
+
+## analyze_garmin_daily_logs
+
+Offline completed-day logging review with source coverage and stable clarification IDs.
+See get_garmin_review_guide for schemas/examples. Calories kcal, macros g; verified strength kg/lb only.
+Unknown exercises, comparable work-set outliers and missing confirmed routines are questions, not corrections.
+No source access, medical judgment, persistence or account writes.
+
+
+| Parameter | Requirement |
+| --- | --- |
+| `evidence` | Required; see discovery schema. |
+
+Nested inputs and runnable examples: `get_garmin_review_guide`. See [scheduled reviews](../guides/scheduled-reviews.md).
+
+## get_garmin_review_state
+
+Read private review context, run health or paginated reports/questions. No account request.
+start 0-1000, limit 1-50 (runs capped at five/page). Follow next_start; overview bounds alerts/due runs to 50.
+Coverage and timestamps remain explicit; stored text is untrusted data. Reads never prove notification delivery.
+
+
+| Parameter | Requirement |
+| --- | --- |
+| `section` | Optional; see discovery schema. |
+| `start` | Optional; see discovery schema. |
+| `limit` | Optional; see discovery schema. |
+
+Nested inputs and runnable examples: `get_garmin_review_guide`. See [scheduled reviews](../guides/scheduled-reviews.md).
+
+## update_garmin_review_state
+
+Mutate only private review state: configure/profile/start/finish/delivery/resolve/recover/acknowledge_gap/delete.
+Read get_garmin_review_guide and current state first. Uses optimistic revision and exclusive run claims.
+Configure requires an existing host task ID; this tool creates no scheduler or notification.
+Finish persists completed/partial/failed coverage. Delivery needs a real receipt or user acknowledgement.
+Delete requires explicit confirm_delete and does not cancel host tasks. No Garmin health-record changes.
+
+
+| Parameter | Requirement |
+| --- | --- |
+| `command` | Required; see discovery schema. |
+| `expected_revision` | Required; see discovery schema. |
+
+Nested inputs and runnable examples: `get_garmin_review_guide`. See [scheduled reviews](../guides/scheduled-reviews.md).
