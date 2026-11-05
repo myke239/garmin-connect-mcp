@@ -58,7 +58,8 @@ Open it, select **Begin Install**, and follow the wizard. No terminal, Python or
 
 - [Getting started](docs/README.md#getting-started): installation, Codex and personal ChatGPT access.
 - [Task guides](docs/README.md#task-guides): creating workouts, recovery, analysis, permissions and troubleshooting.
-- [Reference](docs/README.md#reference): all 58 default tools, sport coverage, poses, units and limits.
+- [Scheduled reviews](docs/guides/scheduled-reviews.md): recurring log checks, workout preparation, persistent questions and explicit failure monitoring.
+- [Reference](docs/README.md#reference): all 63 default tools, sport coverage, poses, units and limits.
 - [Development](docs/README.md#development-and-evidence): contribution workflow, verification evidence and roadmap.
 
 ## Compatibility and honest limits

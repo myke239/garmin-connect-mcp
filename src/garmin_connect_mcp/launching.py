@@ -5,6 +5,7 @@ from pathlib import Path
 from collections.abc import Sequence
 
 MODULES=frozenset({'manage','cli','server','worker','remote','tunnel','writes','archive','protected_storage','catalog_drift','desktop','background','diagnostics','frozen_install','fit_support','shortcut'})
+MODULES = MODULES | {'review_monitor', 'review_policy'}
 
 
 def command(module: str, arguments: Sequence[str] = ()) -> list[str]:

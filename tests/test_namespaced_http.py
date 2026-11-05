@@ -64,7 +64,7 @@ def test_namespace_full_oauth_and_resource_isolation(tmp_path):
             "Accept": "application/json, text/event-stream"},
             json={"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}})
         assert discovery.status_code == 200, discovery.text
-        assert len(discovery.json()["result"]["tools"]) == 58
+        assert len(discovery.json()["result"]["tools"]) == 63
         refresh = client.post(prefix + "/token", data={"grant_type": "refresh_token",
             "client_id": identity, "refresh_token": tokens.json()["refresh_token"], "resource": resource})
         assert refresh.status_code == 200, refresh.text

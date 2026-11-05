@@ -8,6 +8,14 @@ description: Combine Garmin recovery evidence, MyFitnessPal nutrition and planne
 Establish the person's intended date, IANA timezone, planned workout sequence and
 whether this is a morning or pre-workout check. Preserve their training goal.
 
+For an authorized recurring run, follow the
+[scheduled-run protocol](../schedule-health-reviews/references/run-protocol.md).
+For workout preparation, read [preparation decisions](references/preparation.md).
+Use the confirmed profile and recheck which workouts remain today. Date-only plans
+need a confirmed usual/start time for timed food/rest advice. Report rest days and
+already-completed sessions explicitly. Missing input reduces specificity; do not
+wait indefinitely for a reply during an unattended run.
+
 Start with `get_garmin_coaching_guide` when discovering the installed contracts.
 It returns current nested schemas, units and runnable synthetic examples. Prefer
 those contracts over remembered inputs. Examples are not the person's data.
@@ -57,4 +65,5 @@ context, not permission to infer effects or recommend changes.
 Present the main assessment, supporting drivers, missing information and
 workout-specific interpretation with uncertainty. A wellness snapshot is not
 medical clearance. This skill does not authorize account writes, medication
-changes, recurring tasks or edits to existing coaching automations.
+changes. Configure or edit recurring tasks through `schedule-health-reviews` when
+requested; this analysis skill alone does not create or change a schedule.

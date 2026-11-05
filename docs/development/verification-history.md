@@ -2,6 +2,28 @@
 
 [Documentation home](../README.md)
 
+## Recurring health reviews — 2026-11-04 (local evidence)
+
+The 15 MCP foundation/runtime tests passed before implementation; no Garmin
+authentication or live account access was used. The final Windows/Python 3.13
+offline suite passed 712 tests, 9 skipped. Thirty-seven new review tests cover
+missing versus zero/skipped data, comparable strength sets and unverified units,
+stable questions, daily/weekly/DST timing, source coverage, private persistence,
+concurrent claims, stale revisions, worker recovery, history gaps, delivery states,
+storage errors/capacity, pagination, policy controls and MCP discovery/scope denial.
+
+The 63-tool documentation inventory, local links, source lint, focused new-module
+lint, existing scoped strict typing and additional seven-module typing checks
+passed. Both new and both amended skills validated. Source/wheel builds passed.
+The suite reports an existing Starlette test-client deprecation warning.
+
+These are synthetic/software checks, not evidence of an installed host schedule,
+real nutrition connector, health-record correction or outbound notification.
+Independent supervisor and delivery-route setup, powered-off-host alerting and
+live end-to-end scheduled execution remain deployment acceptance requirements.
+The monitor deliberately reports missing/unconfirmed delivery rather than claiming
+an alert was sent. PR CI and merge are separate subsequent gates.
+
 ## Structured workout authoring — 2026-10-27 (local evidence)
 
 All 15 MCP foundation/runtime checks passed without Garmin authentication.

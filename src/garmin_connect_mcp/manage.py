@@ -51,7 +51,7 @@ def register_plugin(codex, marketplace, quiet=False):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Garmin Connect setup and launch commands")
     parser.add_argument("command", choices=["login", "verify", "logout", "serve", "approve",
-        "remote-serve", "connection-info", "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin",
+        "remote-serve", "connection-info", "tunnel-setup", "tunnel", "tunnel-status", "doctor", "install-plugin", "review-monitor", "reviews-enable", "reviews-disable", "reviews-status",
         "writes-enable", "writes-disable", "writes-status", "archive-enable", "archive-disable", "archive-status", "secure-storage-status", "secure-storage-migrate", "catalog-check", "install-local", "installer-register", "installer-unregister", "fit-setup", "desktop", "diagnostics", "background-start", "background-stop", "background-status", "background-install", "background-uninstall"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -82,6 +82,8 @@ def main() -> None:
     mapping = {"remote-serve": ("remote", ["serve"]), "connection-info": ("remote", ["connection-info"]),"installer-register":("frozen_install",["--register-bundle"]),"installer-unregister":("frozen_install",["--unregister-bundle"]),"fit-setup":("fit_support",[]),"install-local":("frozen_install",[]),"desktop":("desktop",[]),"diagnostics":("diagnostics",[]),**{"background-"+v:("background",[v]) for v in ("start","stop","status","install","uninstall")},"catalog-check":("catalog_drift",["check"]),"secure-storage-status":("protected_storage",["status"]),"secure-storage-migrate":("protected_storage",["migrate"]),"archive-enable":("archive",["enable"]),"archive-disable":("archive",["disable"]),"archive-status":("archive",["status"]), "writes-enable": ("writes", ["enable"]), "writes-disable": ("writes", ["disable"]),
         "writes-status": ("writes", ["status"]), "approve": ("remote", ["approve"]), "tunnel-setup": ("tunnel", ["setup"]),
         "tunnel": ("tunnel", ["run"]), "tunnel-status": ("tunnel", ["status"])}
+    mapping["review-monitor"] = ("review_monitor", [])
+    mapping.update({"reviews-" + name: ("review_policy", [name]) for name in ("enable", "disable", "status")})
     module, prefix = mapping.get(args.command, ("cli", [args.command]))
     if module in {"remote", "tunnel"} and not remote_available():
         parser.error("Re-run the installer with --remote (Windows: -Remote) to enable phone access.")

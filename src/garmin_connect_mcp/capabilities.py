@@ -17,6 +17,8 @@ class Resource:
 
 
 RESOURCES = (
+    Resource("scheduled_reviews", ("get_garmin_review_guide", "build_garmin_review_schedule", "analyze_garmin_daily_logs", "get_garmin_review_state", "update_garmin_review_state"),
+             boundary="Private review ledger and offline templates; host scheduling/notification requires a separate integration. State writes honor global disable, review policy and remote garmin:write.", local=True),
     Resource("sleep", ("get_garmin_recovery", "get_garmin_coaching_day", "get_session_with_context", "get_garmin_sleep_mutation_target"),
              ("add_sleep", "update_sleep_times", "set_sleep_note", "clear_sleep_note"),
              fields=("start_time", "end_time", "note"), target="get_garmin_sleep_mutation_target",

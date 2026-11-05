@@ -16,6 +16,12 @@ incomplete activities and partially logged nutrition before interpreting average
 Keep source dates/units/coverage/fetch timestamps. Do not store personal health
 data in source or assume authorization to create an archive.
 
+For an authorized scheduled weekly review, follow the
+[scheduled-run protocol](../schedule-health-reviews/references/run-protocol.md)
+and use seven completed local days by default. Reuse confirmed profile and resolved
+logging questions. Report source coverage and changes in logging quality before
+comparing trends. Unavailable data must still produce a partial/failed report.
+
 Separate training exposure from performance and perceived recovery. Review
 endurance and strength separately: cardiovascular load does not establish
 muscle/tendon recovery. Preserve exercise, equipment, reps, weight and effort;
@@ -50,4 +56,5 @@ Progression suggestions remain coaching judgment. Before describing a model as
 predictive, evaluate chronological held-out sessions against a simple personal
 baseline, reporting error, interval coverage and failure cases. Retrospective
 daily summaries are not historical as-of forecasts. This skill does not authorize
-workout/food changes, recurring tasks or medication changes.
+workout/food or medication changes. Configure recurring tasks through
+`schedule-health-reviews` when requested; do not create schedules from analysis alone.

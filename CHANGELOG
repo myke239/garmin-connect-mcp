@@ -1,3 +1,15 @@
+Recurring health reviews - unreleased
+
+- Add daily-log and scheduling skills, with scheduled workout-preparation and
+  weekly-review paths using existing recovery tools.
+- Add discoverable templates, bounded log-quality analysis, private confirmed
+  context and clarification state, exclusive run claims and explicit coverage.
+- Persist reports separately from delivery receipts; expose missed starts,
+  expired runs, unconfirmed delivery and storage failures to an independent
+  supervisor through the review-monitor command and state tool.
+- Preserve local/remote write controls, source units and missing-data semantics.
+  Host scheduling and outbound alert delivery remain separate integrations.
+
 Structured workout authoring - unreleased
 
 - Group strength sets and running intervals as executable repeats, with
