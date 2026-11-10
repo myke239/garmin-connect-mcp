@@ -157,3 +157,41 @@ whole-length distances, strokes, drills and equipment. Never infer equipment,
 exercise variants or intensity. Saved templates do not establish physical watch execution.
 
 To reuse a template, clone_garmin_workout creates a draft and create_workout saves it. To schedule existing templates in a batch, use schedule_existing_workouts with workout_id/date_str pairs; it creates no new templates. Rename/delete require get_garmin_workout_mutation_target and its exact fresh name/hash. Deletion requires explicit approval of possible calendar-entry removal. Use returned operation-specific commit_arguments unchanged and inspect partial/unknown outcomes before any new intent.
+
+## Quality checks, interrupted updates and device acceptance
+
+Use familiar `pace_min_mile: ["9:15", "11:30"]` and `distance_miles: 14` when
+requested. Validate the distance end condition independently of the pace target.
+For pace.zone, targetValueOne is the faster (larger) m/s boundary. Planned
+strength weightValue uses kilograms with the kilogram descriptor; do not apply
+the old SDK multiplication by 1,000 or rescale historical values blindly.
+
+Review builder and prepare `quality_warnings`. Correct stale descriptions such
+as “time-based” when the executable step is distance-based, while preserving
+unrelated notes. Check repeats for intentionally omitted rests. In a plan that
+explicitly pairs gym commute runs with gym sessions, verify the corresponding
+gym workout/date; do not infer that every commute requires a new workout. Keep
+optional recovery sessions clearly labeled “Optional” in the name and notes.
+These contextual checks require agent review, not a universal automatic rule.
+
+For multiple template updates, maintain a per-workout ledger: workout ID,
+calendar entry/date, intended change, stable idempotency key, draft ID, commit
+status, readback status, app verification and device verification. The server's
+protected draft journal retains the exact intent and per-workout readback. Work
+one template at a time; stop on operation limits and report completed, unknown,
+mismatched and unattempted items separately. Never treat the batch as atomic.
+
+Before resuming, use `get_garmin_write_status(draft_id, reconcile_workout=true)`
+for each prepared update. It freshly compares the stored intent to Garmin and
+persists verification without a Garmin write. Skip `next_action: skip_already_applied`.
+For mismatches, inspect the fresh template; do not create a new key or re-arm an
+unknown write. Prepared update commits also skip an already-matching template.
+Transport completion and `verification.state` are separate: a completed request
+can have mismatched readback. Calendar association must be checked separately
+using the original month/entry; updates do not create calendar entries.
+
+Report each verification level separately: template write/readback; calendar
+scheduling; Garmin Connect display (distance, endpoints, weights/units, notes);
+device queued/downloaded; physical watch execution. After sync, the athlete must
+start the workout and test the intended steps and out-of-range pace vibration
+on their device. User-reported app evidence does not prove Instinct 2 execution.

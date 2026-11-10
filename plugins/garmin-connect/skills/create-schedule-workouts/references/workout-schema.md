@@ -2,7 +2,8 @@
 
 The MCP accepts SDK-named operation parameters. `upload_workout(workout_json)`
 forwards JSON unchanged; it does not fill in enum IDs or fix units. The source
-for these conventions is the pinned SDK's `garminconnect/workout.py`.
+for enum conventions is the pinned SDK's `garminconnect/workout.py`; Connect
+unit adapters also incorporate user-reported app display evidence (2026-11-10).
 
 Read a full existing template when possible. A workout needs `workoutName`,
 `sportType`, and `workoutSegments`. Each segment has `segmentOrder`, `sportType`,
@@ -24,9 +25,10 @@ step/condition/target objects. A time or distance step needs positive
 `endCondition.conditionValue`. Convert miles using exactly 1609.344 metres per
 mile; 12 miles is 19312.128 metres. Do not infer a duration for a distance step.
 
-No target uses ID 1 and key `no.target`. The pinned SDK's PaceTarget and
-SpeedTarget use **metres/second**, with slower speed as targetValueOne and faster
-speed as targetValueTwo. Convert pace by distance metres / duration seconds;
+No target uses ID 1 and key `no.target`. Connect pace.zone (ID 6) uses **metres/second**, with the faster, larger speed as
+targetValueOne and the slower, smaller speed as targetValueTwo. Do not copy the
+pinned SDK PaceTarget lower/upper ordering for Connect pace fields. Other range
+targets retain their own conventions; do not reverse every target type. Convert pace by distance metres / duration seconds;
 for example 8:00/mile is 1609.344 / 480 m/s. Heart-rate range targets use bpm,
 power ranges watts, cadence steps/revolutions per minute; numbered zones require
 zoneNumber from the user's actual settings. Copy a known valid template's
@@ -62,3 +64,17 @@ values; its presence is not authorization to upload it. Wrap the object in
 
 Do not fabricate required workout fields for sports not represented by this
 example. Retrieve an appropriate template or explain what evidence is missing.
+
+## Familiar pace input and independent completion
+
+`build_garmin_running_workout` accepts `distance_miles: 14` and
+`pace_min_mile: ["9:15", "11:30"]` on the same interval. These become distance
+condition 3 with 22530.816 metres and pace.zone target 6 with speeds approximately
+2.899718919 and 2.332382609 m/s. `pace_s_km` remains available; choose only one
+pace format or HR target. M:SS boundaries must be faster then slower; reversed,
+equal, malformed and implausible values are rejected.
+
+The distance ends the step; the pace range is monitored independently. A title
+or note encodes neither. Garmin may display a derived central pace alongside
+the two boundaries; do not invent a third target value or validate only that
+central display. Verify distance and both range endpoints in the app.

@@ -42,7 +42,7 @@ catalog resolution. See the plugin's
 [complete strength example](../../plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md#declarative-authoring).
 
 Running intervals use repeat groups with optional final recovery and explicit
-warmup/cooldown. Pace inputs are seconds/km and become ascending m/s bounds.
+warmup/cooldown. Pace inputs accept seconds/km or M:SS/mile and become faster-speed-first m/s bounds.
 The builder counts only executing time steps; rep/distance duration remains
 unknown. Programmed hold duration is not measured successful performance.
 Builders warn above 50 stored steps; the connector's 100-step maximum does not

@@ -323,8 +323,14 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
             return safe_call(contract,operation)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
-        def get_garmin_write_status(draft_id: str) -> dict:
-            """Read durable draft status/IDs/errors without committing, retrying or revealing its input payload."""
+        def get_garmin_write_status(draft_id: str, reconcile_workout: bool = False) -> dict:
+            """Read durable draft status/IDs/errors without committing or revealing its input payload.
+            For an update_workout draft, reconcile_workout=true freshly compares Garmin with
+            its immutable intent and stores per-workout verification. Matched updates can be
+            skipped; mismatches/unknown writes require inspection, never a new retry key.
+            App display, calendar association and watch execution need separate verification."""
+            if reconcile_workout:
+                return safe_call(writes.reconcile_workout, draft_id, backend)
             return safe_call(writes.status,draft_id)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
@@ -406,7 +412,7 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def build_garmin_strength_step(category: str, exercise: str, reps: StrictInt, step_order: StrictInt, weight_kg: StrictFloat | None = None) -> dict:
             """Build an SDK ExecutableStepDTO from an EXACT catalog category/exercise pair, explicit reps and step order.
-            No Garmin request or write. Optional weight_kg becomes grams in weightValue with the SDK unit.
+            No Garmin request or write. Optional weight_kg stays kilograms in weightValue with the SDK unit.
             Do not use a guessed enum, substitute movement or parent-only fallback for an unresolved exercise.
             """
             from .workout_discovery import strength_step
@@ -603,10 +609,10 @@ def create_server(adapter: GarminAdapter | None = None, remote_access=False, too
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))
         def build_garmin_running_workout(workout_name: str, intervals: list[dict],
                 warmup_seconds: StrictInt = 0, cooldown_seconds: StrictInt = 0) -> dict:
-            """Pure running draft. Intervals choose duration_seconds or distance_m, repeats,
-            recovery_seconds, optional hr_zone 1-5 OR pace_s_km [faster,slower]. Repeats
-            use groups; include_final_recovery defaults false. Pace converts to ascending
-            Garmin m/s bounds. Returns programmed duration; no implicit intensity or write."""
+            """Pure running draft. Intervals choose duration_seconds, distance_m or distance_miles; repeats,
+            recovery_seconds; one hr_zone 1-5, pace_s_km [faster,slower], or pace_min_mile
+            ["9:15","11:30"]. Repeats use groups; include_final_recovery defaults false.
+            Pace converts to Garmin m/s with the faster (larger) speed first. Returns programmed duration; no implicit intensity or write."""
             return safe_call(running_workout, workout_name, intervals, warmup_seconds, cooldown_seconds)
 
         @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False))

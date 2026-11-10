@@ -5,6 +5,7 @@ from .sport_schemas import sport_enum, build_workout
 from .workout_discovery import strength_step
 from .workout_authoring import repeat, order_steps, duration_summary, resolve_strength
 from .writes import WriteInputError
+from .workout_quality import pace_speeds, quality_warnings
 
 
 def integer(value, minimum, maximum, label):
@@ -41,6 +42,7 @@ def finish(sport, name, steps):
         "basis": "Programmed intervals only. Rep/distance/open steps have unknown duration; successful hold time and actual performance are not measured."}
     result["stored_step_count"] = count
     result["warnings"] = (["More than 50 stored steps: check this sport and device's limit or split the workout."] if count > 50 else [])
+    result["warnings"].extend(quality_warnings(result["workout_json"]))
     result["watch_execution_verified"] = False
     result["guidance"] = "Pure draft. Prepare, approve, commit and read back. Watch execution requires physical sync verification."
     return result
@@ -121,22 +123,26 @@ def running_workout(name, intervals, warmup_seconds=0, cooldown_seconds=0):
         if value:
             steps.append(step(1, duration=value, step_type=kind))
     for interval in intervals:
-        if not isinstance(interval, dict) or set(interval) - {"duration_seconds", "distance_m", "repeats", "recovery_seconds", "hr_zone", "pace_s_km", "include_final_recovery"}:
+        if not isinstance(interval, dict) or set(interval) - {"duration_seconds", "distance_m", "repeats", "recovery_seconds", "hr_zone", "pace_s_km", "pace_min_mile", "distance_miles", "include_final_recovery"}:
             raise ValueError("Unknown running fields")
-        template = step(1, interval.get("duration_seconds"), interval.get("distance_m"))
-        if "hr_zone" in interval and "pace_s_km" in interval:
-            raise ValueError("Choose either hr_zone or pace_s_km")
+        if "distance_m" in interval and "distance_miles" in interval:
+            raise ValueError("Choose distance_m or distance_miles")
+        distance = interval.get("distance_m")
+        if "distance_miles" in interval:
+            miles = interval["distance_miles"]
+            if isinstance(miles, bool) or not isinstance(miles, (int, float)) or not math.isfinite(miles) or miles <= 0:
+                raise ValueError("distance_miles must be finite and positive")
+            distance = miles * 1609.344
+        template = step(1, interval.get("duration_seconds"), distance)
+        targets = [key for key in ("hr_zone", "pace_s_km", "pace_min_mile") if key in interval]
+        if len(targets) > 1:
+            raise ValueError("Choose one hr_zone, pace_s_km or pace_min_mile")
         if "hr_zone" in interval:
             template["targetType"] = {"workoutTargetTypeId": 4, "workoutTargetTypeKey": "heart.rate.zone"}
             template["zoneNumber"] = integer(interval["hr_zone"], 1, 5, "hr_zone")
-        if "pace_s_km" in interval:
-            bounds = interval["pace_s_km"]
-            if not isinstance(bounds, list) or len(bounds) != 2 or any(isinstance(v, bool) or not isinstance(v, (int,float)) or not math.isfinite(v) or not 60 <= v <= 3600 for v in bounds):
-                raise ValueError("pace_s_km needs two finite bounds, 60-3600 seconds/km")
-            if bounds[0] >= bounds[1]:
-                raise ValueError("pace_s_km must be [faster, slower]")
+        elif targets:
             template["targetType"] = {"workoutTargetTypeId": 6, "workoutTargetTypeKey": "pace.zone"}
-            template["targetValueOne"], template["targetValueTwo"] = [1000 / v for v in reversed(bounds)]
+            template["targetValueOne"], template["targetValueTwo"] = pace_speeds(interval[targets[0]], targets[0])
         count = integer(interval.get("repeats", 1), 1, 99, "repeats")
         recovery = integer(interval.get("recovery_seconds", 0), 0, 3600, "recovery_seconds")
         include_final = interval.get("include_final_recovery", False)
@@ -182,11 +188,8 @@ def swim_workout(name, pool_length_m, intervals):
                     raise ValueError("Unknown " + field)
                 template[prefix + "Type"] = {prefix + "TypeId": mapping[value], prefix + "TypeKey": value, "displayOrder": mapping[value]}
         if "pace_s_100m" in interval:
-            bounds = interval["pace_s_100m"]
-            if not isinstance(bounds, list) or len(bounds) != 2 or any(isinstance(v, bool) or not isinstance(v, (int,float)) or not math.isfinite(v) or not 20 <= v <= 1200 for v in bounds) or bounds[0] >= bounds[1]:
-                raise ValueError("pace_s_100m needs [faster,slower], 20-1200 seconds/100m")
             template["targetType"] = {"workoutTargetTypeId":6,"workoutTargetTypeKey":"pace.zone"}
-            template["targetValueOne"], template["targetValueTwo"] = [100 / v for v in reversed(bounds)]
+            template["targetValueOne"], template["targetValueTwo"] = pace_speeds(interval["pace_s_100m"], "pace_s_100m")
         rest = integer(interval.get("rest_seconds", 0), 0, 3600, "rest_seconds")
         count = integer(interval.get("repeats", 1), 1, 30, "repeats")
         for index in range(count):

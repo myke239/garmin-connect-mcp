@@ -4,7 +4,7 @@ import copy
 import json
 
 import pytest
-from garminconnect.workout import create_repeat_group, create_strength_exercise_step, PaceTarget
+from garminconnect.workout import create_repeat_group, create_strength_exercise_step
 
 from garmin_connect_mcp.builders import strength_workout, running_workout, swim_workout
 from garmin_connect_mcp.server import create_server
@@ -118,23 +118,22 @@ def test_tempo_program_has_separate_warmup_repeat_and_cooldown():
     assert steps[1]["workoutSteps"][1]["stepType"]["stepTypeKey"] == "recovery"
 
 
-def test_running_final_recovery_and_sdk_pace_units():
+def test_running_final_recovery_and_connect_pace_units():
     result = running_workout("Pace", [{"duration_seconds":300,"repeats":3,"recovery_seconds":60,
         "include_final_recovery":True,"pace_s_km":[300,360]}])
     group = rows(result)[0]
     target = group["workoutSteps"][0]
-    sdk = PaceTarget(lower_limit=1000/360, upper_limit=1000/300)
-    assert target["targetValueOne"] == sdk.lower_limit
-    assert target["targetValueTwo"] == sdk.upper_limit
+    assert target["targetValueOne"] == pytest.approx(3.333333333)
+    assert target["targetValueTwo"] == pytest.approx(2.777777778)
     assert group["skipLastRestStep"] is False
     assert result["duration_estimate"]["total_seconds"] == 1080
 
 
-def test_swim_uses_same_sdk_pace_order_and_reversed_manual_targets_rejected():
+def test_swim_uses_same_connect_pace_order_and_reversed_manual_targets_rejected():
     result = swim_workout("Pool pace", 25, [{"distance_m":100,"pace_s_100m":[90,120]}])
     interval = rows(result)[0]
-    assert interval["targetValueOne"] == pytest.approx(100/120)
-    assert interval["targetValueTwo"] == pytest.approx(100/90)
+    assert interval["targetValueOne"] == pytest.approx(100/90)
+    assert interval["targetValueTwo"] == pytest.approx(100/120)
     interval["targetValueOne"], interval["targetValueTwo"] = interval["targetValueTwo"], interval["targetValueOne"]
     with pytest.raises(WriteInputError, match=r"workoutSteps\[0\].*metres/second"):
         validate("create_workout", {"workout_json":result["workout_json"]})

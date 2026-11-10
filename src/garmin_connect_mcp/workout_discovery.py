@@ -58,9 +58,12 @@ def strength_step(category,exercise,reps,step_order,weight_kg=None):
         raise WriteInputError("build_garmin_strength_step","weight_kg must be finite, between 0 and 1000 kg, or omitted for no encoded load target.")
     step=create_strength_exercise_step(category=category,exercise_name=exercise,reps=reps,
         step_order=step_order,weight_kg=weight_kg).model_dump(exclude_none=True,mode="json")
+    if weight_kg is not None:
+        # Connect display evidence supersedes the pinned SDK gram conversion.
+        step["weightValue"] = float(weight_kg)
     return {"step":step,"sportType":{"sportTypeId":5,"sportTypeKey":"strength_training","displayOrder":5},
-        "source":"pinned Garmin SDK create_strength_exercise_step","sdk_version":version("garminconnect"),
-        "garmin_request_sent":False,"guidance":"This builds JSON only. Assemble the user's selected workout, prepare it, review/authorize the exact preview, then commit. Load targets use grams in weightValue with the SDK kilogram unit/factor; recorded activity-set weights have separate unverified raw units."}
+        "source":"pinned Garmin SDK with Connect planned-load unit correction (user-reported display evidence 2026-11-10)","sdk_version":version("garminconnect"),
+        "garmin_request_sent":False,"guidance":"This builds JSON only. Assemble the user's selected workout, prepare it, review/authorize the exact preview, then commit. Planned load targets use kilograms in weightValue with the kilogram unit descriptor; recorded activity-set weights have separate unverified raw units."}
 
 
 def workout_schema(sport):
@@ -94,7 +97,7 @@ def workout_schema(sport):
                 "defaults":{"rest_between_sets_seconds":60,"rest_between_exercises_seconds":120}},
             "optional_exercise_fields":["category","exercise","duration_seconds","weight_kg","rest_seconds","transition_seconds","include_final_rest","notes"],
             "semantics":"Exactly one reps or duration_seconds. One repeat per exercise; skip final intra-exercise rest by default; transition only between exercises. Timed unresolved names yield descriptive generic steps and warnings; unresolved rep exercises require selection. Programmed duration is not measured performance."}
-        result["load_target_units"]={"input":"weight_kg","weightValue":"grams","weightUnit":workout.WEIGHT_UNIT_KILOGRAM,"conversion":"weightValue = weight_kg * 1000"}
+        result["load_target_units"]={"input":"weight_kg","weightValue":"kilograms","weightUnit":workout.WEIGHT_UNIT_KILOGRAM,"conversion":"weightValue = weight_kg"}
     if sport=="yoga":
         result["pose_catalog"]={"category":"POSE","count":85,"verified_date":"2026-10-12","lookup_tool":"find_garmin_exercises","builder_tool":"build_garmin_yoga_step"}
         result["example_limit"]="Timed session; for exact pose sequences discover category POSE, build_garmin_yoga_step for each selected duration/order, then build_garmin_workout with explicit yoga segments. Watch animations unverified."

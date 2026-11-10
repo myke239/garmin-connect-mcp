@@ -46,13 +46,15 @@ def test_catalog_pagination_and_category_filter():
     assert all(row["category"]=="CALF_RAISE" for row in first["exercises"]+second["exercises"])
 
 
-def test_strength_header_reps_and_load_units_match_sdk():
+def test_strength_header_reps_and_connect_load_unit_adapter():
     schema=workout_schema("strength_training")
     assert schema["sportType"]["sportTypeId"]==5
     assert schema["reps_condition"]["conditionTypeId"]==10
     result=strength_step("SQUAT","LEG_PRESS",8,2,25)
-    assert result["step"]==create_strength_exercise_step(category="SQUAT",exercise_name="LEG_PRESS",reps=8,step_order=2,weight_kg=25).model_dump(exclude_none=True,mode="json")
-    assert result["step"]["weightValue"]==25000
+    sdk = create_strength_exercise_step(category="SQUAT",exercise_name="LEG_PRESS",reps=8,step_order=2,weight_kg=25).model_dump(exclude_none=True,mode="json")
+    sdk["weightValue"] = 25
+    assert result["step"] == sdk
+    assert result["step"]["weightValue"]==25
     assert result["garmin_request_sent"] is False
     payload={"workoutName":"Synthetic strength example","sportType":schema["sportType"],
         "workoutSegments":[{"segmentOrder":1,"sportType":schema["sportType"],"workoutSteps":[result["step"]]}]}
