@@ -29,7 +29,10 @@ lunges or a broad category, and do not fabricate new catalog definitions.
 For a single low-level step, call `build_garmin_strength_step` with the exact category/exercise,
 integer reps (1–1000), integer step_order (1–100), and optional `weight_kg`.
 It returns an ExecutableStepDTO without sending a Garmin request. Planned load
-input is kg; the SDK encodes weightValue in grams with its kilogram unit object.
+input is kg; the Connect adapter writes weightValue in kilograms with its
+kilogram unit descriptor. It overrides the pinned SDK kg-to-gram conversion,
+which the user reported displaying loads 1,000 times too high. Verify the load
+and unit in Garmin Connect. Never rescale existing templates automatically.
 This convention does not establish units for recorded activity exerciseSets;
 those remain raw and must be preserved when editing activity sets.
 

@@ -107,7 +107,7 @@ Validate complete create_manual_activity parameters against the live type catalo
 
 ## build_garmin_running_workout
 
-Pure running draft. Intervals choose duration_seconds or distance_m, repeats, recovery_seconds, optional hr_zone 1-5 OR pace_s_km [faster,slower]. Repeats use groups; include_final_recovery defaults false. Pace converts to ascending Garmin m/s bounds. Returns programmed duration; no implicit intensity or write.
+Pure running draft. Intervals choose duration_seconds, distance_m or distance_miles; repeats, recovery_seconds; one hr_zone 1-5, pace_s_km [faster,slower] or pace_min_mile M:SS strings such as ["9:15","11:30"]. Repeats use groups; include_final_recovery defaults false. Pace converts to Garmin m/s with the faster (larger) speed first. Returns programmed duration; no implicit intensity or write.
 
 **Annotations:** read-only `true`; destructive `false`.
 
@@ -120,7 +120,7 @@ Pure running draft. Intervals choose duration_seconds or distance_m, repeats, re
 
 ## build_garmin_strength_step
 
-Build an SDK ExecutableStepDTO from an EXACT catalog category/exercise pair, explicit reps and step order. No Garmin request or write. Optional weight_kg becomes grams in weightValue with the SDK unit. Do not use a guessed enum, substitute movement or parent-only fallback for an unresolved exercise.
+Build an SDK ExecutableStepDTO from an EXACT catalog category/exercise pair, explicit reps and step order. No Garmin request or write. Optional weight_kg stays kilograms in weightValue with the SDK unit. Do not use a guessed enum, substitute movement or parent-only fallback for an unresolved exercise.
 
 **Annotations:** read-only `true`; destructive `false`.
 
@@ -443,13 +443,14 @@ Get exact SDK argument names, types, bounds, units and workflow for one supporte
 
 ## get_garmin_write_status
 
-Read durable draft status/IDs/errors without committing, retrying or revealing its input payload.
+Read durable draft status/IDs/errors without committing or revealing its input payload. For update_workout, reconcile_workout=true freshly compares Garmin with the immutable intent and saves per-workout verification. Skip matched updates; inspect mismatches without retrying unknown writes. App, calendar and device verification remain separate.
 
 **Annotations:** read-only `true`; destructive `false`.
 
 | Parameter | Required | Type / declared default |
 | --- | --- | --- |
 | `draft_id` | yes | string |
+| `reconcile_workout` | no | boolean; default `false` |
 
 ## get_session_with_context
 

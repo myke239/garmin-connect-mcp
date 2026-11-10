@@ -198,7 +198,7 @@ endpoints and can change upstream; only claim live verification for tested paths
 Use get_garmin_workout_schema and build_garmin_strength_step for SDK sport/step
 conventions. find_garmin_exercises exposes exact matches, variants and pagination
 from the pinned picker snapshot, not a live complete Garmin catalog. Never
-substitute a missing movement. Planned weight_kg is encoded as grams by the SDK;
+substitute a missing movement. Planned weight_kg stays kilograms in Connect weightValue;
 recorded exerciseSets units remain unverified. See the plugin [strength reference](../../plugins/garmin-connect/skills/create-schedule-workouts/references/strength-workouts.md).
 
 ## Timed yoga sessions

@@ -2,6 +2,24 @@
 
 [Documentation home](../README.md)
 
+## Connect workout units and reconciliation - 2026-11-10 (local evidence)
+
+The 15 MCP foundation/runtime checks passed before account access. The Windows/
+Python 3.13 offline suite passed 735 tests, 9 skipped. Regressions independently
+check 14 miles, 9:15-11:30 /mi speed endpoints, kilograms, invalid target/end
+conditions, stale notes, per-workout interrupted-write reconciliation, already
+matching update skips, identity preservation and mismatch reporting. Existing
+calendar identity tests still pass. No live workout was created or changed.
+
+The earlier October SDK pace ordering/load assumptions were contradicted by
+user-reported Garmin Connect display observations; this release corrects the
+adapters. Historical test success did not establish correct app rendering.
+Instinct 2 pace vibration and swimming pace display remain unverified.
+
+Source lint, scoped strict typing, secret checks and the 63-tool documentation
+inventory passed. CI, release publication and installed-runtime acceptance are
+separate subsequent gates; do not infer them from these local results.
+
 ## Recurring health reviews — 2026-11-04 (local evidence)
 
 The 15 MCP foundation/runtime tests passed before implementation; no Garmin

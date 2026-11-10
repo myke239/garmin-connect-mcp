@@ -115,8 +115,16 @@ def validate_workout(payload):
                 value=step.get(field)
                 if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<0):
                     raise invalid("Workout target/load values must be finite nonnegative numbers")
-            if step.get("targetValueOne") is not None and step.get("targetValueTwo") is not None and step["targetValueOne"]>step["targetValueTwo"]:
-                raise invalid("Workout targetValueOne must not exceed targetValueTwo; pace ranges use metres/second")
+            for prefix in ("", "secondary"):
+                type_field = "targetType" if not prefix else "secondaryTargetType"
+                one = step.get("targetValueOne" if not prefix else "secondaryTargetValueOne")
+                two = step.get("targetValueTwo" if not prefix else "secondaryTargetValueTwo")
+                target = step.get(type_field) or {}
+                if target.get("workoutTargetTypeKey") == "pace.zone" and (one is not None or two is not None or step.get("zoneNumber" if not prefix else "secondaryZoneNumber") is None):
+                    if one is None or two is None or not 0 < two < one <= 20:
+                        raise invalid("Pace ranges require both speeds in metres/second: targetValueOne faster than targetValueTwo, positive and at most 20 m/s")
+                elif one is not None and two is not None and one > two:
+                    raise invalid("Workout non-pace targetValueOne must not exceed targetValueTwo")
             if step.get("category") is not None:
                 from garminconnect.exercises import CATEGORIES,EXERCISES
                 if step["category"]=="POSE":
@@ -573,6 +581,9 @@ class WriteService:
             if operation == "upload_activity_file":
                 content = base64.b64decode(parameters["content_base64"])
                 preview["parameters"] = {"format":parameters["format"],"bytes":len(content),"sha256":hashlib.sha256(content).hexdigest()}
+            if operation in {"create_workout", "update_workout"}:
+                from .workout_quality import quality_warnings
+                preview["quality_warnings"] = quality_warnings(parameters["workout_json"])
             return preview
 
     def commit(self, draft_id):
@@ -608,6 +619,26 @@ class WriteService:
             draft=next((v for v in state.values() if v["draft_id"]==draft_id),None)
             if draft is None: raise RequestError("DRAFT_NOT_FOUND")
             return {k:draft.get(k) for k in ("draft_id","operation","status","result","steps","error","verification")}
+
+    def reconcile_workout(self, draft_id, backend):
+        """Freshly reconcile an immutable update intent; never re-arm or replay it."""
+        self.status(draft_id)  # Validate before any account access.
+        from .lifecycle import template
+        from .workout_quality import compare_workout
+        with session_lock(self.store):
+            state = json.loads(self.store.load())
+            draft = next(v for v in state.values() if v["draft_id"] == draft_id)
+            if draft["operation"] != "update_workout":
+                raise ValueError("reconcile_workout is only supported for update_workout drafts")
+            workout_id = str(draft["parameters"]["workout_id"])
+            actual = template(backend, workout_id)
+            expected = dict(draft["parameters"]["workout_json"], workoutId=workout_id)
+            draft["verification"] = compare_workout(expected, actual)
+            draft["verification"].update(workout_id=workout_id, intended_content_sha256=draft["digest"],
+                checked_at=time.time(), next_action="skip_already_applied" if draft["verification"]["state"] == "verified"
+                else "inspect_mismatch_do_not_retry_unknown_outcome")
+            self.store.save(json.dumps(state))
+        return self.status(draft_id)
 
 
 def execute(client, directory, draft_id):
@@ -665,6 +696,19 @@ def execute(client, directory, draft_id):
                 original["workoutName"]=parameters["workout_name"]
                 raw=invoke_write(client,"update_workout",parameters["workout_id"],original)
                 result={"workout_id":str(parameters["workout_id"]),"workout_name":parameters["workout_name"]}
+            elif operation == "update_workout":
+                from .workout_quality import compare_workout
+                expected = dict(parameters["workout_json"], workoutId=str(parameters["workout_id"]))
+                current = client.get_workout_by_id(parameters["workout_id"])
+                before = compare_workout(expected, current)
+                skipped = before["state"] == "verified"
+                if not skipped:
+                    raw = invoke_write(client, "update_workout", **parameters)
+                    current = client.get_workout_by_id(parameters["workout_id"])
+                draft["verification"] = compare_workout(expected, current)
+                draft["verification"].update(workout_id=str(parameters["workout_id"]),
+                    intended_content_sha256=draft["digest"], checked_at=time.time())
+                result = {"workout_id": str(parameters["workout_id"]), "skipped_already_applied": skipped}
             elif operation == "delete_workout":
                 raw=invoke_write(client,"delete_workout",parameters["workout_id"])
                 result={"workout_id":str(parameters["workout_id"]),"deleted":True}
@@ -701,7 +745,8 @@ def execute(client, directory, draft_id):
                 if isinstance(report,dict) and report.get("failures"):
                     raise RequestError("IMPORT_REJECTED_OR_PARTIAL")
             from .mutation_targets import verification_result
-            draft["verification"] = verification_result(operation, result)
+            if operation != "update_workout":
+                draft["verification"] = verification_result(operation, result)
             draft["result"], draft["status"] = result,"completed"
         except Exception as error:
             draft["status"] = "unknown"

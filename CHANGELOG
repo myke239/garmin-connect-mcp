@@ -1,4 +1,10 @@
-Recurring health reviews - unreleased
+Workout execution and recurring health reviews - 0.21.0
+
+- Correct Connect pace and planned-load units using user-reported app evidence.
+- Accept mile distances and M:SS/mile targets; validate completion and target separately.
+- Reconcile each update in the durable journal, skip already-applied updates and
+  distinguish transport, readback, app display, calendar and watch verification.
+- Flag contradictory time-based notes on distance steps without rewriting them.
 
 - Add daily-log and scheduling skills, with scheduled workout-preparation and
   weekly-review paths using existing recovery tools.
@@ -10,13 +16,13 @@ Recurring health reviews - unreleased
 - Preserve local/remote write controls, source units and missing-data semantics.
   Host scheduling and outbound alert delivery remain separate integrations.
 
-Structured workout authoring - unreleased
+Structured workout authoring (included in 0.21.0)
 
 - Group strength sets and running intervals as executable repeats, with
   configurable set/transition rests and intentional final recovery handling.
 - Resolve exact exercise names, preserve unsupported timed movements as labeled
   generic steps, and distinguish programmed duration from measured performance.
-- Correct running/swim pace target bound order, validate nested repeat contracts and
+- Encode Connect pace targets faster-speed first, validate nested repeat contracts and
   allow bounded larger complete workout updates.
 - Expand the workout skill with scheduled-update readback, acceptance examples
   and sourced Garmin device/step-limit guidance.
